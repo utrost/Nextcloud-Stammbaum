@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="470" viewBox="0 0 1200 470" role="img" aria-labelledby="title desc">
+<title id="title">Evidence, assertions and display preference</title>
+<desc id="desc">A fictional register contains a citation. It supports birth in 1890 and contradicts birth in 1891. Assessment and display preference remain independent.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#426858"/></marker></defs>
+<rect width="1200" height="470" rx="18" fill="#f3f6ef"/>
+<g font-family="Arial, sans-serif" font-size="23" fill="#203f32">
+<rect x="30" y="115" width="255" height="150" rx="12" fill="white" stroke="#6f8b78"/>
+<text x="157" y="157" text-anchor="middle" font-weight="bold">SOURCE</text><text x="157" y="199" text-anchor="middle">Fictional register</text><text x="157" y="233" text-anchor="middle">Reusable description</text>
+<rect x="350" y="115" width="275" height="150" rx="12" fill="white" stroke="#6f8b78"/>
+<text x="487" y="157" text-anchor="middle" font-weight="bold">CITATION</text><text x="487" y="199" text-anchor="middle">Page and quotation</text><text x="487" y="233" text-anchor="middle">Specific evidence</text>
+<rect x="820" y="35" width="345" height="135" rx="12" fill="white" stroke="#6f8b78"/>
+<text x="992" y="75" text-anchor="middle" font-weight="bold">ASSERTION A</text><text x="992" y="111" text-anchor="middle">Birth in 1890</text><text x="992" y="145" text-anchor="middle">Own assessment</text>
+<rect x="820" y="220" width="345" height="135" rx="12" fill="white" stroke="#6f8b78"/>
+<text x="992" y="260" text-anchor="middle" font-weight="bold">ASSERTION B</text><text x="992" y="296" text-anchor="middle">Birth in 1891</text><text x="992" y="330" text-anchor="middle">Own assessment</text>
+<path d="M287 190H335" stroke="#426858" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<g stroke="#426858" stroke-width="3" fill="none" marker-end="url(#arrow)"><path d="M627 160L804 105"/><path d="M627 220L804 288"/></g>
+<text x="685" y="104">supports</text><text x="661" y="316">contradicts</text>
+<text x="600" y="415" text-anchor="middle" font-weight="bold">Display preference is a separate choice.</text>
+<text x="600" y="448" text-anchor="middle">A preferred assertion can still be disputed. Adding a citation does not change its assessment.</text>
+</g></svg>
