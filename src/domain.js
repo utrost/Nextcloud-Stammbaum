@@ -42,6 +42,7 @@ export function editable(person) {
     Object.keys(emptyPerson()).map((k) => [k, structuredClone(person[k] ?? emptyPerson()[k])]),
   );
 }
+export const graphCard = { width: 220, height: 104 };
 export function layoutGraph(people) {
   const groups = new Map();
   for (const p of people) {
@@ -50,15 +51,15 @@ export function layoutGraph(people) {
     groups.get(level).push(p);
   }
   const levels = [...groups.keys()].sort((a, b) => a - b);
-  const width = Math.max(700, ...[...groups.values()].map((g) => g.length * 230 + 60));
+  const width = Math.max(320, ...[...groups.values()].map((g) => g.length * 250 + 40));
   const positions = {};
   for (const [i, level] of levels.entries()) {
     const group = groups
       .get(level)
       .sort((a, b) => personName(a).localeCompare(personName(b)) || a.id.localeCompare(b.id));
     group.forEach(
-      (p, j) => (positions[p.id] = { x: (width - group.length * 230) / 2 + j * 230, y: 50 + i * 170 }),
+      (p, j) => (positions[p.id] = { x: (width - group.length * 250) / 2 + j * 250, y: 50 + i * 180 }),
     );
   }
-  return { positions, width, height: Math.max(300, levels.length * 170 + 90) };
+  return { positions, width, height: Math.max(300, levels.length * 180 + 70) };
 }

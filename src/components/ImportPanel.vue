@@ -9,7 +9,8 @@ const items = ref([]),
   nextPage = ref(null),
   selected = ref(null),
   file = ref(null),
-  input = ref(null);
+  input = ref(null),
+  uploadOpen = ref(true);
 const busy = ref(false),
   loading = ref(false),
   error = ref(''),
@@ -79,6 +80,7 @@ async function load(page = 0) {
   }
 }
 async function open(run) {
+  if (!file.value) uploadOpen.value = false;
   const seq = ++sequence;
   nodes.value = null;
   nodePage.value = null;
@@ -120,6 +122,7 @@ async function upload() {
     input.value.value = '';
     await load();
     await open(run);
+    uploadOpen.value = false;
   } catch (e) {
     error.value = t(e.message);
   } finally {
@@ -243,23 +246,27 @@ onBeforeUnmount(() => {
         }}
       </p>
     </details>
-    <form class="panel import-upload" @submit.prevent="upload">
-      <label
-        >{{ t('GEDCOM file')
-        }}<input
-          ref="input"
-          type="file"
-          accept=".ged,.gedcom,text/plain"
-          :disabled="busy"
-          @change="file = $event.target.files[0] || null"
-      /></label>
-      <button class="primary" :disabled="busy || !file">
-        {{ busy ? t('Please wait…') : t('Upload for review') }}
-      </button>
-    </form>
+    <details class="import-upload-disclosure" :open="uploadOpen" @toggle="uploadOpen = $event.target.open">
+      <summary>{{ t(selected ? 'Upload another file' : 'Choose a file to review') }}</summary>
+      <form class="panel import-upload" @submit.prevent="upload">
+        <label
+          >{{ t('GEDCOM file')
+          }}<input
+            ref="input"
+            type="file"
+            accept=".ged,.gedcom,text/plain"
+            :disabled="busy"
+            @change="file = $event.target.files[0] || null"
+        /></label>
+        <button class="primary" :disabled="busy || !file">
+          {{ busy ? t('Please wait…') : t('Upload for review') }}
+        </button>
+      </form>
+    </details>
     <p v-if="error" role="alert" class="error">{{ error }}</p>
-    <div class="import-layout">
+    <div class="import-layout" :class="{ 'has-review': selected }">
       <section class="panel import-runs" :aria-label="t('Import runs')">
+        <h3>{{ t('Import runs') }}</h3>
         <p v-if="loading" role="status">{{ t('Loading…') }}</p>
         <p v-else-if="!items.length">{{ t('No imports yet') }}</p>
         <button
@@ -279,10 +286,12 @@ onBeforeUnmount(() => {
         </button>
       </section>
       <section v-if="selected" class="panel import-review" :aria-label="t('Import review')">
-        <h3>{{ selected.originalName }}</h3>
-        <p role="status">
-          <strong>{{ t(labels[selected.status]) }}</strong>
-        </p>
+        <header class="import-review-heading">
+          <h3>{{ selected.originalName }}</h3>
+          <p role="status" class="import-status" :class="selected.status">
+            <strong>{{ t(labels[selected.status]) }}</strong>
+          </p>
+        </header>
         <p v-if="pending.has(selected.status)">
           {{ t('Nextcloud background jobs process this request. You may leave this page and return later.') }}
         </p>
@@ -310,12 +319,12 @@ onBeforeUnmount(() => {
         </button>
         <template v-if="selected.report?.counts">
           <dl class="import-counts">
-            <template v-for="(count, kind) in selected.report.counts" :key="kind"
-              ><dt>{{ t(kind[0].toUpperCase() + kind.slice(1)) }}</dt>
-              <dd>{{ count }}</dd></template
-            >
+            <div v-for="(count, kind) in selected.report.counts" :key="kind">
+              <dt>{{ t(kind[0].toUpperCase() + kind.slice(1)) }}</dt>
+              <dd>{{ count }}</dd>
+            </div>
           </dl>
-          <p>
+          <p class="import-diagnostic-summary">
             {{ selected.report.errors }} {{ t('errors') }} · {{ selected.report.warnings }}
             {{ t('warnings') }}
           </p>
@@ -335,7 +344,7 @@ onBeforeUnmount(() => {
             {{ t('Showing the first 200 diagnostics; totals include every diagnostic.') }}
           </p>
           <h4>{{ t('Preview people') }}</h4>
-          <ul>
+          <ul class="import-preview">
             <li v-for="(p, i) in selected.report.preview" :key="i">
               {{ [p.givenName, p.familyName].filter(Boolean).join(' ') || t('Unnamed person') }}
               <span v-if="p.visibility === 'management'" class="badge">{{ t('Management only') }}</span>
@@ -460,9 +469,9 @@ onBeforeUnmount(() => {
 }
 .import-counts {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 4px 24px;
-  max-width: 340px;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  margin: 16px 0;
 }
 .import-review h3,
 .import-review code,
@@ -519,8 +528,96 @@ summary {
   .import-layout {
     grid-template-columns: 1fr;
   }
+  .import-upload {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .import-upload label {
+    flex: none;
+    width: 100%;
+  }
+  .import-upload button {
+    align-self: flex-start;
+  }
   .import-panel {
     padding: 12px;
+  }
+  .import-runs {
+    max-height: 240px;
+    overflow: auto;
+  }
+}
+</style>
+
+<style scoped>
+.import-review-heading h3 {
+  font-size: 20px;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+.import-status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--color-background-dark);
+}
+.import-status.ready,
+.import-status.committed {
+  background: var(--stb-tint);
+}
+.import-status.blocked,
+.import-status.failed {
+  border-inline-start: 4px solid var(--color-error);
+}
+.import-counts > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  background: var(--color-background-hover);
+  padding: 10px 12px;
+  border-radius: 8px;
+  min-width: 0;
+}
+.import-counts dt {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.import-counts dd {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 2px 0 0;
+}
+.import-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px 24px;
+  padding-inline-start: 20px;
+}
+.import-review {
+  grid-column: 2;
+  grid-row: 1;
+}
+.import-runs {
+  grid-column: 1;
+  grid-row: 1;
+}
+.import-upload-disclosure {
+  margin: 12px 0;
+}
+.import-diagnostic-summary {
+  font-weight: 600;
+}
+@media (max-width: 1000px) {
+  .import-layout {
+    grid-template-columns: 1fr;
+  }
+  .import-review {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .has-review .import-runs {
+    grid-row: 2;
   }
   .import-runs {
     max-height: 240px;

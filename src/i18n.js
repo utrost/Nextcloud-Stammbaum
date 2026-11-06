@@ -4,6 +4,14 @@ export const locale = ref(
     (document.documentElement.lang?.startsWith('en') ? 'en' : 'de'),
 );
 const de = {
+  'Expand person research': 'Personenforschung vergrößern',
+  'Back to family workspace': 'Zurück zum Familienarbeitsbereich',
+  'Research context': 'Forschungskontext',
+  'Retained assertions and connections for comparison with the current panel.':
+    'Erhaltene Aussagen und Beziehungen zum Vergleich mit dem aktuellen Bereich.',
+  'Upload another file': 'Weitere Datei hochladen',
+  'Choose a file to review': 'Datei zur Prüfung auswählen',
+
   'Tree workspace': 'Stammbaum-Arbeitsbereich',
   'Person details': 'Personendetails',
   'This early version supports manual research and a bounded, reviewed GEDCOM import. Current-state export and external integrations are still planned.':
