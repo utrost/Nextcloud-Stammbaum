@@ -4,6 +4,8 @@ export const locale = ref(
     (document.documentElement.lang?.startsWith('en') ? 'en' : 'de'),
 );
 const de = {
+  'Tree workspace': 'Stammbaum-Arbeitsbereich',
+  'Person details': 'Personendetails',
   'This early version supports manual research and a bounded, reviewed GEDCOM import. Current-state export and external integrations are still planned.':
     'Diese frühe Version unterstützt manuelle Forschung und einen begrenzten GEDCOM-Import mit Prüfung. Der Export des aktuellen Datenstands und externe Integrationen sind noch geplant.',
   Warning: 'Warnung',
