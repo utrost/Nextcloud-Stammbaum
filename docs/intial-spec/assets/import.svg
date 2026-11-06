@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="480" viewBox="0 0 1200 480" role="img" aria-labelledby="title desc">
+<title id="title">Review before importing</title><desc id="desc">Choose an empty tree and file, analyze, review. Blocking errors prevent activation. A ready review requires explicit confirmation before the complete import is activated. Cancellation retains the original and report.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#426858"/></marker></defs>
+<rect width="1200" height="480" rx="18" fill="#f3f6ef"/>
+<g font-family="Arial, sans-serif" font-size="22" fill="#203f32">
+<g fill="white" stroke="#6f8b78"><rect x="30" y="45" width="330" height="130" rx="12"/><rect x="435" y="45" width="330" height="130" rx="12"/><rect x="840" y="45" width="330" height="130" rx="12"/><rect x="435" y="280" width="330" height="130" rx="12"/><rect x="840" y="280" width="330" height="130" rx="12"/></g>
+<text x="195" y="88" text-anchor="middle" font-weight="bold">1. CHOOSE</text><text x="195" y="126" text-anchor="middle">Empty tree and file</text>
+<text x="600" y="88" text-anchor="middle" font-weight="bold">2. ANALYZE</text><text x="600" y="126" text-anchor="middle">No people added yet</text>
+<text x="1005" y="88" text-anchor="middle" font-weight="bold">3. REVIEW</text><text x="1005" y="126" text-anchor="middle">Counts, errors and warnings</text>
+<text x="1005" y="323" text-anchor="middle" font-weight="bold">4. CONFIRM</text><text x="1005" y="361" text-anchor="middle">Only a ready interpretation</text>
+<text x="600" y="323" text-anchor="middle" font-weight="bold">5. ACTIVATE</text><text x="600" y="361" text-anchor="middle">Whole import becomes visible</text>
+<g stroke="#426858" stroke-width="3" fill="none" marker-end="url(#arrow)"><path d="M362 110H419"/><path d="M767 110H824"/><path d="M1005 177V264"/><path d="M838 345H781"/></g>
+<text x="28" y="291" font-weight="bold">If blocked: correct the input</text><text x="28" y="325">or extend supported handling.</text><text x="28" y="374" font-weight="bold">If cancelled: no activation.</text>
+<text x="600" y="453" text-anchor="middle">The private original and review report remain retained, including after cancellation.</text>
+</g></svg>

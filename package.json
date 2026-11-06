@@ -1,0 +1,30 @@
+{
+  "name": "nextcloud-stammbaum",
+  "version": "0.1.0-alpha.7",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "package": "npm run build && node scripts/package.mjs",
+    "test": "node --test tests/unit/*.test.mjs",
+    "test:e2e": "playwright test",
+    "check": "npm test && npm run build && python3 scripts/check.py",
+    "format": "prettier --write \"src/**/*.{js,vue,css}\" \"lib/**/*.php\" \"appinfo/*.php\" \"templates/*.php\" \"scripts/*.mjs\" \"tests/**/*.{js,mjs,php}\" vite.config.js playwright.config.js",
+    "format:check": "prettier --check \"src/**/*.{js,vue,css}\" \"lib/**/*.php\" \"appinfo/*.php\" \"templates/*.php\" \"scripts/*.mjs\" \"tests/**/*.{js,mjs,php}\" vite.config.js playwright.config.js"
+  },
+  "dependencies": {
+    "vue": "3.5.42"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@prettier/plugin-php": "0.26.0",
+    "@vitejs/plugin-vue": "6.0.8",
+    "prettier": "3.9.10",
+    "vite": "7.3.7"
+  },
+  "engines": {
+    "node": ">=24",
+    "npm": ">=11"
+  }
+}

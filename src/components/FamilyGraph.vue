@@ -1,0 +1,202 @@
+<script setup>
+import { computed, ref, watch, nextTick, onMounted } from 'vue';
+import { t, title } from '../i18n.js';
+import { layoutGraph, personName, dateText } from '../domain.js';
+const props = defineProps({ graph: Object, selected: String, modelValue: Object });
+const emit = defineEmits(['select', 'update:modelValue']);
+const viewport = ref(null),
+  textView = ref(false);
+const layout = computed(() => layoutGraph(props.graph.people));
+const camera = computed(() => props.modelValue || { x: 20, y: 20, zoom: 1 });
+const name = (p) => personName(p, t('Unnamed person'));
+const peopleById = computed(() => Object.fromEntries(props.graph.people.map((p) => [p.id, p])));
+function move(v) {
+  emit('update:modelValue', { ...camera.value, ...v });
+}
+function zoom(delta, px, py) {
+  const c = camera.value;
+  const z = Math.max(0.2, Math.min(2, c.zoom * delta));
+  px ??= viewport.value.clientWidth / 2;
+  py ??= viewport.value.clientHeight / 2;
+  move({ zoom: z, x: px - ((px - c.x) * z) / c.zoom, y: py - ((py - c.y) * z) / c.zoom });
+}
+function fit() {
+  if (!viewport.value) return;
+  const z = Math.min(
+    1,
+    (viewport.value.clientWidth - 40) / layout.value.width,
+    (viewport.value.clientHeight - 30) / layout.value.height,
+  );
+  move({
+    zoom: Math.max(0.2, z),
+    x: (viewport.value.clientWidth - layout.value.width * Math.max(0.2, z)) / 2,
+    y: 20,
+  });
+}
+function center() {
+  const p = layout.value.positions[props.graph.focusId];
+  if (p && viewport.value)
+    move({
+      x: viewport.value.clientWidth / 2 - (p.x + 100) * camera.value.zoom,
+      y: viewport.value.clientHeight / 2 - (p.y + 45) * camera.value.zoom,
+    });
+}
+watch(
+  () => props.graph.focusId,
+  () => nextTick(center),
+);
+onMounted(() => nextTick(fit));
+let drag = null;
+function down(e) {
+  if (e.target.closest('button')) return;
+  drag = { x: e.clientX, y: e.clientY, c: { ...camera.value } };
+  e.currentTarget.setPointerCapture(e.pointerId);
+}
+function pointer(e) {
+  if (!drag) return;
+  move({ x: drag.c.x + e.clientX - drag.x, y: drag.c.y + e.clientY - drag.y });
+}
+function key(e) {
+  if (e.target !== viewport.value) return;
+  const c = camera.value;
+  const actions = {
+    ArrowLeft: () => move({ x: c.x + 40 }),
+    ArrowRight: () => move({ x: c.x - 40 }),
+    ArrowUp: () => move({ y: c.y + 40 }),
+    ArrowDown: () => move({ y: c.y - 40 }),
+    '+': () => zoom(1.2),
+    '=': () => zoom(1.2),
+    '-': () => zoom(1 / 1.2),
+    Home: fit,
+  };
+  if (actions[e.key]) {
+    e.preventDefault();
+    actions[e.key]();
+  }
+}
+function path(edge) {
+  const a = layout.value.positions[edge.sourceId],
+    b = layout.value.positions[edge.targetId];
+  if (!a || !b) return '';
+  const x1 = a.x + 100,
+    y1 = a.y + 45,
+    x2 = b.x + 100,
+    y2 = b.y + 45;
+  return edge.kind === 'partner'
+    ? `M${x1},${y1} L${x2},${y2}`
+    : `M${x1},${y1} C${x1},${(y1 + y2) / 2} ${x2},${(y1 + y2) / 2} ${x2},${y2}`;
+}
+</script>
+<template>
+  <div class="graph-shell">
+    <div class="graph-toolbar">
+      <div class="segmented">
+        <button :aria-pressed="!textView" @click="textView = false">{{ t('Diagram') }}</button
+        ><button :aria-pressed="textView" @click="textView = true">{{ t('Text view') }}</button>
+      </div>
+      <div v-if="!textView" class="button-row">
+        <button :aria-label="t('Zoom out')" @click="zoom(1 / 1.2)">−</button
+        ><span>{{ Math.round(camera.zoom * 100) }}%</span
+        ><button :aria-label="t('Zoom in')" @click="zoom(1.2)">+</button
+        ><button @click="fit">{{ t('Fit') }}</button>
+      </div>
+    </div>
+    <p v-if="graph.limited" class="feedback" role="status">
+      {{ t('This view is limited. More relatives may exist.') }}
+    </p>
+    <div
+      v-if="!textView"
+      ref="viewport"
+      class="graph-viewport"
+      tabindex="0"
+      role="region"
+      :aria-label="t('Family diagram')"
+      @keydown="key"
+      @pointerdown="down"
+      @pointermove="pointer"
+      @pointerup="drag = null"
+      @pointercancel="drag = null"
+      @wheel.prevent="
+        (e) => {
+          const r = viewport.getBoundingClientRect();
+          zoom(e.deltaY < 0 ? 1.1 : 1 / 1.1, e.clientX - r.left, e.clientY - r.top);
+        }
+      "
+    >
+      <div
+        class="graph-world"
+        :style="{
+          width: layout.width + 'px',
+          height: layout.height + 'px',
+          transform: `translate(${camera.x}px,${camera.y}px) scale(${camera.zoom})`,
+        }"
+      >
+        <svg :width="layout.width" :height="layout.height" aria-hidden="true">
+          <path
+            v-for="e in graph.relations"
+            :key="e.id"
+            :d="path(e)"
+            :class="['edge', e.kind, e.parentType]"
+          />
+        </svg>
+        <button
+          v-for="p in graph.people"
+          :key="p.id"
+          class="person-node"
+          :class="{ selected: p.id === selected, focus: p.id === graph.focusId }"
+          :style="{ left: layout.positions[p.id].x + 'px', top: layout.positions[p.id].y + 'px' }"
+          :aria-pressed="p.id === selected"
+          @click="emit('select', p)"
+        >
+          <span class="node-avatar" aria-hidden="true">{{
+            (p.givenName?.[0] || p.familyName?.[0] || '?').toUpperCase()
+          }}</span
+          ><span class="node-text"
+            ><strong>{{ name(p) }}</strong
+            ><small>{{
+              [dateText(p.birthDate), dateText(p.deathDate)].filter(Boolean).join(' — ') ||
+              t('No date recorded')
+            }}</small
+            ><span v-if="p.id === graph.focusId" class="focus-label">{{ t('Focus') }}</span></span
+          >
+        </button>
+      </div>
+    </div>
+    <div v-else class="graph-text">
+      <ul>
+        <li v-for="p in graph.people" :key="p.id">
+          <button @click="emit('select', p)">{{ name(p) }}</button>
+        </li>
+      </ul>
+      <h3>{{ t('Connections') }}</h3>
+      <ul>
+        <li v-for="e in graph.relations" :key="e.id">
+          {{ name(peopleById[e.sourceId]) }} → {{ name(peopleById[e.targetId]) }} ·
+          {{ t(e.kind === 'partner' ? 'Partner' : 'Parent')
+          }}<template v-if="e.kind === 'parent'"> ({{ t(title(e.parentType)) }})</template>
+        </li>
+      </ul>
+    </div>
+    <details v-if="graph.contexts?.length" class="graph-contexts">
+      <summary>{{ t('Family contexts') }}</summary>
+      <p class="muted">{{ t('Grouping creates no connections. Members are listed in recorded order.') }}</p>
+      <section v-for="c in graph.contexts" :key="c.id">
+        <h3>{{ c.label }}</h3>
+        <ol>
+          <li v-for="m in c.members" :key="m.personId">
+            <button class="text-button" @click="emit('select', peopleById[m.personId])">
+              {{ name(peopleById[m.personId]) }}
+            </button>
+            · {{ t(title(m.role)) }}
+          </li>
+        </ol>
+      </section>
+    </details>
+    <div class="legend">
+      <span><i class="line biological"></i>{{ t('Biological') }}</span
+      ><span><i class="line adoptive"></i>{{ t('Adoptive') }} / {{ t('Foster') }}</span
+      ><span><i class="line other"></i>{{ t('Unknown') }} / {{ t('Step') }} / {{ t('Other') }}</span
+      ><span><i class="line partner"></i>{{ t('Partner') }}</span>
+    </div>
+  </div>
+</template>

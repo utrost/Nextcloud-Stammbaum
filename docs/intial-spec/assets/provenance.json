@@ -1,0 +1,148 @@
+{
+  "synthetic": true,
+  "applicationVersion": "0.15",
+  "image": "sha256:f6bc45c0a2cf73cd52431bc87a47e9083453ec335bc10baff456e3d889665a83",
+  "sourceRun": "frontend/review-output/20261031T113830Z-841514",
+  "captured": "2026-10-31",
+  "reviewed": "2026-11-06",
+  "review": "All twelve images visually inspected. Fictional test records only; credential fields in Figure 12 are masked in the source capture. No real family inputs or reference screenshots were used.",
+  "images": [
+    {
+      "file": "docs/assets/product-specification/01-members.png",
+      "sha256": "7182c2bb79b58429467a06a3d66a0c2082ff6f9cdd25361a518e890471f55073",
+      "source": "frontend/review-output/20261031T113830Z-841514/screenshots/chromium-desktop-A02-members-en.png",
+      "fixture": "frontend/tests/review/access.spec.ts",
+      "language": "en",
+      "width": 1440,
+      "height": 5216,
+      "caption": "Members, separate export rights and access activity",
+      "unchangedFromSource": true
+    },
+    {
+      "file": "docs/assets/product-specification/02-family-tree.png",
+      "sha256": "6cd46dc960eb6aeab4cfe0758a25fb5f5967adf1539a142e0bf306ab652d80aa",
+      "source": "frontend/review-output/20261031T113830Z-841514/screenshots/chromium-desktop-graph-family.png",
+      "fixture": "frontend/tests/review/journeys.spec.ts",
+      "language": "de",
+      "width": 1440,
+      "height": 1671,
+      "caption": "Family view, focus, selection and explicit parent types",
+      "unchangedFromSource": true
+    },
+    {
+      "file": "docs/assets/product-specification/03-person.png",
+      "sha256": "8cd689505c1c72f89bc74c49366476680af1b6418a8a66972fce7fa59b9bb02b",
+      "source": "frontend/review-output/20261031T113830Z-841514/screenshots/chromium-desktop-english-person.png",
+      "fixture": "frontend/tests/review/quickwins.spec.ts",
+      "language": "en",
+      "width": 1440,
+      "height": 3507,
+      "caption": "Person, literal historical date and alternative assertions",
+      "unchangedFromSource": true
+    },
+    {
+      "file": "docs/assets/product-specification/04-siblings.png",
+      "sha256": "5d9f6fdc9e44c31d40850c852b34b19774935ec418171797b67c60fd18467754",
+      "source": "frontend/review-output/20261031T113830Z-841514/screenshots/chromium-desktop-siblings-context.png",
+      "fixture": "frontend/tests/review/journeys.spec.ts",
+      "language": "de",
+      "width": 1440,
+      "height": 1456,
+      "caption": "Ordered siblings with no invented parents",
+      "unchangedFromSource": true
+    },
+    {
+      "file": "docs/assets/product-specification/05-sources.png",
+      "sha256": "ac2be10c8df5e0ec3874afaa5b1652e3fbe08801dd489e5e2699556c89d672bb",
+      "source": "frontend/review-output/20261031T113830Z-841514/screenshots/chromium-desktop-english-sources.png",
+      "fixture": "frontend/tests/review/english.spec.ts",
+      "language": "en",
+      "width": 1440,
+      "height": 1220,
+      "caption": "Reusable sources and citations",
+      "unchangedFromSource": true
+    },
+    {
+      "file": "docs/assets/product-specification/06-shared-event.png",
+      "sha256": "fc7fb997f569aa624c8a45d022073abe2dbb16a6e2cd0c91800bbd6ee9061c6a",
+      "source": "frontend/review-output/20261031T113830Z-841514/screenshots/chromium-desktop-statement-shared-draft.png",
+      "fixture": "frontend/tests/review/statements.spec.ts",
+      "language": "de",
+      "width": 1440,
+      "height": 5138,
+      "caption": "Shared event, participant roles and year-only date",
+      "unchangedFromSource": true
+    },
+    {
+      "file": "docs/assets/product-specification/07-media.png",
+      "sha256": "2f52b6e13b6c93712bcaeb593c6eb27198ae0e5feea213497740923a7c88d4ea",
+      "source": "frontend/review-output/20261031T113830Z-841514/screenshots/chromium-desktop-M03-media-english.png",
+      "fixture": "frontend/tests/review/media-export.spec.ts",
+      "language": "en",
+      "width": 1440,
+      "height": 3311,
+      "caption": "Private media metadata, dates and assignments",
+      "unchangedFromSource": true
+    },
+    {
+      "file": "docs/assets/product-specification/08-import-review.png",
+      "sha256": "22b188f26b7469da524af807d3f4d03cb5b2291874ef3c7154dfedf7575aed46",
+      "source": "frontend/review-output/20261031T113830Z-841514/screenshots/chromium-desktop-english-import-diagnostics.png",
+      "fixture": "frontend/tests/review/english.spec.ts",
+      "language": "en",
+      "width": 1440,
+      "height": 1965,
+      "caption": "Blocked import with complete issue totals",
+      "unchangedFromSource": true
+    },
+    {
+      "file": "docs/assets/product-specification/09-export-review.png",
+      "sha256": "0bdf47273ea2c40af67e44ddde496cfcafd180e1fe0ad142d51fb9715576a742",
+      "source": "frontend/review-output/20261031T113830Z-841514/screenshots/chromium-desktop-M02-export-preview.png",
+      "fixture": "frontend/tests/review/media-export.spec.ts",
+      "language": "de",
+      "width": 1440,
+      "height": 1784,
+      "caption": "Privacy-aware export review and acknowledged limitations",
+      "unchangedFromSource": true
+    },
+    {
+      "file": "docs/assets/product-specification/10-conflict.png",
+      "sha256": "66f185c1fa8726556b05cb0b615a75f8af2c491c6c94626c4c5192a732e1f0c1",
+      "source": "frontend/review-output/20261031T113830Z-841514/screenshots/chromium-desktop-statement-stale-comparison.png",
+      "fixture": "frontend/tests/review/statements.spec.ts",
+      "language": "de",
+      "width": 1440,
+      "height": 5525,
+      "caption": "Preserved draft and explicit current-version comparison",
+      "unchangedFromSource": true
+    },
+    {
+      "file": "docs/assets/product-specification/11-restoration.png",
+      "sha256": "5296041cbf5e01257281cc9c7e297a5b8448ec5e83425c39344bc32a3b362d85",
+      "source": "frontend/review-output/20261031T113830Z-841514/screenshots/chromium-desktop-M02-trash.png",
+      "fixture": "frontend/tests/review/media-export.spec.ts",
+      "language": "de",
+      "width": 1440,
+      "height": 1000,
+      "caption": "Person restoration without automatic reconnection",
+      "unchangedFromSource": true
+    },
+    {
+      "file": "docs/assets/product-specification/12-tool-access.png",
+      "sha256": "b51034196076652e2d05858f18f0d0d00029a418b29a0b3595ff284701fc2ab2",
+      "source": "frontend/review-output/20261031T113830Z-841514/screenshots/chromium-desktop-I01-en-issued.png",
+      "fixture": "frontend/tests/review/integrations.spec.ts",
+      "language": "en",
+      "width": 1440,
+      "height": 4148,
+      "caption": "Selected-tree operation permissions and masked one-time credential",
+      "unchangedFromSource": true
+    }
+  ],
+  "diagrams": [
+    "evidence.svg",
+    "import.svg",
+    "conflict.svg"
+  ]
+}

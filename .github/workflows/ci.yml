@@ -1,0 +1,37 @@
+name: Native app checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run check && npm run format:check
+      - run: python3 scripts/check-docs.py
+      - name: PHP 8.3 syntax
+        run: docker run --rm -v "$PWD:/app:ro" php:8.3-cli sh -c 'find /app/lib /app/appinfo /app/templates -name "*.php" -print0 | xargs -0 -n1 php -l'
+      - run: npm run package
+      - name: Create disposable Nextcloud and MariaDB
+        run: python3 scripts/test-instance.py
+      - run: python3 scripts/deploy-test.py
+      - name: PHP value tests with Nextcloud extensions
+        run: docker run --rm -v "$PWD:/app:ro" nextcloud:34.0.4-apache php /app/tests/unit/values.php
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: stammbaum-runtime
+          path: |
+            build/stammbaum-*.tar.gz
+            build/stammbaum-*.tar.gz.sha256
+          if-no-files-found: error

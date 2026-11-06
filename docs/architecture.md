@@ -1,0 +1,62 @@
+# First-iteration architecture
+
+## Native application
+
+The stable app ID is `stammbaum`, PHP namespace `OCA\Stammbaum`, table prefix `stb_`. PHP controllers use Nextcloud's authenticated session, CSRF middleware, service container, migrations, user events and `IAppData`. A Vue 3 application runs inside the native Nextcloud shell. Vite builds content-hashed static assets; no separate application server or authentication database is required.
+
+The initial supported target is Nextcloud 34. PHP 8.3 syntax and PHP 8.5 runtime have been checked. MariaDB is tested; PostgreSQL and SQLite compatibility is not claimed. Runtime dependencies are Nextcloud and bundled Vue. Build tooling and test tools are excluded from release archives.
+
+## Authorization and writes
+
+`Trees` resolves an enabled Nextcloud account and an active tree membership for every request. Viewer, editor, manager and owner are independent per tree. Managers and owners can export; other roles hold a separate export grant, although export generation is not implemented yet. Nextcloud administrator membership is never a genealogy bypass.
+
+Person, assertion, source, citation, record, context and media visibility is either `members` or `management`. Shared citations require access to their source and every target. Shared records require access to every participant. Media and contexts require access to every assigned person. List queries apply these conditions before pagination. Missing and inaccessible object IDs produce the same unavailable response. Responses and authorized original/preview downloads use `private, no-store`.
+
+`Store::write` uses a transactional singleton write guard. It serializes membership changes, graph-cycle checks, revision checks, quota reservations and app writes across PHP workers. This conservative installation-wide lock favors correctness for the alpha; it is not a high-throughput claim. All SQL values are bound parameters. Integer page offsets and bounded table identifiers are application-controlled.
+
+Mutations carry the record revision. A stale write returns HTTP 412; omitted revisions return 428. User-created records use actor/scope/request-bound idempotency receipts. Receipts retain result identities, never replay private response bodies, and responses recheck current access. Receipt expiry/pruning and a broader retry policy remain unfinished.
+
+## Storage
+
+| Tables | Responsibility |
+| --- | --- |
+| `stb_state` | Serialized-write guard; lazily initialized because fresh Nextcloud installs run schema-only migrations |
+| `stb_trees`, `stb_members`, `stb_invites` | Tree metadata, role/export grants, persistent membership generations and hashed single-use invitations |
+| `stb_people`, `stb_claims`, `stb_relations` | Current people, retained assertions and explicit active/inactive parent/partner connections |
+| `stb_sources`, `stb_citations`, `stb_targets` | Reusable sources, citations and independent target effects |
+| `stb_records`, `stb_participants` | Shared events, notes, contacts, structured details and ordered participants |
+| `stb_contexts`, `stb_context_people` | Ordered family groupings and references to existing connections |
+| `stb_media`, `stb_media_people` | Original integrity/quota reservations, publication state, assignments and reversible crop/portrait metadata |
+| `stb_history`, `stb_receipts` | Attributed operations and creation retry identities |
+
+Language and private saved views use app-scoped Nextcloud user configuration. They do not modify the host's language setting. Saved views are filtered against current access before being returned.
+
+Original files live in the app's private `IAppData` `originals` folder under random opaque IDs. They are not ordinary user Files objects and have no public-sharing route. Uploads validate type, decoded image dimensions and byte limits before reserving quota. The reservation commits before filesystem writing; interrupted originals remain counted. A hash-verified original becomes visible only after another current-role and membership-generation check. Revocation followed by regrant cannot revive a pending upload. There is no physical-purge interface.
+
+Previews are separately decoded and re-encoded PNG responses. Crops are normalized assignment metadata and never overwrite original bytes. PDFs have no inline preview and download as attachments. JPEG orientation/EXIF-aware presentation and preview caching remain future work.
+
+## Genealogy semantics
+
+Unknown names, dates, sex and living status remain unknown. Partial, approximate, ranged and literal dates preserve their form. Calendar validation and mixed-precision boundary checks do not replace missing components with invented dates.
+
+Editing a person's name or life values retains previous assertions. Historical assessment is independent of display preference. Explicitly releasing a private person's current values creates releasable current assertions while retaining restricted historic values. Assertions and history are not an import-preservation implementation; no GEDCOM parser exists in this iteration.
+
+Parent connections have explicit types. Biological cycles and duplicate parent connections are rejected; nonbiological loops remain navigable with bounded traversal. Partnerships require an explicit action; a further episode requires confirmation. Atomic relative creation rolls back the new person when its connection fails.
+
+Contexts group and order people without generating parentage or partnerships. Inactive connection references remain readable until a context is saved, when those references are removed. Their underlying relationship history is retained.
+
+Shared events have an immutable originating person and category. Saving confirms the union of previous and proposed participants, including explicitly removed participants. Contacts and religious affiliation are always management-only. Original entry wording remains retained and is filtered independently when current wording is released.
+
+Notes render a small, text-node-based formatting vocabulary. HTML and image instructions remain literal. Only deliberate HTTP(S) links are rendered; opening a note fetches no external resource.
+
+Logical person deletion deactivates connections and clears a shared home. The UI reviews counts against a tree revision before deletion. Shared records depending on a deleted person become unavailable. Restoration makes the person available again but does not reactivate relationships.
+
+## API and lifecycle
+
+Native browser routes are under `/apps/stammbaum/api/v1`; their declarations are in `appinfo/routes.php`. Families include trees/members/invitations, people/assertions/history, relations/graph, sources/citations, records, contexts, media, personal views and language preferences. These authenticated browser routes are **not** the scoped external-tool API promised by I02. No external credential or webhook endpoint is exposed.
+
+All writes retain Nextcloud CSRF protection. Read-only routes explicitly permit normal authenticated browser GETs. Uploads use bounded multipart input; original and preview reads reauthorize every request. Application errors expose controlled messages; unexpected exceptions are logged server-side without returning stack traces.
+
+Native disable and password-change events invalidate outstanding invitation authority by advancing membership generations. Native deletion and creation revoke old memberships, preventing a recreated account ID from inheriting access. Nextcloud owns sessions, provisioning and password recovery. A host administrator can still forcibly disable the last owner; the app does not block host administration or silently appoint an administrator as owner. Operator-assisted ownership recovery is unfinished.
+
+`occ stammbaum:invalidate-authority` revokes invitations and advances membership generations after a consistent restore. It leaves host sessions and valid genealogy memberships intact. This command is not a complete backup/recovery system, and it does not claim to invalidate external credentials or exports that have not yet been implemented.

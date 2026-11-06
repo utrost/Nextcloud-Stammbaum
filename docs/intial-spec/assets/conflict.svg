@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="460" viewBox="0 0 1200 460" role="img" aria-labelledby="title desc">
+<title id="title">Resolving concurrent edits</title><desc id="desc">Two researchers open one version. The first saves a newer version. The second cannot silently overwrite it. Their draft is retained while they load current values, compare and reconcile before an intentional save.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#426858"/></marker></defs>
+<rect width="1200" height="460" rx="18" fill="#f3f6ef"/>
+<g font-family="Arial, sans-serif" font-size="22" fill="#203f32">
+<g fill="white" stroke="#6f8b78"><rect x="30" y="50" width="330" height="135" rx="12"/><rect x="435" y="50" width="330" height="135" rx="12"/><rect x="840" y="50" width="330" height="135" rx="12"/><rect x="435" y="270" width="330" height="135" rx="12"/><rect x="840" y="270" width="330" height="135" rx="12"/></g>
+<text x="195" y="94" text-anchor="middle" font-weight="bold">BOTH OPEN A RECORD</text><text x="195" y="134" text-anchor="middle">Same starting version</text>
+<text x="600" y="94" text-anchor="middle" font-weight="bold">FIRST RESEARCHER SAVES</text><text x="600" y="134" text-anchor="middle">Current record changes</text>
+<text x="1005" y="94" text-anchor="middle" font-weight="bold">SECOND SAVE IS STALE</text><text x="1005" y="134" text-anchor="middle">Draft stays available</text>
+<text x="1005" y="314" text-anchor="middle" font-weight="bold">LOAD AND COMPARE</text><text x="1005" y="354" text-anchor="middle">Reconcile the differences</text>
+<text x="600" y="314" text-anchor="middle" font-weight="bold">SAVE DELIBERATELY</text><text x="600" y="354" text-anchor="middle">Current rights still apply</text>
+<g stroke="#426858" stroke-width="3" fill="none" marker-end="url(#arrow)"><path d="M362 117H419"/><path d="M767 117H824"/><path d="M1005 187V254"/><path d="M838 337H781"/></g>
+<text x="30" y="311" font-weight="bold">No automatic merge.</text><text x="30" y="350">No silent overwrite.</text><text x="30" y="389">The researcher decides.</text>
+</g></svg>
