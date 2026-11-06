@@ -1,0 +1,265 @@
+{
+  "source": "docs/current-product-specification.md",
+  "sourceRevision": "d5809c3470fe53604ffd4307428c3a68053e77b5",
+  "externalResourceRequests": 0,
+  "brokenContentsAnchors": [],
+  "contentsPages": [
+    {
+      "href": "#purpose-scope-and-guiding-rules",
+      "title": "Purpose, scope and guiding rules",
+      "page": 3
+    },
+    {
+      "href": "#people-accounts-and-permissions",
+      "title": "People, accounts and permissions",
+      "page": 5
+    },
+    {
+      "href": "#family-trees-and-navigation",
+      "title": "Family trees and navigation",
+      "page": 11
+    },
+    {
+      "href": "#people-dates-and-relationships",
+      "title": "People, dates and relationships",
+      "page": 14
+    },
+    {
+      "href": "#evidence-alternatives-and-uncertainty",
+      "title": "Evidence, alternatives and uncertainty",
+      "page": 20
+    },
+    {
+      "href": "#events-biographies-and-personal-details",
+      "title": "Events, biographies and personal details",
+      "page": 23
+    },
+    {
+      "href": "#photographs-documents-and-other-media",
+      "title": "Photographs, documents and other media",
+      "page": 28
+    },
+    {
+      "href": "#importing-and-exporting-family-history",
+      "title": "Importing and exporting family history",
+      "page": 32
+    },
+    {
+      "href": "#collaboration-history-and-recovery",
+      "title": "Collaboration, history and recovery",
+      "page": 39
+    },
+    {
+      "href": "#languages-presentation-and-accessibility",
+      "title": "Languages, presentation and accessibility",
+      "page": 46
+    },
+    {
+      "href": "#connected-tools-and-change-notifications",
+      "title": "Connected tools and change notifications",
+      "page": 48
+    },
+    {
+      "href": "#current-limits-and-glossary",
+      "title": "Current limits and glossary",
+      "page": 53
+    },
+    {
+      "href": "#appendix-a--acceptance-examples",
+      "title": "Appendix A — acceptance examples",
+      "page": 56
+    },
+    {
+      "href": "#appendix-b--requirement-relationships",
+      "title": "Appendix B — requirement relationships",
+      "page": 59
+    },
+    {
+      "href": "#appendix-c--evidence-and-illustration-record",
+      "title": "Appendix C — evidence and illustration record",
+      "page": 60
+    }
+  ],
+  "figures": 12,
+  "diagrams": 3,
+  "illustrationPages": 23,
+  "coverage": [
+    {
+      "figure": "figure-01",
+      "width": 1440,
+      "height": 5216,
+      "pieces": [
+        {
+          "start": 0,
+          "end": 1763
+        },
+        {
+          "start": 1715,
+          "end": 3502
+        },
+        {
+          "start": 3454,
+          "end": 5216
+        }
+      ]
+    },
+    {
+      "figure": "figure-02",
+      "width": 1440,
+      "height": 1671,
+      "pieces": [
+        {
+          "start": 0,
+          "end": 1671
+        }
+      ]
+    },
+    {
+      "figure": "figure-03",
+      "width": 1440,
+      "height": 3507,
+      "pieces": [
+        {
+          "start": 0,
+          "end": 1778
+        },
+        {
+          "start": 1730,
+          "end": 3507
+        }
+      ]
+    },
+    {
+      "figure": "figure-04",
+      "width": 1440,
+      "height": 1456,
+      "pieces": [
+        {
+          "start": 0,
+          "end": 1456
+        }
+      ]
+    },
+    {
+      "figure": "figure-05",
+      "width": 1440,
+      "height": 1220,
+      "pieces": [
+        {
+          "start": 0,
+          "end": 1220
+        }
+      ]
+    },
+    {
+      "figure": "figure-06",
+      "width": 1440,
+      "height": 5138,
+      "pieces": [
+        {
+          "start": 0,
+          "end": 1737
+        },
+        {
+          "start": 1689,
+          "end": 3450
+        },
+        {
+          "start": 3402,
+          "end": 5138
+        }
+      ]
+    },
+    {
+      "figure": "figure-07",
+      "width": 1440,
+      "height": 3311,
+      "pieces": [
+        {
+          "start": 0,
+          "end": 1680
+        },
+        {
+          "start": 1632,
+          "end": 3311
+        }
+      ]
+    },
+    {
+      "figure": "figure-08",
+      "width": 1440,
+      "height": 1965,
+      "pieces": [
+        {
+          "start": 0,
+          "end": 1007
+        },
+        {
+          "start": 959,
+          "end": 1965
+        }
+      ]
+    },
+    {
+      "figure": "figure-09",
+      "width": 1440,
+      "height": 1784,
+      "pieces": [
+        {
+          "start": 0,
+          "end": 1784
+        }
+      ]
+    },
+    {
+      "figure": "figure-10",
+      "width": 1440,
+      "height": 5525,
+      "pieces": [
+        {
+          "start": 0,
+          "end": 1866
+        },
+        {
+          "start": 1818,
+          "end": 3708
+        },
+        {
+          "start": 3660,
+          "end": 5525
+        }
+      ]
+    },
+    {
+      "figure": "figure-11",
+      "width": 1440,
+      "height": 1000,
+      "pieces": [
+        {
+          "start": 0,
+          "end": 1000
+        }
+      ]
+    },
+    {
+      "figure": "figure-12",
+      "width": 1440,
+      "height": 4148,
+      "pieces": [
+        {
+          "start": 0,
+          "end": 1407
+        },
+        {
+          "start": 1359,
+          "end": 2790
+        },
+        {
+          "start": 2742,
+          "end": 4148
+        }
+      ]
+    }
+  ],
+  "note": "Rendering checks only. No product acceptance scenarios executed by this script."
+}

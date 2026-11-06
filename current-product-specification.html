@@ -1,0 +1,2216 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Stammbaum — current product specification</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+<style>/* Document layout only. The application and source screenshots are unchanged. */
+@page { size: A4; margin: 18mm 16mm 18mm; }
+@page illustration { size: A3; margin: 16mm 16mm 18mm; }
+html { color: #233e32; background: white; }
+body { max-width: 100%; margin: 0; font: 11pt/1.48 Arial, sans-serif; color: #263c32; }
+h1, h2, h3 { font-family: Georgia, serif; font-weight: normal; line-height: 1.2; color: #214d3a; }
+h1 { font-size: 31pt; margin: 15mm 0 10mm; max-width: 160mm; }
+h2 { font-size: 22pt; margin: 0 0 7mm; break-before: page; }
+h3 { font-size: 15pt; margin: 8mm 0 3mm; }
+h1, h2, h3, h4 { break-after: avoid; }
+p { margin: 0 0 3.5mm; orphans: 3; widows: 3; break-inside: avoid; }
+strong { color: #234b39; }
+a { color: #285c45; text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+ul, ol { padding-left: 6mm; margin: 3mm 0 5mm; }
+li { margin-bottom: 1.8mm; break-inside: avoid; }
+#contents + ol li { position: relative; padding-right: 12mm; }
+.contents-page { position: absolute; right: 0; color: #596a60; }
+table { width: 100%; border-collapse: collapse; margin: 5mm 0; font-size: 9.2pt; line-height: 1.36; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+th { background: #e4eddf; text-align: left; font-weight: bold; }
+td, th { vertical-align: top; padding: 2.4mm 2mm; border-bottom: 0.3mm solid #d2decf; overflow-wrap: anywhere; }
+tbody tr:nth-child(even) { background: #f6f8f3; }
+.role-matrix { table-layout: fixed; font-size: 8.8pt; }
+.role-matrix th:first-child { width: 44%; }
+.role-matrix th { white-space: nowrap; }
+.traceability td, .traceability th { padding-top: 1.5mm; padding-bottom: 1.5mm; }
+figure { margin: 7mm 0; }
+figure.diagram { break-inside: avoid; }
+figure.diagram img { display: block; width: 100%; height: auto; }
+figcaption { font-size: 9pt; line-height: 1.4; padding-top: 3mm; }
+figure:not(.diagram) > img { max-width: 100%; }
+.illustration-page { page: illustration; break-before: page; break-after: page; }
+.illustration-caption { font-size: 10pt; line-height: 1.35; margin: 0 0 4mm; min-height: 10mm; }
+.illustration-window { position: relative; overflow: hidden; width: 258mm; margin: 0 auto; }
+.illustration-window img { position: absolute; left: 0; width: 258mm; height: auto; max-width: none; }
+@media screen {
+  body { max-width: 980px; margin: 40px auto; padding: 0 20px; }
+  h2 { margin-top: 60px; }
+  figure:not(.diagram) { border-top: 1px solid #d2decf; padding-top: 20px; }
+}
+</style></head>
+<body>
+<h1 id="stammbaum--current-product-specification">Stammbaum — current
+product specification</h1>
+<p><strong>An illustrated, nontechnical product handoff</strong><br />
+Document version 1.0 · 6 November 2026 · Application reference: release
+0.15</p>
+<p>Stammbaum is a private workspace for maintaining family history
+together. It combines people and relationships with the evidence,
+uncertainty, original records and working notes behind them. A family
+tree is both a collection of information and a boundary for deciding who
+may see or change it.</p>
+<p>This document describes the functionality available in the current
+application. It is intended for a product owner, designer or delivery
+team that needs to understand or recreate its behavior. It does not
+select a technology, prescribe an architecture or propose a Nextcloud
+redesign.</p>
+<p><strong>How to read this specification.</strong> Chapters 1–12
+describe current behavior and its limits. Examples describe expected
+outcomes; they are not new test results. Appendix A provides acceptance
+scenarios, Appendix B preserves links to requirement identifiers, and
+Appendix C identifies the evidence used. The broader approved
+specification includes work that is still unfinished: inclusion there
+does not establish that a feature is available today.</p>
+<p>All people, accounts, documents and media in the examples and
+screenshots are fictional. The screenshots are from the running release
+0.15 application, captured on 31 October 2026. Some show the German
+interface; their captions explain the relevant behavior in English. They
+illustrate functionality rather than prescribe a pixel-for-pixel design.
+Bright magenta areas deliberately conceal test passwords and
+credentials.</p>
+<h2 id="contents">Contents</h2>
+<ol type="1">
+<li><a href="#purpose-scope-and-guiding-rules">Purpose, scope and
+guiding rules</a></li>
+<li><a href="#people-accounts-and-permissions">People, accounts and
+permissions</a></li>
+<li><a href="#family-trees-and-navigation">Family trees and
+navigation</a></li>
+<li><a href="#people-dates-and-relationships">People, dates and
+relationships</a></li>
+<li><a href="#evidence-alternatives-and-uncertainty">Evidence,
+alternatives and uncertainty</a></li>
+<li><a href="#events-biographies-and-personal-details">Events,
+biographies and personal details</a></li>
+<li><a href="#photographs-documents-and-other-media">Photographs,
+documents and other media</a></li>
+<li><a href="#importing-and-exporting-family-history">Importing and
+exporting family history</a></li>
+<li><a href="#collaboration-history-and-recovery">Collaboration, history
+and recovery</a></li>
+<li><a href="#languages-presentation-and-accessibility">Languages,
+presentation and accessibility</a></li>
+<li><a href="#connected-tools-and-change-notifications">Connected tools
+and change notifications</a></li>
+<li><a href="#current-limits-and-glossary">Current limits and
+glossary</a></li>
+<li><a href="#appendix-a--acceptance-examples">Appendix A — acceptance
+examples</a></li>
+<li><a href="#appendix-b--requirement-relationships">Appendix B —
+requirement relationships</a></li>
+<li><a href="#appendix-c--evidence-and-illustration-record">Appendix C —
+evidence and illustration record</a></li>
+</ol>
+<h2 id="purpose-scope-and-guiding-rules">Purpose, scope and guiding
+rules</h2>
+<h3 id="intended-users-and-outcomes">Intended users and outcomes</h3>
+<p>Stammbaum serves a small, closed group researching and maintaining
+family history. A reader can explore a branch and inspect its evidence.
+A contributor can add relatives, correct a date, attach a document or
+record an alternative explanation. A tree manager controls membership,
+confidential information and reviewed imports. An installation operator
+maintains access and recovery for the application.</p>
+<p>The current feature set supports these end-to-end activities:</p>
+<ul>
+<li>Create a private tree, invite collaborators and define their
+rights.</li>
+<li>Build a family from individual people and explicitly described
+connections.</li>
+<li>Explore ancestors, descendants and the surrounding family without
+duplicating records.</li>
+<li>Record sources, quotations, alternative names and dates, and
+judgments about evidence.</li>
+<li>Maintain repeated or shared life events, biographies, notes and
+structured details.</li>
+<li>Preserve photographs and documents, link them to records and choose
+portraits.</li>
+<li>Review a supported genealogy exchange file before importing it into
+an empty tree.</li>
+<li>Export the current permitted information, with explicit warnings
+about what the exchange format cannot preserve.</li>
+<li>Review changes, resolve concurrent edits, remove people from active
+use and restore them with controlled consequences.</li>
+<li>Give an external tool limited access and send minimal notifications
+about changes.</li>
+</ul>
+<p>An account with a commercial genealogy service is not needed for
+ordinary use. Existing information can be entered manually or
+transferred through the supported file-import workflow. The application
+does not automatically search commercial records or discover
+relatives.</p>
+<h3 id="rules-that-apply-throughout">Rules that apply throughout</h3>
+<p><strong>Unknown information remains unknown.</strong> A missing
+parent, incomplete date or unknown living status does not authorize the
+application to invent a value. A relationship label is explicit
+information, not a conclusion drawn from a name or sex.</p>
+<p><strong>Presentation and historical judgment remain
+separate.</strong> The name or date chosen for a card can still be
+disputed. A neatly displayed tree is not a claim that all its
+information is certain.</p>
+<p><strong>Original material and current research have distinct
+roles.</strong> An imported original is retained unchanged. Corrections
+affect the current research record while preserving its connection to
+the original. A fresh export describes current research within the
+export format's limits.</p>
+<p><strong>Access applies to the whole operation.</strong> Permission to
+see a person does not necessarily permit reading a shared citation or
+changing a shared event. Every affected record matters.</p>
+<p><strong>Actions have specific consequences.</strong> Removing a
+connection, deleting a person, detaching a photograph and deleting its
+media record are different actions. The interface must communicate which
+action is being taken.</p>
+<p><strong>Changes must not silently overwrite one another.</strong>
+When the information changed after a form was opened, the user's draft
+is retained for comparison and deliberate reconciliation.</p>
+<h3 id="product-boundaries">Product boundaries</h3>
+<p>A user account identifies a collaborator. A person record describes
+someone in family history. Creating a person does not create an account,
+send an invitation or grant access. Several people may have the same
+name. The same real individual can be recorded independently in two
+trees; those records do not synchronize.</p>
+<p>The application currently offers a substantial working subset of its
+approved long-term scope. The limitations in Chapter 12 are part of this
+handoff, not suggestions to silently remove unfinished obligations from
+the original specification.</p>
+<h2 id="people-accounts-and-permissions">People, accounts and
+permissions</h2>
+<h3 id="accounts-and-entry-to-the-application">Accounts and entry to the
+application</h3>
+<p>The first account is created through a one-time installation setup
+process. There is no permanent default password. Subsequent
+collaborators join through invitations; there is no open public
+registration journey.</p>
+<p>A user can sign in, sign out, change their password and save their
+interface-language preference. A password change requires the current
+password and signs the user out. An operator can issue a single-use
+recovery link when a password is lost. A recovery link lasts 30 minutes
+and does not grant new tree memberships. Application restarts require
+browser users to sign in again.</p>
+<p>Repeated sign-in, invitation, password and recovery attempts can be
+temporarily refused when protective limits are reached. These limits use
+15-minute windows. The refusal does not delete an account or its
+research, and retrying repeatedly is not a way to bypass it.</p>
+<p>Operators can inspect account status, enable or disable accounts and
+review account/security activity. Disabling an account preserves its
+contributed information and attribution. The application protects the
+last active operator and the last active owner of a tree against changes
+that would leave those responsibilities unassigned. Full account
+provisioning and administration beyond the implemented controls remain
+unfinished.</p>
+<h3 id="four-roles-within-each-tree">Four roles within each tree</h3>
+<p>A user may be an owner in one tree and a viewer in another. Roles are
+not inherited across trees. A new tree's creator becomes its owner.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Action in the current application</th>
+<th>Viewer</th>
+<th>Editor</th>
+<th>Manager</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Read and search permitted genealogy</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>Save own view and personal home person</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td>Add/edit permitted people, relationships and evidence</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>Add/edit permitted events, notes and ordinary details</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td>Upload/edit permitted media and its assignments</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>View management-only content</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td>Change content visibility; maintain confidential contacts</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>Rename tree or change its description/shared home</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td>Review, confirm or cancel imports; retrieve original imports</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>Upload/review media packages and match missing references</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td>Delete media records; delete or restore people</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>Export permitted information</td>
+<td>Separate grant</td>
+<td>Separate grant</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td>View member directory and tree access activity</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>Invite or manage viewers/editors</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td>Appoint or change managers/owners</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>Configure tree change notifications</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td>Leave the tree</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Unless last active owner</td>
+</tr>
+</tbody>
+</table>
+<p>“Yes” always remains subject to record visibility and shared-record
+checks. For example, an editor cannot edit a source whose existing
+citations include inaccessible information. A manager cannot alter
+another manager's grant or their own manager grant. An owner can manage
+all role levels but cannot remove the final active owner.</p>
+<p>Any signed-in active account can create a new tree. That ability is
+separate from the role held in an existing tree. The installation
+operator has no automatic right to view or edit a tree through the
+application. The operator's responsibility for the installation and its
+backups should not be confused with a promise that the host operator is
+technically unable to access stored information.</p>
+<h3 id="visibility-and-living-status">Visibility and living status</h3>
+<p>Content is either available to <strong>tree members</strong> or
+restricted to <strong>management only</strong>. New ordinary person
+records default to tree-member visibility. Contacts and
+religious-affiliation details are confidential. Managers and owners
+control visibility changes. A newly uploaded medium starts
+management-only for a manager/owner and member-visible for an
+editor.</p>
+<p>Living status has three values: <strong>living</strong>,
+<strong>deceased</strong> and <strong>unknown</strong>. It is distinct
+from visibility. Deceased people are not automatically public. Living
+and unknown-status people can be visible to authorized members inside a
+closed tree, but both categories are omitted from exports by
+default.</p>
+<p>A restricted person is excluded from unauthorized search results and
+diagrams. The application does not reveal them through a named
+placeholder or use them as a hidden connection between otherwise visible
+people. Home-person settings cannot expose an inaccessible person's
+identity.</p>
+<p>Shared citations and media require access to every relevant linked
+target. If a citation is attached to a visible person and an
+inaccessible person, the reader cannot see the citation merely because
+one attachment is visible. Historical private material remains protected
+even if the current person becomes visible to more members.</p>
+<h3 id="export-rights">Export rights</h3>
+<p>Viewers and editors need an additional export grant. Managers and
+owners have export rights through their roles. Downgrading a manager or
+owner starts with the separate export permission unchecked; the person
+changing the grant must deliberately decide whether to retain export
+access.</p>
+<p>Export permission permits only the information the user is currently
+allowed to see. It does not turn a viewer into a manager or reveal
+confidential records. It governs Stammbaum's export functions; it cannot
+prevent someone from copying information already displayed to them.</p>
+<p><strong>Acceptance example.</strong> An editor can correct a visible
+birthplace and attach an ordinary photograph. The same editor cannot
+change that person's visibility, inspect a management-only contact
+record or delete the person. Giving the editor export permission adds
+export capability without adding those management rights.</p>
+<figure id="figure-01">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/01-members.png" alt="English tree administration showing fictional members, their roles and export rights, tree notification controls, and access activity." />
+<figcaption>Figure 1. Membership and access administration, English interface. A changed role and separate export permission are visible in the activity record. The surrounding tree page also contains invitation and notification controls.</figcaption>
+</figure>
+
+<h2 id="family-trees-and-navigation">Family trees and navigation</h2>
+<h3 id="creating-and-managing-a-tree">Creating and managing a tree</h3>
+<p>The family-tree list contains the trees accessible to the signed-in
+user, with their name, description, own role and available actions. A
+tree needs a name; its description is optional. Equal names are allowed
+and the interface supplies a short distinguishing identifier. Creating a
+tree creates an empty private workspace, not a sample family.</p>
+<p>Owners and managers can edit tree details. A tree's management page
+links to its people, evidence library, interactive workspace, import,
+media and export areas. Management-only controls include members,
+invitations, access activity, deleted people and notifications.
+Available controls follow the user's actual permissions.</p>
+<p>An empty tree supports creating its first person or, for management,
+reviewing a GEDCOM import. There is no implemented
+merge-into-existing-tree journey or full-tree deletion workflow.</p>
+<h3 id="searching-and-opening-people">Searching and opening people</h3>
+<p>People can be searched by their authorized names, including
+alternative names, and display notes. The current search finds matching
+text without case sensitivity. It does not promise spelling correction,
+fuzzy matching or equivalence between forms such as “ä” and “ae.”
+Results are loaded in pages; the first loaded page is not the whole
+tree.</p>
+<p>A search result can be selected even when it lies outside the
+displayed branch. The details panel indicates that situation. The user
+can then explicitly make the person the focus of a new branch. Finding a
+record does not create another copy of it.</p>
+<h3 id="focus-selection-home-and-camera">Focus, selection, home and
+camera</h3>
+<p>Four concepts remain distinct:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Concept</th>
+<th>User meaning</th>
+<th>What changing it affects</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Focus</td>
+<td>The person around whom the branch is built</td>
+<td>Which relatives the diagram includes</td>
+</tr>
+<tr class="even">
+<td>Selection</td>
+<td>The person currently being inspected</td>
+<td>The details panel and available actions</td>
+</tr>
+<tr class="odd">
+<td>Home person</td>
+<td>A saved starting person</td>
+<td>Where the Home action goes</td>
+</tr>
+<tr class="even">
+<td>Camera/view</td>
+<td>Diagram mode, generations, zoom and position</td>
+<td>How the branch is presented</td>
+</tr>
+</tbody>
+</table>
+<p>Selecting a card or search result opens details without changing the
+branch or camera. <strong>Show family branch</strong> changes the focus
+and centers that person while retaining zoom. <strong>Previous
+branch</strong> returns to preceding branch states, including their
+focus, selection, generations and camera. Up to 30 preceding branch
+entries are retained.</p>
+<p>The user can choose family, ancestor or descendant view. Upward and
+downward generation depths are separate, from zero through eight; their
+initial values are three and two. Family view includes visible partners
+and focus siblings where the supported relationships or family contexts
+establish them.</p>
+<p>The diagram shows each person once. Additional paths point to the
+same person; repeated ancestors do not become duplicate records.
+Different parent relationships and partnerships use distinguishable line
+styles and a text legend. Connections that do not fit ordinary
+generation rows have an explanatory reference style.</p>
+<h3 id="moving-around-the-workspace">Moving around the workspace</h3>
+<p>Users can drag the diagram background, use zoom buttons, fit the
+view, zoom around the pointer with the mouse wheel and use supported
+two-finger gestures. Keyboard arrows move the camera; plus/minus zoom
+and Home fits the diagram when the diagram has focus. These actions do
+not resize the details panel or change genealogy.</p>
+<p>A text view provides the displayed people and relationship types as
+navigable text and buttons. It is an alternative to the diagram, not
+another dataset. A selected boundary person can be expanded locally, or
+made the focus to explore a different branch.</p>
+<p>The current view is bounded at 200 unique people and 1,000
+relationship lines. A limited-view message explains when the full
+requested neighborhood cannot be displayed. There are also limits on
+local expansions and the number of neighboring records inspected; see
+Chapter 12. A limit is not evidence that excluded relatives do not
+exist.</p>
+<h3 id="personal-and-shared-starting-points">Personal and shared
+starting points</h3>
+<p>Each account has separate saved views and a personal home person for
+each tree. Viewers may change their own navigation preferences without
+gaining editing rights.</p>
+<p>Managers and owners can set or clear the tree's shared home person.
+On opening a tree, an accessible saved focus takes precedence, followed
+by personal home, shared home and the first visible person. The
+<strong>Home person</strong> action uses personal home first and
+otherwise shared home. Clearing personal home lets the user follow the
+shared default without erasing their saved camera or branch history.</p>
+<p>Changing the shared home does not overwrite other people's
+preferences. If the stored person is no longer accessible, the interface
+uses an authorized alternative or reports unavailability without
+revealing hidden details. A copied view link requires authorized
+sign-in; it is not a public share link.</p>
+<p>Saving an edit or a newly connected relative from the workspace
+returns to the prior focus and camera, with the saved person selected. A
+failed diagram load exposes a reload action instead of presenting an old
+drawing as a successful fresh result.</p>
+<p><strong>Acceptance example.</strong> Ada is the focus. Selecting
+Clara shows Clara's details while Ada remains the focus. Choosing
+Clara's family branch changes the branch; Previous branch returns to
+Ada's former view. Neither action changes the family records.</p>
+<figure id="figure-02">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/02-family-tree.png" alt="German family diagram with fictional parent Emil, siblings Ada and Bea, partner Clara, and adoptive child Dora; Ada is selected and focused." />
+<figcaption>Figure 2. Interactive family view, German interface. The selected-person panel, focus, generation controls and relationship legend are separate. The adoptive connection uses a different line style from the biological connections.</figcaption>
+</figure>
+
+<h2 id="people-dates-and-relationships">People, dates and
+relationships</h2>
+<h3 id="the-person-record">The person record</h3>
+<p>Editors, managers and owners can create and edit people they are
+allowed to access. The basic editor records given name, family name, a
+display note, living status, sex, visibility, birth and death
+dates/places, and a note explaining the change's provenance. Sex offers
+female, male, unknown and another recorded indication; it does not
+determine a parent or partner role.</p>
+<p>Unknown living status and sex are valid starting values. A person can
+have an incomplete name. Creating someone with neither given nor family
+name requires explicit confirmation; the application does not fabricate
+a surname. An empty birth or death section does not create an invented
+event.</p>
+<p>Person details bring together life dates, events and notes, claims
+and evidence, family contexts, current connections, assigned media and
+available history. The preferred biography and preferred portraits are
+presentations of linked records, not replacements for those records.</p>
+<p>Correcting a preferred name, date or place retains the earlier
+assertion and its evidence links. An unchanged value does not create an
+artificial alternative. Clearing a date or place makes the current
+preference empty while retaining the previous information for research
+and history.</p>
+<h3 id="historical-dates-and-places">Historical dates and places</h3>
+<p>Dates support the following distinctions:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Date form</th>
+<th>Meaning and example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Exact or partial</td>
+<td>A known day, month or year: “1890-03-12,” “1890-03” or “1890”</td>
+</tr>
+<tr class="even">
+<td>About</td>
+<td>Approximate date, such as “about 1890”</td>
+</tr>
+<tr class="odd">
+<td>Before / after</td>
+<td>A boundary without a claimed exact date</td>
+</tr>
+<tr class="even">
+<td>Between</td>
+<td>An event occurred somewhere between two dates</td>
+</tr>
+<tr class="odd">
+<td>From / to</td>
+<td>A period, including an open start or end where supported</td>
+</tr>
+<tr class="even">
+<td>Calculated</td>
+<td>A date derived by calculation, kept distinct from direct
+evidence</td>
+</tr>
+<tr class="odd">
+<td>Estimated</td>
+<td>A research estimate</td>
+</tr>
+<tr class="even">
+<td>Literal wording</td>
+<td>Text whose meaning should remain uninterpreted, such as “03/04”</td>
+</tr>
+</tbody>
+</table>
+<p>Structured date entry uses year, year-month or year-month-day.
+Impossible calendar dates are rejected. Partial dates remain partial: a
+year-only date does not acquire January 1. Historical wording remains
+visible. Ambiguous dates, dates before the common era and other
+calendars can be retained as literal wording; there is no automatic
+historical-calendar conversion.</p>
+<p>Birth/death contradictions produce explanatory findings without
+silently changing either assertion. For example, living status can
+conflict with a recorded death, or a precise death date can precede a
+precise birth. These findings are not a complete research-quality
+case-management system.</p>
+<p>Places retain entered or imported wording. A place and an address are
+distinct information. No automatic map lookup, geographic normalization
+or geocoding is provided.</p>
+<h3 id="adding-and-connecting-relatives">Adding and connecting
+relatives</h3>
+<p>From a person or the workspace, choose a new relative or search for
+an existing person. Specify whether the connection is parent, child or
+partner. Parent relationships explicitly distinguish unknown,
+biological, adoptive, foster, step and other.</p>
+<p>Creating a new relative and its connection is one operation: either
+both become available or neither is created. Connecting an existing
+person reuses that person. Multiple parents and partners are supported.
+An additional partnership episode needs explicit confirmation.</p>
+<p>Names, sex and partnership do not imply parenthood. Two people being
+parents in the same grouping does not itself establish that they were
+partners. Recording a shared marriage event and creating a partnership
+connection are distinct operations.</p>
+<p>The application refuses self-connections, duplicate active exact
+parent connections, connections across different trees and biological
+ancestry loops that would make someone their own ancestor. Repeated
+ancestors through different legitimate branches are permitted.
+Nonbiological loops are handled as references in the diagram; a broader
+social-loop warning system is unfinished.</p>
+<p><strong>Removing a connection keeps both people.</strong> It does not
+record a divorce, separation or death. The people and their other
+connections remain available, and evidence/history is retained subject
+to its visibility rules.</p>
+<h3 id="family-contexts-and-siblings">Family contexts and siblings</h3>
+<p>A family context groups existing people with parent/child roles,
+optional role descriptions, a label, visibility and explicit child
+order. It can reference existing parent or partnership connections. A
+person can participate in more than one context, but appears only once
+within a particular context.</p>
+<p>Contexts support siblings whose parents are unknown: create the
+people, then group them in child roles. No placeholder parent is
+invented. Grouping never creates parent relationships or a partnership
+automatically. Half-siblings and different parental circumstances can be
+represented through the actual connections and separate contexts.</p>
+<p>Child order is a recorded research choice. Displaying a family does
+not silently rewrite it by date. An inactive relationship can remain
+visible as historical information in a context; editing that context
+offers active relationship choices and drops inactive context references
+on saving, without deleting the underlying history.</p>
+<p>There is no dedicated comprehensive sibling-creation wizard or
+automatic family reconstruction. Users work with the existing relative
+editor and context controls.</p>
+<p><strong>Acceptance example.</strong> Two fictional siblings have no
+known parents. An editor creates their records, places them in a family
+context as children and orders them. The resulting context contains
+those children and no invented parent or partnership.</p>
+<figure id="figure-03">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/03-person.png" alt="English person page for fictional Änne Linden, with literal birth wording 03/04, a separate alternative birth date, evidence controls, family connections and history." />
+<figcaption>Figure 3. Person and evidence workspace, English interface. The literal date “03/04” remains unchanged, and another date is retained as an alternative rather than replacing it automatically.</figcaption>
+</figure>
+
+<figure id="figure-04">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/04-siblings.png" alt="German family context listing fictional siblings Bea and Ada Linden in a chosen order, with no parent role assigned." />
+<figcaption>Figure 4. Siblings with unknown parents, German interface. The saved context explicitly states that no people or parent connections were created by grouping the children.</figcaption>
+</figure>
+
+<h2 id="evidence-alternatives-and-uncertainty">Evidence, alternatives
+and uncertainty</h2>
+<h3 id="sources-and-citations">Sources and citations</h3>
+<p>A <strong>source</strong> is a reusable description of underlying
+material: a register, certificate, book, interview or other research
+source. Its fields include title, type, author, publication information,
+repository, call number, external address, description and visibility.
+Users can search source titles, create/edit sources and browse their
+citations.</p>
+<p>A <strong>citation</strong> identifies a particular passage or
+reference within a source. It can record a page or other locator,
+literal quotation/transcription, external address, document date,
+separate access date, reliability and reasoning. Reliability can be
+unassessed, low, medium or high; it is not automatically a verdict on
+every claim using the citation.</p>
+<p>A citation can refer to a person generally or target particular
+names, birth/death date or place assertions, connections and supported
+statements. Each specific target can be a general reference, support or
+contradiction. Person-level references are general references, not
+evidence that every statement about that person is true.</p>
+<p>One citation can serve several claims or people. Reusing it preserves
+one shared citation. Detaching one target retains the source, citation
+and its other targets. Unattached citations remain discoverable through
+their source. Editing a citation from one person's page must retain its
+targets elsewhere, including those outside the currently loaded
+page.</p>
+<p>An external source address is a link, not a locally preserved
+document. The application does not fetch it automatically. To preserve a
+supported document locally, upload it through the media library and
+explicitly assign it.</p>
+<h3 id="alternative-assertions-and-display-preferences">Alternative
+assertions and display preferences</h3>
+<p>People can have alternative birth names, married names, aliases and
+other names, and alternative birth/death dates. An assertion has its own
+assessment: <strong>unassessed</strong>, <strong>supported</strong>,
+<strong>disputed</strong> or <strong>rejected</strong>.</p>
+<p>Choosing a preferred display value and assessing its historical
+credibility are separate decisions. A disputed or rejected assertion can
+remain the display preference. Adding a citation does not automatically
+change an assessment. A correction does not erase older cited
+values.</p>
+<p>Example: a register suggests a birth in 1890 while a later document
+says 1891. Both can be retained with their own evidence. The researcher
+can display 1890 and mark it disputed, with an explanation. The
+application does not vote between sources or invent a certainty score
+for the entire person.</p>
+<p>The current alternative-assertion editor does not extend to every
+possible competing event or relationship hypothesis. Multiple events and
+multiple relationships can exist, but a complete system for grouping
+mutually exclusive event/relationship explanations is unfinished.</p>
+<figure class="diagram" id="diagram-01">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/evidence.svg" alt="A source contains a citation. The citation can support one assertion and contradict another. Display preference is a separate choice between assertions." />
+<figcaption>Diagram 1. Explanation of evidence relationships, not an application screenshot. Supporting evidence, assessment and display preference are separate decisions.</figcaption>
+</figure>
+
+<h3 id="shared-evidence-and-confidentiality">Shared evidence and
+confidentiality</h3>
+<p>The reader must be entitled to the citation's source and all its
+targets. If one dependency is inaccessible, the citation is withheld as
+a whole, including its quotation and target list. An editor cannot
+change a source when doing so would affect inaccessible citing
+material.</p>
+<p>Changing current visibility does not retroactively expose private
+historical assertions. A private alternative cannot simply become the
+preferred assertion visible to all tree members; an explicitly released
+assertion is needed. Authors also need to choose appropriate visibility
+for the wording of independently authored source or context labels.</p>
+<p>No general deletion/purge interface for sources, citations,
+alternatives or family contexts is currently supplied. Editing, target
+detachment and context membership changes have narrower consequences and
+must not be described as permanent deletion.</p>
+<p><strong>Acceptance example.</strong> A citation supports one recorded
+date and contradicts another. Marking the first date preferred changes
+the card's display but not either citation effect. Removing the second
+target leaves the citation linked to the first date.</p>
+<figure id="figure-05">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/05-sources.png" alt="English source library with a fictional church register, source search, edit controls and access to the source's reusable citations." />
+<figcaption>Figure 5. Reusable source library, English interface. The fictional German source title remains in its original language. A source is distinct from the citations that refer to particular passages within it.</figcaption>
+</figure>
+
+<h2 id="events-biographies-and-personal-details">Events, biographies and
+personal details</h2>
+<h3 id="repeated-and-shared-events">Repeated and shared events</h3>
+<p>Editors and above can add or edit supported events and details for
+accessible people. Available event choices include marriage, civil
+marriage, separation/divorce, adoption, military service, occupation,
+education, residence, migration, baptism/burial and explicitly labelled
+custom events. The broader imported-event vocabulary also includes
+records such as census, probate, wills and other supported religious or
+life events.</p>
+<p>An event/detail records its category and type, title or custom
+designation, description, date, place, visibility, structured fields,
+participants and provenance. Birth/death card values and their
+alternatives continue to be maintained through the person/evidence
+editor. Imported birth/death statements remain identifiable; they are
+not silently replaced by an unrelated event.</p>
+<p>Events can repeat. One shared event can have multiple participants,
+each with a role, including a custom role. It appears in each
+participant's timeline as the same record. Saving asks the user to
+confirm the affected people. Editing requires access to all affected
+participants and shared evidence; the original person or family-context
+association cannot silently disappear. Additional participants may be
+removed explicitly.</p>
+<p>A current/ongoing flag is supported and cannot be combined with an
+explicit end date. Dates can remain partial, approximate or open-ended.
+The application does not infer missing start or end dates.</p>
+<h3 id="timeline-behavior">Timeline behavior</h3>
+<p>The timeline shows life dates first, then loaded additional records
+by date, with undated entries after dated entries. Further pages must be
+loaded when offered. It is a view of loaded records, not an unlimited,
+globally sorted chronology of the entire tree.</p>
+<p>Entries expose available dates, places, text, participants and a
+route to their sources/citations. Age is shown only when the necessary
+exact full dates are compatible. Approximate years do not produce a
+falsely precise age.</p>
+<p>The optional relatives' life-events view adds marked context from
+loaded visible relationships. These entries remain relatives' events;
+showing them does not save extra events on the selected person.</p>
+<h3 id="notes-and-biographies">Notes and biographies</h3>
+<p>Notes have a title, text and visibility. Basic formatting supports
+paragraphs, emphasis, bold text, lists and deliberate links. HTML and
+embedded-image instructions are displayed literally rather than executed
+or loaded. Opening a note does not fetch external resources.</p>
+<p>A person can have several notes. Selecting one as the preferred
+biography controls the main narrative presentation; other notes remain
+separate. Imported notes retain their original provenance when
+corrected.</p>
+<h3 id="contacts-attributes-and-structured-details">Contacts, attributes
+and structured details</h3>
+<p>Contacts and attributes can repeat. Structured fields preserve
+values, their labels, units and ordering, including name components,
+address parts, organization or qualification information where
+supported. These are not collapsed into a single undifferentiated text
+field.</p>
+<p>Contacts and religious affiliation remain management-only. A
+genealogy email address does not create an account, issue an invitation
+or send a message. Leading zeros and literal wording in contact
+information are retained. Imported contact/address information may
+conservatively restrict its containing person or family record to
+management; the import review explains that treatment.</p>
+<p>An imported statement's primary wording and recognized detail fields
+can be corrected separately. The original file, original structure,
+provenance and citation targets remain retained. Imported
+type/category/subject are not freely reassigned. Values outside the
+supported editing limits remain readable but may be read-only. Changing
+a name-components detail does not silently change the separately
+preferred display name.</p>
+<h3 id="editing-and-confirmation">Editing and confirmation</h3>
+<p>Switching interface language preserves the open draft. Cancelling or
+leaving an open statement prompts before discarding unsaved entries. A
+concurrent change retains the draft and requires loading current
+information, comparison and explicit acknowledgement before retrying.
+Saving a shared event is its own completed action; cancelling a
+different form does not undo it.</p>
+<p><strong>Acceptance example.</strong> A researcher records one
+fictional marriage with two participants. Both timelines show that
+event. Correcting its place updates the shared record for both. No
+duplicate marriage is created, and the old import wording remains
+available as provenance where applicable.</p>
+<figure id="figure-06">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/06-shared-event.png" alt="German shared-event editor for a fictional marriage of Aster and Birch Linden, with year-only date 1910, participant roles, structured fields and provenance." />
+<figcaption>Figure 6. Shared event draft, German interface. The year remains year-only. The participant list makes the shared effect of saving explicit, and structured details are separate from descriptive text.</figcaption>
+</figure>
+
+<h2 id="photographs-documents-and-other-media">Photographs, documents
+and other media</h2>
+<h3 id="uploads-and-original-files">Uploads and original files</h3>
+<p>The media library stores private JPEG/PNG originals and PDF
+attachments. A file may be at most 10 MiB; images also have dimension
+and pixel-count limits. PDFs are downloadable attachments, not an inline
+document viewer. Other formats require conversion outside the
+application.</p>
+<p>Editors and above can upload media and maintain metadata they are
+authorized to change. Metadata includes title, description, visibility,
+capture date and digitization date. Those dates are separate from upload
+time and can retain historical uncertainty.</p>
+<p>Image previews do not replace originals. Downloading an original
+retrieves its unchanged stored bytes. Previews omit original embedded
+metadata. The application does not promise automatic interpretation of
+camera orientation or source-system portrait/crop settings.</p>
+<h3 id="assignments-portraits-and-crops">Assignments, portraits and
+crops</h3>
+<p>One medium can be assigned to multiple people, events, details,
+sources, citations or family contexts. Each assignment has a meaning. A
+person assignment can be designated a preferred portrait and can carry a
+reversible crop for presentation.</p>
+<p>Cropping changes the preview presentation, not the original file.
+Clearing the crop restores the full-image presentation. The portrait is
+currently shown on the person page; tree diagram cards retain their
+existing neutral portrait symbol.</p>
+<p>Reading a shared medium requires visibility of the medium and every
+linked target/dependency. Linking it to a confidential record may
+therefore prevent an ordinary member from viewing it through another
+visible assignment. Editors cannot use an accessible assignment to
+bypass that restriction.</p>
+<h3 id="missing-imported-media">Missing imported media</h3>
+<p>An imported filename or external address is a reference, not proof
+that a file has been obtained. Missing and external references remain
+distinguishable from verified local files. The application never
+automatically downloads media from those addresses.</p>
+<p>Managers and owners can upload a bounded ZIP package, review its
+candidates and explicitly match a candidate's full path to a missing or
+external reference. Equal filenames in different folders do not produce
+an automatic match. Successful matching preserves the original reference
+while attaching verified stored bytes.</p>
+<p>The package limit is 32 MiB compressed, 100 entries and 128 MiB
+expanded, with a 10 MiB limit per file. Invalid or unsafe package
+contents are rejected as a whole rather than partly imported. No
+instruction file inside a package is executed.</p>
+<h3 id="detaching-and-deleting">Detaching and deleting</h3>
+<p>Detaching a medium from a person removes that association only. It
+does not delete its other assignments or its original file. Changing a
+portrait preference or crop is also separate from deletion.</p>
+<p>Managers and owners can delete a media record from active use.
+Original bytes are retained; this is not permanent erasure of storage or
+backups. Shared originals and retained package candidates can still
+consume the logical storage allowance. The current application does not
+provide automatic broad physical cleanup.</p>
+<p><strong>Acceptance example.</strong> One photograph is assigned to
+two fictional relatives. Cropping its portrait presentation for one
+person does not alter the original download or the other assignment.
+Detaching it from that person leaves the other assignment intact.</p>
+<figure id="figure-07">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/07-media.png" alt="English media library showing a fictional original, title and visibility, separate capture/digitization dates, assignment controls and imported-media package matching." />
+<figcaption>Figure 7. Media management, English interface. Metadata, original-file access, assignments, portrait presentation and package matching are distinct controls. This fixture's original is a deliberately simple synthetic image.</figcaption>
+</figure>
+
+<h2 id="importing-and-exporting-family-history">Importing and exporting
+family history</h2>
+<h3 id="three-different-kinds-of-file">Three different kinds of
+file</h3>
+<p><strong>GEDCOM</strong> is a family-history exchange format used by
+genealogy applications. It can describe people, relationships and
+supported research information, but it does not represent every
+Stammbaum behavior.</p>
+<table>
+<thead>
+<tr class="header">
+<th>File or output</th>
+<th>What it represents</th>
+<th>What it does not promise</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Original import download</td>
+<td>The unchanged file that was uploaded</td>
+<td>Later corrections or the current tree</td>
+</tr>
+<tr class="even">
+<td>Current GEDCOM export, optionally with media ZIP</td>
+<td>Today's authorized research within the supported exchange
+profile</td>
+<td>Full history, access rights or complete application restoration</td>
+</tr>
+<tr class="odd">
+<td>Operational backup</td>
+<td>The information and private files needed for installation
+recovery</td>
+<td>A portable interchange file for another genealogy application</td>
+</tr>
+</tbody>
+</table>
+<p>A complete portable tree archive is not currently implemented. A
+generated PDF of this specification is documentation; it is unrelated to
+the unfinished genealogy diagram-PDF feature.</p>
+<h3 id="import-eligibility-and-supported-input">Import eligibility and
+supported input</h3>
+<p>Only a manager or owner can upload, review, confirm or cancel an
+import and retrieve its original. The destination must be empty of
+genealogy records, including standalone sources. A tree with members or
+navigation settings is not necessarily populated, but a tree already
+containing research cannot receive an additional import.</p>
+<p>The current bounded profile accepts GEDCOM 5.5/5.5.1 with UTF-8,
+ASCII or explicitly identified UTF-16 text. It does not accept ANSEL,
+legacy Windows encodings, GEDCOM 7 or a ZIP as the genealogy input. The
+maximum GEDCOM size is 8 MiB and the maximum imported population is
+2,000 people.</p>
+<p>Supported content includes names and name components, life dates and
+places, explicit family connections and ordered contexts, notes,
+sources/citations, selected additional events/attributes, contact
+details and media references. Preserved extension text is not
+necessarily interpreted as an editable feature. A narrow adoption-event
+combination is supported; arbitrary adoption encodings are not.</p>
+<p>There is no blanket guarantee that any file exported by MyHeritage or
+another application can be imported completely. Unsupported standard
+information blocks activation. Unsupported vendor material can remain
+preserved with warnings, without being promoted to historical claims.
+The exact import profile and reported limitations are part of the user's
+review.</p>
+<h3 id="review-before-activation">Review before activation</h3>
+<ol type="1">
+<li>Open <strong>Import GEDCOM</strong> in an empty tree and select a
+file.</li>
+<li>Upload it for analysis. This does not yet add people to the active
+tree.</li>
+<li>Review status, proposed counts, sample people, completeness
+categories, errors, warnings and missing-media notices.</li>
+<li>Inspect preserved structure and mappings when needed. The original
+file and a report remain private.</li>
+<li>If the result is ready, acknowledge the review and confirm this
+interpretation for this destination.</li>
+<li>Wait for successful completion before opening the imported
+people.</li>
+</ol>
+<p>The report distinguishes information mapped into research records,
+normalized information and material preserved structurally. Complete
+issue totals accompany a bounded display of up to 200 individual issues,
+prioritizing errors, and up to 20 preview people. A short list is not a
+claim that only those records were analyzed.</p>
+<p>Missing media are reported separately. They must not be described as
+successfully available photographs. Source-system matching or discovery
+labels are retained as source wording; they do not automatically
+establish events or evidence quality.</p>
+<figure class="diagram" id="diagram-02">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/import.svg" alt="Choose an empty tree and file, analyze without adding people, review errors and warnings, confirm a ready review, then activate the whole import. Blocking errors require correction; cancellation retains the report." />
+<figcaption>Diagram 2. Explanation of the reviewed import journey, not an application screen. Analysis and explicit activation are separate steps.</figcaption>
+</figure>
+
+<h3 id="import-failures-cancellation-and-preservation">Import failures,
+cancellation and preservation</h3>
+<p>A blocked review cannot be activated. The user needs a corrected file
+or an extended supported profile; the application must not silently
+discard an unsupported standard field to get past the block. Invalid
+text is rejected rather than replaced with invented characters.</p>
+<p>Confirmation refers to the exact reviewed file, interpretation and
+destination state. Changes to the tree or loss of the confirming user's
+authority can prevent activation. Successful activation publishes the
+complete imported set together. Readers do not see half an imported
+family.</p>
+<p>Cancelling before completed activation does not create the proposed
+people. It retains the private original and report. Cancellation is not
+an undo operation for a completed import. Interrupted work and retained
+job status are handled separately from the user's choice to start a new
+import.</p>
+<p>Uploading the same file again to the same tree under the same import
+profile returns the existing run. This also applies to a cancelled or
+failed run: a general reanalysis/resume interface is unfinished.
+Creating an independent copy requires a different empty tree.</p>
+<p>Original bytes, the original ordered structure and connections to
+resulting records remain retained after corrections. The current
+research does not silently rewrite the original. Historical import runs
+retain their own interpretation profile; later profile changes do not
+retrospectively reinterpret a previously reviewed run.</p>
+<h3 id="export-review-and-creation">Export review and creation</h3>
+<p>Users with export rights open <strong>GEDCOM export</strong> and
+choose options. By default, living people, people with unknown living
+status and management-only information are omitted. Authorized users can
+deliberately include living/unknown people; management-only inclusion
+additionally requires a manager or owner. An optional ordinary media ZIP
+can include authorized local originals.</p>
+<p>The preview shows included counts and the supported format's
+limitations. Counts do not reveal exact hidden populations. Shared
+records depending on excluded people or targets are excluded too. Export
+choices do not change the tree's stored visibility or living status.</p>
+<p>The user acknowledges the limitations before creating an export job.
+It can be revisited after navigating away. When it completes, the
+requesting user can download the permitted result. Results expire after
+24 hours. A queued job can be cancelled before publication; failed work
+requires a fresh review and export rather than an unrestricted automatic
+retry.</p>
+<p>Any tree edit or relevant access change invalidates an older result,
+even when the change would not obviously affect the file. Regaining
+permission does not revive it. The user must review and generate a fresh
+export. One user's export job is not a general download facility for
+every tree member.</p>
+<h3 id="what-the-export-preserves-and-loses">What the export preserves
+and loses</h3>
+<p>The output uses GEDCOM 5.5.1 and current preferred values, current
+edited statements and active relationships. It does not append obsolete
+imported wording to reconstruct deleted people or removed connections.
+Superseded preferred names and rejected alternatives are excluded;
+eligible active alternative names can be included. Choosing an older
+assertion as preferred can make it current again.</p>
+<p>When a birth or death appears both in the person's preferred life
+information and in an edited event statement, export uses the most
+recently updated representation and emits its date/place once. It does
+not combine an obsolete raw event with a newer preferred date. An
+“other” sex indication becomes unknown in this exchange format, with the
+normalization reported.</p>
+<p>Repeated events, supported date precision, sources/citations and
+supported adoptive/foster relationships can be represented. Where the
+destination format cannot express meaning directly, the report
+identifies normalization or omission. Examples include complex parent
+constellations, some participant roles and structured fields, step/other
+parent meanings, portrait crops, preferred-portrait flags and explicit
+living status.</p>
+<p>History, access permissions, full competing-claim semantics, audit
+activity and complete application settings are not a GEDCOM archive.
+Some source/citation meanings and media metadata also lack exact
+portable equivalents. Only a narrow category of unchanged vendor
+extension values can be carried through; retaining an original does not
+guarantee every extension will be regenerated.</p>
+<p>The media ZIP is an ordinary package with genealogy, report
+information and included originals. It is not GEDZIP or a full
+restoration archive. An export can contain more media than one allowed
+input package, so transfer may require splitting media into bounded
+packages.</p>
+<p><strong>Acceptance example.</strong> A manager imports a supported
+file, changes a person's preferred name, removes a parent connection and
+deletes another person. A fresh export reflects those current choices.
+Downloading the original still returns the unchanged original file.
+Neither output is mislabeled as the other.</p>
+<figure id="figure-08">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/08-import-review.png" alt="English import review with a blocking unsupported-field error, complete issue summary, preview person and cancellation/structure controls; no people have been activated." />
+<figcaption>Figure 8. A blocked import, English interface. This deliberately unsupported adoption structure cannot be activated. It does not imply that every adoption representation is unsupported: the current profile accepts a specific corroborated form.</figcaption>
+</figure>
+
+<figure id="figure-09">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/09-export-review.png" alt="German export review with living/confidential/media options, included counts, explicit fidelity limitations and a checked acknowledgement before creating the export." />
+<figcaption>Figure 9. Export preview, German interface. Privacy choices and format limitations are reviewed before generation. This fictional restricted preview intentionally includes a small permitted subset.</figcaption>
+</figure>
+
+<h2 id="collaboration-history-and-recovery">Collaboration, history and
+recovery</h2>
+<h3 id="invitations-and-membership-changes">Invitations and membership
+changes</h3>
+<p>A manager can invite viewers or editors; an owner can invite all role
+levels. The invitation identifies the tree, role, export permission and
+expiry. The generated link is single-use and lasts 48 hours. The user
+shares it deliberately; the current workflow does not depend on
+automatic email delivery.</p>
+<p>The recipient reviews the invitation and explicitly accepts, creating
+an account or using an existing account as appropriate. Possessing the
+link is not the same as anonymous access to the tree. Invalid, revoked,
+expired or already consumed links do not grant a fresh membership.</p>
+<p>Owners and managers can review members within their role boundaries.
+Role/export changes and removal require confirmation. A stale grant
+cannot overwrite a newer grant; comparison retains the proposed edit.
+Any member can leave, except that the final active owner must first
+appoint another active owner.</p>
+<p>Changing or removing a membership revokes outstanding invitations
+issued by that member. Fresh invitations are required if still needed. A
+removed member's genealogy and attribution remain. An old invitation or
+previously opened form does not regain authority merely because the
+person later rejoins.</p>
+<h3 id="concurrent-changes-and-uncertain-saves">Concurrent changes and
+uncertain saves</h3>
+<p>Forms are based on the version the user opened. If another user saves
+first, the later attempt does not overwrite it silently. The application
+retains the draft, explains the conflict and offers current information
+for comparison. The user reconciles the differences and deliberately
+retries. Some editors, including shared statements, require an explicit
+comparison acknowledgement.</p>
+<p>Loading current information is not an automatic merge. It must not be
+represented as evidence that every difference has been resolved.
+Personal navigation preferences also detect changes from another tab,
+with explicit reload or overwrite choices after checking the current
+version.</p>
+<p>An interrupted connection may leave the user uncertain whether a save
+completed. Supported create workflows recognize a repeated unchanged
+request rather than creating a duplicate. The interface does not
+indiscriminately replay every failed write or promise that an unsaved
+draft survives closing the browser. Changes made after access is
+withdrawn must be refused even if the form was already open.</p>
+<figure class="diagram" id="diagram-03">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/conflict.svg" alt="Two researchers open the same record. The first saves. The second's stale save is refused while their draft remains. They load current values, compare and reconcile, then intentionally save again." />
+<figcaption>Diagram 3. Explanation of concurrent-edit resolution, not an application screenshot. A preserved draft and explicit comparison replace silent overwriting.</figcaption>
+</figure>
+
+<h3 id="genealogy-history-and-access-activity">Genealogy history and
+access activity</h3>
+<p>Person history exposes available revisions and attributed changes,
+subject to current access and historical confidentiality. A provenance
+note explains an operation; it is not automatically a formal source or
+citation. History is loaded in pages, and ordering of loaded entries
+must not be confused with a complete chronological history loaded all at
+once.</p>
+<p>The interface is not a general undo system. Dedicated history/undo
+browsers for every source, citation, family context and relationship are
+unfinished even when underlying changes retain attribution.</p>
+<p>Tree access activity is available to current owners/managers. It
+records actions, outcomes, timestamps, stable actor/target identifiers
+and relevant role/export changes. Users can filter by action and
+outcome, refresh and load further entries. It contains no family
+narrative or password/secret contents. Older entries may have an unknown
+target rather than an invented attribution.</p>
+<p>Installation account/security activity is separate and restricted to
+operators. Operator status alone does not reveal tree activity. Access
+records are retained for the installation's lifetime by default; a
+user-facing configurable audit-purge facility is not provided.</p>
+<h3 id="deleting-and-restoring-people">Deleting and restoring
+people</h3>
+<p>Managers and owners review the impact before deleting a person.
+Deletion removes the person from active searches, diagrams and exports,
+deactivates active relationships and clears a matching shared home.
+Shared sources, statements, events and media remain retained rather than
+being broadly erased.</p>
+<p>The deleted-people area lists the latest 100 deletions and offers
+restoration. Restoring brings back the person, <strong>not their former
+active connections</strong>. Those connections must be reviewed and
+explicitly recreated; normal ancestry checks still apply. This avoids
+automatically reviving old errors or inappropriate links.</p>
+<p>Deletion is not permanent erasure. Original imports, retained media
+and backups may still contain the information. Configurable physical
+purge, selective relationship restoration and whole-tree deletion are
+unfinished.</p>
+<h3 id="backup-and-installation-recovery">Backup and installation
+recovery</h3>
+<p>The operator is responsible for preserving the application
+information, private originals and necessary recovery material together.
+Encrypted backup and isolated restoration procedures exist. A recovery
+must preserve the research, retained originals, assignments and history
+as a consistent set.</p>
+<p>Restoration invalidates old access credentials and links under the
+documented recovery behavior. Old external-tool credentials do not
+automatically become usable again merely because their records were
+restored. Recovery is not a user-facing “import this GEDCOM to restore
+everything” operation.</p>
+<p>There is no automatic backup schedule simply because the application
+is installed. Scheduling, protected retention and recovery
+responsibilities must be arranged by the operator. This document defines
+those responsibilities without prescribing the technology used to
+fulfill them.</p>
+<p><strong>Acceptance example.</strong> Two researchers edit the same
+occupation statement. The first saves. The second sees a conflict, keeps
+their draft, loads the saved wording and decides how to reconcile it.
+The application does not choose the historical interpretation for
+them.</p>
+<figure id="figure-10">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/10-conflict.png" alt="German shared-statement editor showing a preserved research draft, current saved wording and an explicit acknowledgement control before retrying a stale save." />
+<figcaption>Figure 10. Concurrent-edit comparison, German interface. The fictional draft remains visible alongside the newly loaded statement, and saving requires deliberate reconciliation.</figcaption>
+</figure>
+
+<figure id="figure-11">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/11-restoration.png" alt="German deleted-people view with a fictional person available to restore and an explanation that connections are not restored automatically." />
+<figcaption>Figure 11. Person restoration, German interface. Restoring the record and recreating its connections are separate actions; retained originals and backups are explicitly acknowledged.</figcaption>
+</figure>
+
+<h2 id="languages-presentation-and-accessibility">Languages,
+presentation and accessibility</h2>
+<h3 id="english-and-german">English and German</h3>
+<p>Implemented interface screens, application errors and new saved
+import diagnostics support English and German. Before sign-in, an
+explicit browser choice takes precedence over the browser's preferred
+language; German is the fallback. After sign-in, the saved account
+preference applies. Existing and newly created accounts start in German
+until changed.</p>
+<p>Changing language preserves the route, selection and open drafts.
+Concurrent changes to language preferences are handled explicitly rather
+than silently overwriting another session's choice. Old saved reports
+without translation information retain their original German wording and
+are labelled accordingly.</p>
+<p>Research content is not translated automatically. Names, notes,
+quotations, source titles, place names and original date wording remain
+unchanged. Generated presentation labels can change language, but
+deliberately saving authored text makes that wording part of the
+research record.</p>
+<p>Numbers, file sizes and operational timestamps follow the display
+locale. Operational times use the device's timezone and show its label.
+Changing language does not change timezone or reinterpret a historical
+date. After changing the device timezone, reload to refresh the
+display.</p>
+<h3 id="input-and-accessibility-behavior">Input and accessibility
+behavior</h3>
+<p>The interface provides labelled controls, keyboard access, visible
+focus and a text alternative to the family diagram. Graph controls and
+individual person actions can be reached without dragging. Relationship
+types have textual explanations as well as visual line styles; color
+alone is insufficient to convey their meaning.</p>
+<p>On narrow displays the graph and collapsible details are arranged for
+continued use. Long names, explanations and validation messages should
+remain readable without losing the action they explain. Broad graphs may
+produce small cards when fitted, so the sidebar and text alternative
+remain important.</p>
+<p>Existing evidence covers desktop browser engines and narrow emulated
+viewports. It does not establish complete screen-reader compliance,
+physical-phone certification or a comprehensive accessibility audit.
+Those claims must not be inferred from the available screenshots.</p>
+<h3 id="feedback-and-recovery-from-errors">Feedback and recovery from
+errors</h3>
+<p>Forms identify invalid entries, preserve drafts during supported
+failures and make successful saves visible. Temporary loading, failed
+startup, expired access and unavailable records have explicit feedback
+and relevant retry or sign-in actions. Hidden information must not
+appear in an error explanation.</p>
+<p>The interface distinguishes an empty result, a limited displayed
+subset, a blocked import and a failed operation. It does not label an
+unconfirmed import as completed or a missing media reference as an
+available photograph.</p>
+<p><strong>Acceptance example.</strong> An English-speaking user opens a
+person whose quoted source and ambiguous date are German research
+content. Switching to German changes interface labels and number/time
+formatting but leaves the quote, date wording and draft unchanged.</p>
+<h2 id="connected-tools-and-change-notifications">Connected tools and
+change notifications</h2>
+<h3 id="limited-access-for-an-external-tool">Limited access for an
+external tool</h3>
+<p>An account holder can create a named personal access credential under
+<strong>My account → API tokens</strong>. This allows a separately
+configured script, automation or AI tool to work with selected current
+capabilities. It does not add an AI research assistant to Stammbaum
+itself.</p>
+<p>The user chooses the permitted operations, selected existing trees
+and expiry of 1–365 days, then confirms their current password. The
+secret is displayed once. It must be saved at creation; the application
+cannot display it again later. A missing creation response or lost
+secret requires revoking the entry and creating a replacement.</p>
+<p>Permissions can cover reading or editing genealogy, media, imports,
+exports and access management, creating trees, and managing
+notifications. Reading and writing are separate choices: permission to
+write does not automatically include reading results.</p>
+<p>A tool never exceeds the account holder's current tree role, export
+permission or record visibility. A viewer's credential cannot edit
+genealogy simply because an editing operation was selected. The tool
+does not automatically gain access to trees the user joins later. When
+explicitly permitted to create a tree, it receives access to that newly
+created tree.</p>
+<p>Tokens cannot administer accounts, recover passwords or issue
+additional tokens. The account page shows safe metadata such as name,
+permissions, expiry and usage, and offers individual revocation or
+revocation of all tokens. At most 20 unexpired, unrevoked tokens can be
+active per account.</p>
+<p>One credential can initially select up to 100 existing trees. Tool
+use is limited to 1,200 requests per credential in a 15-minute window;
+credential-creation attempts are limited to twenty per account in that
+period. Reaching a limit temporarily refuses further requests rather
+than expanding permissions.</p>
+<h3 id="revocation-and-work-already-in-progress">Revocation and work
+already in progress</h3>
+<p>Changing a selected membership, including promotion or export-right
+changes, permanently invalidates that tree grant for the existing
+credential. Other unchanged tree grants remain usable. Removing and
+re-adding the member does not revive the old grant. Password
+changes/recovery, account deactivation/reactivation and backup
+restoration invalidate old account credentials.</p>
+<p>Queued imports and exports recheck the authority that initiated or
+confirmed them. Expired or revoked credentials must not continue as an
+unrestricted background identity. Import reports/originals and export
+jobs accessed by a tool remain tied to the creating credential; a second
+credential belonging to the same person does not automatically inherit
+them.</p>
+<p>An authorized manager using the application can inspect retained
+imports and explicitly approve an eligible reviewed import as a fresh
+action. This is not automatic continuation under the expired tool's
+authority. Export generation/download retains its requesting-user and
+credential restrictions.</p>
+<p>Revocation stops subsequent authorized operations, but cannot retract
+information already received or undo a change that completed before
+revocation took effect. Tool changes remain attributable to the person
+and the named credential.</p>
+<h3 id="notifications-about-tree-and-job-changes">Notifications about
+tree and job changes</h3>
+<p>Owners and managers can register a named receiving service for tree
+changes, import status changes and export status changes. These
+notifications are called <strong>webhooks</strong> in the interface.
+They contain minimal references and status information, not person
+names, family narratives, changed field values or media.</p>
+<p>The receiver gets a separate one-time signing secret so it can verify
+where notifications came from. Managers can inspect deliveries and
+failures, rotate the secret, revoke the subscription and explicitly
+retry eligible failed deliveries. Rotating the secret requires updating
+the receiver.</p>
+<p>Delivery can be repeated; the receiver must avoid acting twice on the
+same notification. Automatic retries stop after six failures or 24
+hours. An explicit replay within the allowed period can take the total
+to twelve attempts. Delivery records are retained for 30 days. A tree
+can have ten non-revoked subscriptions.</p>
+<p>Notifications convey no additional right to read the tree or download
+a job. The receiving tool must still have appropriate current access.
+Permission loss or revocation cancels pending delivery when checked. No
+notification is emitted for a change that was not committed.</p>
+<p>The current receiver connection supports public HTTPS destinations
+reachable through IPv4. Private destinations require an exact
+operator-approved exception; some destinations remain forbidden.
+Redirects and IPv6-only receivers are unsupported. A slow receiver can
+briefly delay application writes, so this feature should not be
+described as a high-throughput notification service.</p>
+<p><strong>Acceptance example.</strong> A user permits a tool to read
+one tree. Joining another tree does not extend the credential. When the
+original membership changes, that grant becomes invalid and must be
+replaced deliberately. A tree-change notification reveals no person's
+name.</p>
+<figure id="figure-12">
+<img src="file:///home/uwe/Developer/utrost/Stammbaum/docs/assets/product-specification/12-tool-access.png" alt="English account page showing independent operation permissions, selected fictional trees, token expiry, masked one-time secret and revoke controls." />
+<figcaption>Figure 12. Scoped access for a connected tool, English interface. Operations and selected trees are explicit. Magenta masks conceal test passwords and the one-time credential; they are part of the original review capture.</figcaption>
+</figure>
+
+<h2 id="current-limits-and-glossary">Current limits and glossary</h2>
+<h3 id="user-visible-capacity-and-retention-limits">User-visible
+capacity and retention limits</h3>
+<p>These are current behavior, not performance targets for every
+possible future edition. A MiB/GiB is the file-size unit used by the
+interface.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Area</th>
+<th>Current boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Diagram</td>
+<td>200 unique people; 1,000 relationship lines; generation depths
+0–8</td>
+</tr>
+<tr class="even">
+<td>Diagram neighborhood</td>
+<td>400 fetched neighbors per person; 20 contextual groups; 20 explicit
+local expansions</td>
+</tr>
+<tr class="odd">
+<td>Branch history</td>
+<td>Up to 30 preceding branch states</td>
+</tr>
+<tr class="even">
+<td>Genealogy import</td>
+<td>8 MiB; 2,000 people; 100,000 physical lines; 16,384 characters per
+line; nesting depth 64; bounded interpretation budget</td>
+</tr>
+<tr class="odd">
+<td>Import review</td>
+<td>Complete issue totals, up to 200 detailed issues and 20 preview
+people</td>
+</tr>
+<tr class="even">
+<td>Import capacity</td>
+<td>Five new runs per account/hour; twenty pending runs
+installation-wide; 512 MiB retained originals installation-wide</td>
+</tr>
+<tr class="odd">
+<td>Media originals</td>
+<td>10 MiB per file; JPEG/PNG up to 16 million pixels and 16,000 pixels
+in either dimension; PDF attachment</td>
+</tr>
+<tr class="even">
+<td>Media input package</td>
+<td>32 MiB compressed; 100 entries; 128 MiB expanded; 10 MiB per file;
+expansion ratio at most 100:1</td>
+</tr>
+<tr class="odd">
+<td>Media accounting</td>
+<td>1 GiB logical original allowance installation-wide;
+retained/deleted/candidate records still count, and shared references
+can count conservatively</td>
+</tr>
+<tr class="even">
+<td>Export</td>
+<td>2,000 people; 50,000 objects; up to 64 MiB packaged original media;
+ten new jobs per account/hour; twenty queued jobs installation-wide</td>
+</tr>
+<tr class="odd">
+<td>Export downloads</td>
+<td>Expire after 24 hours; invalidated sooner by tree/access
+changes</td>
+</tr>
+<tr class="even">
+<td>Deleted-people list</td>
+<td>Latest 100 deletions; no general physical-purge facility</td>
+</tr>
+<tr class="odd">
+<td>Invitations / password recovery</td>
+<td>Single use; 48 hours / 30 minutes respectively</td>
+</tr>
+<tr class="even">
+<td>External-tool credentials</td>
+<td>1–365-day expiry; twenty active credentials per account; up to 100
+initially selected trees per credential</td>
+</tr>
+<tr class="odd">
+<td>Notification subscriptions</td>
+<td>Ten non-revoked subscriptions per tree; delivery records retained 30
+days</td>
+</tr>
+</tbody>
+</table>
+<p>Cancelled and failed import originals/reports remain retained rather
+than automatically expiring. Deleted media are not automatically
+physically erased. The current application should not imply otherwise
+merely because an item disappears from an active view. Stored research
+survives an ordinary application restart; browser sessions do not.</p>
+<h3 id="not-currently-available">Not currently available</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Capability</th>
+<th>Boundary of the current release</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Genealogy diagram PDF generation</td>
+<td>No ancestor/descendant/family PDF generator, print preview or
+poster/tiling workflow</td>
+</tr>
+<tr class="even">
+<td>Complete portable tree archive</td>
+<td>No lossless tree archive carrying all history, permissions, claims
+and application settings</td>
+</tr>
+<tr class="odd">
+<td>Full migration from an existing installation</td>
+<td>GEDCOM/media transfer has explicit losses; it is not complete
+installation migration</td>
+</tr>
+<tr class="even">
+<td>Import into a populated tree or merge</td>
+<td>No incremental merge, duplicate reconciliation or cross-tree
+synchronization</td>
+</tr>
+<tr class="odd">
+<td>Broader GEDCOM support</td>
+<td>ANSEL, GEDCOM 7, GEDZIP, all vendor extensions and arbitrary
+standard structures are not supported</td>
+</tr>
+<tr class="even">
+<td>Universal source-system compatibility</td>
+<td>Synthetic consumer checks do not prove complete real-family
+MyHeritage migration</td>
+</tr>
+<tr class="odd">
+<td>Complete alternative-hypothesis system</td>
+<td>Competing event/relationship groups are unfinished; existing
+name/date alternatives remain usable</td>
+</tr>
+<tr class="even">
+<td>Research-quality work queue</td>
+<td>Some validation/findings exist; a complete persistent
+accept/defer/recheck workflow is unfinished</td>
+</tr>
+<tr class="odd">
+<td>General undo and advanced trash</td>
+<td>No arbitrary rollback, automatic restoration of connections,
+configurable purge or complete whole-tree deletion</td>
+</tr>
+<tr class="even">
+<td>Public/guest sharing</td>
+<td>View links require authorized sign-in; anonymous/expiring public
+genealogy shares are unfinished</td>
+</tr>
+<tr class="odd">
+<td>Full account and collaboration suite</td>
+<td>Expanded provisioning, automatic email invitations/recovery,
+comments and reader change requests remain unfinished</td>
+</tr>
+<tr class="even">
+<td>More diagram styles</td>
+<td>Fan, butterfly, sun, all-in-one and family-book layouts are not
+available</td>
+</tr>
+<tr class="odd">
+<td>Built-in discovery services</td>
+<td>No DNA analysis, automatic matching, face recognition, AI-written
+biographies, commercial records search or geocoding</td>
+</tr>
+<tr class="even">
+<td>Broader language/quality claims</td>
+<td>More languages, full accessibility certification, physical-device
+certification and large-scale performance acceptance are not
+established</td>
+</tr>
+</tbody>
+</table>
+<p>These boundaries retain their original priority where the approved
+baseline calls them core work. They are not all optional enhancements.
+The specification of the current release must not silently convert a
+partial implementation into completion of the approved product.</p>
+<h3 id="glossary">Glossary</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>Meaning in this specification</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Account</td>
+<td>A collaborator's access to the application</td>
+</tr>
+<tr class="even">
+<td>Person</td>
+<td>A family-history record; it does not require an account</td>
+</tr>
+<tr class="odd">
+<td>Tree</td>
+<td>A separate collection of genealogy and memberships</td>
+</tr>
+<tr class="even">
+<td>Branch</td>
+<td>A view of part of a tree, not a copy of its records</td>
+</tr>
+<tr class="odd">
+<td>Focus</td>
+<td>The person from whom the displayed branch is derived</td>
+</tr>
+<tr class="even">
+<td>Selection</td>
+<td>The person whose details are currently open</td>
+</tr>
+<tr class="odd">
+<td>Home person</td>
+<td>A personal or shared preferred starting person</td>
+</tr>
+<tr class="even">
+<td>Family context</td>
+<td>An ordered grouping of people and existing connections; grouping
+creates no parentage</td>
+</tr>
+<tr class="odd">
+<td>Assertion / claim</td>
+<td>One recorded statement about a person or fact, which may have
+alternatives</td>
+</tr>
+<tr class="even">
+<td>Preferred value</td>
+<td>The assertion chosen for display; not a verdict of truth</td>
+</tr>
+<tr class="odd">
+<td>Assessment</td>
+<td>A research judgment about an assertion: unassessed, supported,
+disputed or rejected</td>
+</tr>
+<tr class="even">
+<td>Source</td>
+<td>A reusable description of underlying research material</td>
+</tr>
+<tr class="odd">
+<td>Citation</td>
+<td>A specific reference or quotation from a source, attached to
+explicit targets</td>
+</tr>
+<tr class="even">
+<td>Provenance</td>
+<td>Where information came from and who entered or changed it</td>
+</tr>
+<tr class="odd">
+<td>Shared event</td>
+<td>One event record associated with multiple participants</td>
+</tr>
+<tr class="even">
+<td>Media assignment</td>
+<td>A link between a file and a research record, with an explicit
+meaning</td>
+</tr>
+<tr class="odd">
+<td>Original</td>
+<td>Unchanged imported file or uploaded media bytes</td>
+</tr>
+<tr class="even">
+<td>GEDCOM</td>
+<td>A genealogy exchange format with defined representational
+limits</td>
+</tr>
+<tr class="odd">
+<td>Export</td>
+<td>A generated view of permitted current research in an exchange
+format</td>
+</tr>
+<tr class="even">
+<td>Backup</td>
+<td>Recovery material for an installation, distinct from an exchange
+export</td>
+</tr>
+<tr class="odd">
+<td>Token</td>
+<td>A named, limited and expiring credential for an external tool</td>
+</tr>
+<tr class="even">
+<td>Webhook</td>
+<td>A signed notification sent to an explicitly configured receiving
+service</td>
+</tr>
+</tbody>
+</table>
+<h2 id="appendix-a--acceptance-examples">Appendix A — acceptance
+examples</h2>
+<p>These examples state observable behavior for a handoff or future
+parity review. <strong>They are not a report that these scenarios were
+newly executed for this document.</strong> All example data must remain
+fictional. Requirement relationships refer to the existing baseline;
+integrations also have approved amendments.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Example</th>
+<th>Given / action</th>
+<th>Expected observable result</th>
+<th>Requirement relationship</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A01 — closed trees</td>
+<td>A signed-in user belongs only to tree A and opens a link to tree
+B</td>
+<td>No genealogy from B is disclosed and no new membership is
+created</td>
+<td>RECHT-02; SICHT-01–04</td>
+</tr>
+<tr class="even">
+<td>A02 — independent export rights</td>
+<td>A viewer without export rights receives an export grant</td>
+<td>Export becomes available within current visibility; editing remains
+unavailable</td>
+<td>RECHT-04; SICHT-06</td>
+</tr>
+<tr class="odd">
+<td>A03 — operator separation</td>
+<td>An operator has no membership of a private tree</td>
+<td>Account administration does not provide that tree's genealogy or
+access activity</td>
+<td>RECHT-03</td>
+</tr>
+<tr class="even">
+<td>A04 — unknown people</td>
+<td>An editor creates an unnamed person with explicit confirmation</td>
+<td>Empty names and unknown status remain; no invented dates or parents
+appear</td>
+<td>ZIEL-05; PER/NAM/DAT</td>
+</tr>
+<tr class="odd">
+<td>A05 — navigation</td>
+<td>Select another person, then explicitly focus their branch and
+return</td>
+<td>Selection and focus remain distinct; returning restores the previous
+view without duplicating people</td>
+<td>GRUND-02; NAV</td>
+</tr>
+<tr class="even">
+<td>A06 — shared home</td>
+<td>A manager changes shared home while another member has a personal
+home</td>
+<td>The personal home remains the user's preference; the shared default
+is available when appropriate</td>
+<td>BAUM-05; ADR-015 locale/home amendment</td>
+</tr>
+<tr class="odd">
+<td>A07 — explicit parentage</td>
+<td>Add an adoptive parent to a person who already has a biological
+parent</td>
+<td>Both connections retain their explicit types; neither replaces the
+other by inference</td>
+<td>BEZ; SEX-02</td>
+</tr>
+<tr class="even">
+<td>A08 — ancestry loop</td>
+<td>Attempt to make a person their own biological ancestor</td>
+<td>The connection is refused and existing people remain unchanged</td>
+<td>BEZ-09–11</td>
+</tr>
+<tr class="odd">
+<td>A09 — sibling grouping</td>
+<td>Group two existing children with no known parent</td>
+<td>The ordered context contains the children and no fabricated parents
+or partnership</td>
+<td>BEZ; GRUND-03</td>
+</tr>
+<tr class="even">
+<td>A10 — incomplete date</td>
+<td>Enter only a year; separately preserve “03/04” as literal
+wording</td>
+<td>No month/day is invented and no ambiguous date is silently
+interpreted</td>
+<td>DAT-01–05</td>
+</tr>
+<tr class="odd">
+<td>A11 — evidence preference</td>
+<td>Mark a disputed date preferred and attach a supporting citation</td>
+<td>Display preference, assessment and citation effect remain
+independent</td>
+<td>QEL; ERE-06–07</td>
+</tr>
+<tr class="even">
+<td>A12 — reusable citation</td>
+<td>Detach one of two targets from a citation</td>
+<td>The citation, source and other target remain</td>
+<td>QEL</td>
+</tr>
+<tr class="odd">
+<td>A13 — confidential shared material</td>
+<td>Attach a citation or medium to both visible and inaccessible
+targets</td>
+<td>An ordinary reader cannot retrieve the shared content through the
+visible target</td>
+<td>SICHT-03/08</td>
+</tr>
+<tr class="even">
+<td>A14 — shared event</td>
+<td>Edit a marriage that has two participants</td>
+<td>One shared record changes for both; affected-person confirmation is
+explicit</td>
+<td>ERE; KOLL</td>
+</tr>
+<tr class="odd">
+<td>A15 — note safety</td>
+<td>Enter markup that resembles executable content or an embedded remote
+image</td>
+<td>It is not executed or automatically fetched</td>
+<td>NOT; ROB-02</td>
+</tr>
+<tr class="even">
+<td>A16 — unchanged original</td>
+<td>Choose a portrait crop, then download the original</td>
+<td>Preview uses the crop; downloaded original retains its bytes</td>
+<td>MED</td>
+</tr>
+<tr class="odd">
+<td>A17 — explicit media matching</td>
+<td>A ZIP contains two equal basenames in different paths</td>
+<td>A manager must choose the full-path candidate; no automatic guess
+occurs</td>
+<td>MED; IMP</td>
+</tr>
+<tr class="even">
+<td>A18 — staged import</td>
+<td>Upload a supported GEDCOM into an empty tree</td>
+<td>The review exists before genealogy becomes active; explicit
+confirmation is required</td>
+<td>IMP-04–16</td>
+</tr>
+<tr class="odd">
+<td>A19 — blocked import</td>
+<td>Upload a file containing an unsupported standard structure</td>
+<td>A blocking explanation appears; no partial family is activated</td>
+<td>ZIEL-03; IMP</td>
+</tr>
+<tr class="even">
+<td>A20 — cancellation</td>
+<td>Cancel an unactivated import</td>
+<td>No proposed people are added; original and report remain private and
+retained</td>
+<td>IMP; JOB</td>
+</tr>
+<tr class="odd">
+<td>A21 — current-state export</td>
+<td>Correct a name, remove a connection and delete a person before
+export</td>
+<td>Current permitted research is exported; obsolete raw input does not
+revive removed material</td>
+<td>EXP-01–08</td>
+</tr>
+<tr class="even">
+<td>A22 — stale export</td>
+<td>Edit the tree after creating an export</td>
+<td>The previous result is unavailable for download; a fresh review is
+required</td>
+<td>RECHT-02; EXP; ADR-017</td>
+</tr>
+<tr class="odd">
+<td>A23 — concurrent edit</td>
+<td>Two users edit the same record and one saves first</td>
+<td>The other receives a conflict with draft retained and explicit
+comparison/retry</td>
+<td>KOLL-01–05</td>
+</tr>
+<tr class="even">
+<td>A24 — last owner</td>
+<td>The only active owner tries to leave or demote themselves</td>
+<td>The action is refused until another active owner is appointed</td>
+<td>RECHT-01</td>
+</tr>
+<tr class="odd">
+<td>A25 — restoration</td>
+<td>Delete a person, then restore them</td>
+<td>Person returns; former active connections do not return
+automatically</td>
+<td>LOE; ADR-017</td>
+</tr>
+<tr class="even">
+<td>A26 — language</td>
+<td>Switch language with an unsaved form and a literal historical
+date</td>
+<td>Labels change; draft, date wording and research content remain</td>
+<td>NF-03 as amended by ADR-011–015</td>
+</tr>
+<tr class="odd">
+<td>A27 — token boundaries</td>
+<td>Issue a read-only selected-tree credential, then join another
+tree</td>
+<td>Credential cannot edit or read the newly joined tree
+automatically</td>
+<td>Integration amendment; issues 42–46</td>
+</tr>
+<tr class="even">
+<td>A28 — revoked queued work</td>
+<td>Revoke an initiating credential before a queued export is
+published</td>
+<td>Background work cannot silently continue with broader authority</td>
+<td>Integration amendment; issues 45–46</td>
+</tr>
+<tr class="odd">
+<td>A29 — minimal notifications</td>
+<td>Change a fictional person and inspect the notification received</td>
+<td>Notification identifies tree/revision or job state without names or
+research values</td>
+<td>Integration amendment; issue 48</td>
+</tr>
+<tr class="even">
+<td>A30 — recovery boundary</td>
+<td>Restore a complete fictional installation backup</td>
+<td>Research and original files remain consistent; old tool credentials
+do not silently reactivate</td>
+<td>BETR; integration recovery amendment</td>
+</tr>
+</tbody>
+</table>
+<h2 id="appendix-b--requirement-relationships">Appendix B — requirement
+relationships</h2>
+<p>The immutable <a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/functional-specification-v1.md">functional
+specification</a> and <a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/decisions.md">decision register</a>
+remain the source of approved requirements and amendments. This document
+describes a release snapshot; it neither replaces them nor marks their
+acceptance register passed. A requirement family listed below can be
+only partly implemented.</p>
+<table>
+<thead>
+<tr class="header">
+<th>This document</th>
+<th>Relevant baseline families / amendments</th>
+<th>Important qualification</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Purpose and boundaries</td>
+<td>ZIEL-01–06; GRUND-01–05</td>
+<td>Closed research workspace; no automatic cross-tree
+synchronization</td>
+</tr>
+<tr class="even">
+<td>Accounts, roles and privacy</td>
+<td>KONTO-01–06; RECHT-01–04; SICHT-01–08; ADR-016</td>
+<td>Current delete/restore permission is management-only; broader
+baseline workflows remain unfinished</td>
+</tr>
+<tr class="odd">
+<td>Trees and navigation</td>
+<td>BAUM; NAV; BAUMANS; SUCHE; UX; shared-home amendment</td>
+<td>Bounded current graph; advanced layout and broader search are
+unfinished</td>
+</tr>
+<tr class="even">
+<td>People, dates and connections</td>
+<td>PER; NAM; SEX; DAT; BEZ; PART; FORM</td>
+<td>No complete competing-relationship hypothesis editor</td>
+</tr>
+<tr class="odd">
+<td>Evidence and uncertainty</td>
+<td>QEL; ERE-06–07; ADR-04</td>
+<td>Name/date alternatives do not establish complete event-claim
+grouping</td>
+</tr>
+<tr class="even">
+<td>Events and details</td>
+<td>ERE; NOT; KON; EXT; ADR-014</td>
+<td>Imported type/category/subject and editor limits constrain
+changes</td>
+</tr>
+<tr class="odd">
+<td>Media</td>
+<td>MED; SICHT; ADR-017</td>
+<td>Private originals and explicit matching; no broad physical
+purge</td>
+</tr>
+<tr class="even">
+<td>Import</td>
+<td>IMP; ZIEL-03; ADR-007/008/010/017</td>
+<td>Bounded profiles; preserved original does not mean every field is
+semantically supported</td>
+</tr>
+<tr class="odd">
+<td>Export</td>
+<td>EXP-01–08; SICHT-05–06; ADR-017</td>
+<td>Current-state GEDCOM/media, not a full archive or PDF feature</td>
+</tr>
+<tr class="even">
+<td>Collaboration and recovery</td>
+<td>KOLL; HIST; LOE; JOB; FEHLER; BETR</td>
+<td>Partial trash/history/jobs; operational backup is separate from
+portable archives</td>
+</tr>
+<tr class="odd">
+<td>Language and accessibility</td>
+<td>NF-03; UX; ADR-011–015</td>
+<td>English/German implemented behavior; no blanket accessibility
+certification</td>
+</tr>
+<tr class="even">
+<td>Connected tools</td>
+<td>Approved integration amendment, issues 42–48</td>
+<td>Personal credentials and minimal signed notifications; delegated
+authorization remains future work</td>
+</tr>
+</tbody>
+</table>
+<p>The decision register currently contains two entries labelled
+ADR-015: one for locale/shared-home behavior and a later one for
+integration access. References here identify the subject to avoid
+confusing those entries. This documentation task does not renumber
+historical decisions.</p>
+<h2 id="appendix-c--evidence-and-illustration-record">Appendix C —
+evidence and illustration record</h2>
+<h3 id="sources-used-and-reconciliation">Sources used and
+reconciliation</h3>
+<p>The current README, release 0.15 verification record, active behavior
+descriptions, selected current application controls/services and
+decision amendments were compared. Older milestone reports were used for
+behavior that later increments retain, not as a current list of missing
+features. In particular, earlier statements that export, media, general
+event editing or the shared tree home were unavailable are
+superseded.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Evidence</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/README.md">Current feature overview</a> and <a
+href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/README.md">documentation index</a></td>
+<td>Establish the current release and feature boundary</td>
+</tr>
+<tr class="even">
+<td><a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/testing/release-0.15.md">Release 0.15 verification</a></td>
+<td>Identify historical executed evidence, screenshot release and
+explicit remaining limits</td>
+</tr>
+<tr class="odd">
+<td><a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/user-guide-en.md">English user guide</a></td>
+<td>User-facing journeys; its older opening version statement is
+superseded by later sections/release evidence</td>
+</tr>
+<tr class="even">
+<td><a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/implementation/m1a.md">People and relationships</a>, <a
+href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/implementation/m1b.md">evidence and contexts</a></td>
+<td>Core rules, preservation and shared-record permissions</td>
+</tr>
+<tr class="odd">
+<td><a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/implementation/m3a.md">Interactive workspace</a>, <a
+href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/implementation/locale-and-home.md">locale and shared home</a></td>
+<td>Navigation behavior, bounds and current home-person precedence</td>
+</tr>
+<tr class="even">
+<td><a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/implementation/event-editing.md">Event/detail
+editing</a></td>
+<td>Shared statements, notes, contacts and draft handling</td>
+</tr>
+<tr class="odd">
+<td><a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/implementation/access-management.md">Access
+management</a></td>
+<td>Current membership boundaries, last-owner protection and activity
+views</td>
+</tr>
+<tr class="even">
+<td><a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/implementation/media-and-export.md">Media and export</a>,
+<a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/migration/m2d-profile.md">current exchange profile</a></td>
+<td>Files, deletion/restoration, export semantics, retention and
+input/output bounds</td>
+</tr>
+<tr class="odd">
+<td><a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/migration/m2a-profile.md">Import profile foundation</a>, <a
+href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/migration/m2b-profile.md">additional events</a>, <a
+href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/migration/m2c-profile.md">literal compatibility</a></td>
+<td>Earlier import rules retained or explicitly extended by later
+profiles</td>
+</tr>
+<tr class="even">
+<td><a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/implementation/integration-api.md">Integration
+behavior</a>, <a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/api/integration.md">integration guide</a></td>
+<td>Tool access, current-authority checks, notification delivery and
+recovery</td>
+</tr>
+<tr class="odd">
+<td><a href="https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/testing/playwright-review.md">Browser review</a> and <a
+href="#illustration-provenance">screenshot
+provenance</a></td>
+<td>Origin of the fictional illustrations and their existing capture
+evidence</td>
+</tr>
+</tbody>
+</table>
+<p>The new document was reviewed as documentation. The examples in
+Appendix A have not been newly executed as a separate acceptance suite.
+Historical release evidence is not a claim that all original core
+obligations passed. No real-family import or complete real-data
+migration was performed for this specification.</p>
+<h3 id="illustration-provenance">Illustration provenance</h3>
+<p>Figures 1–12 are unmodified image files selected from the release
+0.15 Chromium desktop review gallery. Each source belongs to the same
+recorded fictional release run. Their checksums, original capture names,
+language, dimensions and captions are recorded in the linked provenance
+manifest. PDF layout may continue a long image on subsequent pages at a
+readable scale; it does not alter the original stored screenshot.</p>
+<p>Diagrams 1–3 are newly authored explanations of observable workflows.
+They use invented examples and do not depict a proposed user interface.
+They do not establish additional product functionality.</p>
+<h3 id="remaining-evidence-boundaries">Remaining evidence
+boundaries</h3>
+<p>This handoff does not certify arbitrary third-party genealogy files,
+complete real-family migration, physical mobile devices, all assistive
+technologies, large-tree performance or every authorization race. Those
+remain explicit verification obligations where applicable. A future
+implementation should use the behavior and requirement relationships
+here while recording its own executed evidence.</p>
+</body>
+</html>
