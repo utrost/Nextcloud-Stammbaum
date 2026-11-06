@@ -233,3 +233,37 @@ test('maximum-length unbroken source titles remain readable in phone lists and d
     await mainTabs(page).getByRole('tab', { name: 'People', exact: true }).click();
   }
 });
+
+test('a late management refresh never overwrites newly typed tree details', async ({ page }) => {
+  const t = await tree(page);
+  await openTree(page, t);
+  let release, arrive;
+  const pending = new Promise((r) => (release = r)),
+    arrived = new Promise((r) => (arrive = r));
+  const pattern = `**/api/v1/trees/${t.id}/members`;
+  await page.route(pattern, async (route) => {
+    arrive();
+    await pending;
+    await route.continue();
+  });
+  try {
+    await mainTabs(page).getByRole('tab', { name: 'Manage', exact: true }).click();
+    await arrived;
+    const form = page.locator('form.panel');
+    await form.getByLabel('Name', { exact: true }).fill('Fictional revised name');
+    await form.getByLabel('Description', { exact: true }).fill('Typed during the management refresh');
+    release();
+    await expect(form.getByRole('button', { name: 'Save', exact: true })).toBeEnabled();
+    await expect(form.getByLabel('Name', { exact: true })).toHaveValue('Fictional revised name');
+    await expect(form.getByLabel('Description', { exact: true })).toHaveValue(
+      'Typed during the management refresh',
+    );
+    await answer(page, false, () => mainTabs(page).getByRole('tab', { name: 'People', exact: true }).click());
+    await expect(form.getByLabel('Description', { exact: true })).toHaveValue(
+      'Typed during the management refresh',
+    );
+  } finally {
+    release();
+    await page.unroute(pattern);
+  }
+});

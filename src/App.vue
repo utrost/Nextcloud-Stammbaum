@@ -426,8 +426,6 @@ async function loadManage() {
   members.value = m.items;
   trash.value = d.items;
   invitations.value = i.items;
-  editTreeName.value = tree.value.name;
-  editTreeDescription.value = tree.value.description;
 }
 async function saveTreeDetails(home = tree.value.homeId) {
   await action(async () => {
