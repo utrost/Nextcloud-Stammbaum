@@ -9,6 +9,7 @@ import FamilyGraph from './components/FamilyGraph.vue';
 import EvidencePanel from './components/EvidencePanel.vue';
 import RecordPanel from './components/RecordPanel.vue';
 import MediaPanel from './components/MediaPanel.vue';
+import ImportPanel from './components/ImportPanel.vue';
 import ContextPanel from './components/ContextPanel.vue';
 const savedViews = ref({ revision: 1, items: [] }),
   viewLabel = ref(''),
@@ -108,6 +109,7 @@ const actionName = (a) =>
   t(
     {
       person_created: 'Person created',
+      person_imported: 'Person imported from GEDCOM',
       person_updated: 'Person updated',
       person_restored: 'Person restored',
       person_deleted: 'Person deleted',
@@ -138,6 +140,21 @@ function urlState() {
 async function refreshTrees() {
   const r = await api('/trees');
   trees.value = r.items;
+}
+async function importsChanged() {
+  const id = tree.value?.id;
+  try {
+    const current = await api(`/trees/${id}`);
+    if (tree.value?.id !== id) return;
+    tree.value = current;
+    await loadPeople();
+    if (tree.value?.id !== id) return;
+    if (!focus.value) focus.value = people.value[0]?.id || '';
+    if (focus.value) await loadGraph();
+    await refreshTrees();
+  } catch (e) {
+    if (tree.value?.id === id) error.value = t(e.message);
+  }
 }
 async function loadPeople(page = 0) {
   const seq = ++peopleSequence;
@@ -184,10 +201,10 @@ async function chooseTree(id, initial = {}) {
     tree.value = r;
     editTreeName.value = r.name;
     editTreeDescription.value = r.description;
-    tab.value = ['family', 'people', 'sources', 'media', 'manage'].includes(initial.view)
+    tab.value = ['family', 'people', 'sources', 'media', 'imports', 'manage'].includes(initial.view)
       ? initial.view
       : 'family';
-    if (tab.value === 'manage' && !management.value) tab.value = 'family';
+    if (['manage', 'imports'].includes(tab.value) && !management.value) tab.value = 'family';
     await loadPeople();
     savedViews.value = await api(`/trees/${id}/views`);
     viewChoice.value = '';
@@ -722,7 +739,13 @@ onBeforeUnmount(() => {
         </button>
         <div class="page-tabs" role="tablist">
           <button
-            v-for="v in ['family', 'people', 'sources', 'media', ...(management ? ['manage'] : [])]"
+            v-for="v in [
+              'family',
+              'people',
+              'sources',
+              'media',
+              ...(management ? ['imports', 'manage'] : []),
+            ]"
             :key="v"
             role="tab"
             :aria-selected="tab === v"
@@ -826,6 +849,13 @@ onBeforeUnmount(() => {
             </div>
           </section>
         </section>
+        <ImportPanel
+          v-else-if="tab === 'imports' && management"
+          :key="tree.id"
+          :tree-id="tree.id"
+          @changed="importsChanged"
+          @open-tree="changeTab('family')"
+        />
         <EvidencePanel
           v-else-if="tab === 'sources'"
           :key="tree.id"
@@ -1144,7 +1174,7 @@ onBeforeUnmount(() => {
         <p class="iteration-note">
           {{
             t(
-              'This early version supports people, relationships, evidence, shared events, notes and private media. GEDCOM exchange and integrations are still planned.',
+              'This early version supports manual research and a bounded, reviewed GEDCOM import. Current-state export and external integrations are still planned.',
             )
           }}
         </p>

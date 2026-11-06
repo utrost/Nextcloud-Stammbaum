@@ -4,6 +4,108 @@ export const locale = ref(
     (document.documentElement.lang?.startsWith('en') ? 'en' : 'de'),
 );
 const de = {
+  'This early version supports manual research and a bounded, reviewed GEDCOM import. Current-state export and external integrations are still planned.':
+    'Diese frühe Version unterstützt manuelle Forschung und einen begrenzten GEDCOM-Import mit Prüfung. Der Export des aktuellen Datenstands und externe Integrationen sind noch geplant.',
+  Warning: 'Warnung',
+  Error: 'Fehler',
+  Imports: 'Importe',
+  'GEDCOM import': 'GEDCOM-Import',
+  'Person imported from GEDCOM': 'Person aus GEDCOM importiert',
+  'Import into an empty tree. Review the result before any people or evidence become active.':
+    'Importiere in einen leeren Stammbaum. Prüfe das Ergebnis, bevor Personen oder Belege übernommen werden.',
+  'Supported import scope': 'Unterstützter Importumfang',
+  'GEDCOM 5.5 / 5.5.1, up to 8 MiB and 2,000 people. UTF-8, ASCII, or UTF-16 with a byte-order mark.':
+    'GEDCOM 5.5 / 5.5.1, bis zu 8 MiB und 2.000 Personen. UTF-8, ASCII oder UTF-16 mit Byte-Reihenfolgemarkierung.',
+  'Basic names, vital dates and places, explicit family links, notes, sources and citations. Unsupported standard fields block activation. Vendor extensions remain preserved with warnings.':
+    'Einfache Namen, Lebensdaten und Orte, ausdrückliche Familienbeziehungen, Notizen, Quellen und Belege. Nicht unterstützte Standardfelder verhindern die Übernahme. Herstellererweiterungen bleiben mit Warnhinweisen erhalten.',
+  'No ZIP archives, media files, populated-tree merge, or complete migration-profile compatibility yet.':
+    'ZIP-Archive, Mediendateien, Zusammenführen mit bestehenden Stammbäumen und vollständige Kompatibilität mit dem Migrationsprofil werden noch nicht unterstützt.',
+  'Originals and reports remain private to tree managers and owners, including failed and cancelled runs. Downloading the original is not a current-state export.':
+    'Originale und Berichte bleiben der Stammbaumverwaltung vorbehalten, auch nach fehlgeschlagenen oder abgebrochenen Läufen. Der Originaldownload ist kein Export des aktuellen Datenstands.',
+  'GEDCOM file': 'GEDCOM-Datei',
+  'Upload for review': 'Zur Prüfung hochladen',
+  'Import runs': 'Importläufe',
+  'No imports yet': 'Noch keine Importe',
+  'Import review': 'Importprüfung',
+  'Receiving original': 'Original wird empfangen',
+  'Waiting for analysis': 'Wartet auf Analyse',
+  Analyzing: 'Wird analysiert',
+  'Ready for review': 'Bereit zur Prüfung',
+  'Activation blocked': 'Übernahme blockiert',
+  'Waiting for activation': 'Wartet auf Übernahme',
+  Activating: 'Wird übernommen',
+  'Import completed': 'Import abgeschlossen',
+  'Import cancelled': 'Import abgebrochen',
+  'Import failed': 'Import fehlgeschlagen',
+  'Nextcloud background jobs process this request. You may leave this page and return later.':
+    'Nextcloud verarbeitet diesen Auftrag im Hintergrund. Du kannst die Seite verlassen und später zurückkehren.',
+  'Nothing was activated. The original and any completed review remain retained.':
+    'Es wurde nichts übernommen. Das Original und eine bereits abgeschlossene Prüfung bleiben erhalten.',
+  'The reviewed research is now available in this tree. Original-file downloads retain the uploaded bytes.':
+    'Die geprüften Forschungsdaten sind jetzt im Stammbaum verfügbar. Der Originaldownload enthält weiterhin die unveränderten hochgeladenen Bytes.',
+  'Open imported family': 'Importierte Familie öffnen',
+  Relations: 'Beziehungen',
+  Contexts: 'Familienkontexte',
+  Records: 'Einträge',
+  Citations: 'Belege',
+  errors: 'Fehler',
+  warnings: 'Warnungen',
+  Line: 'Zeile',
+  'Showing the first 200 diagnostics; totals include every diagnostic.':
+    'Die ersten 200 Hinweise werden angezeigt; die Summen umfassen alle Hinweise.',
+  'Preview people': 'Personenvorschau',
+  'The preview shows up to twenty people. Counts cover the complete file.':
+    'Die Vorschau zeigt bis zu zwanzig Personen. Die Anzahlen beziehen sich auf die gesamte Datei.',
+  'Analysis stopped at a blocking error. These counts and previews are incomplete.':
+    'Die Analyse wurde bei einem blockierenden Fehler beendet. Anzahlen und Vorschau sind unvollständig.',
+  'I reviewed this file, the preview and all warnings. Activate this result in the empty tree.':
+    'Ich habe diese Datei, die Vorschau und alle Warnungen geprüft. Dieses Ergebnis im leeren Stammbaum übernehmen.',
+  'Confirm import': 'Import bestätigen',
+  'Cancel import': 'Import abbrechen',
+  'Download unchanged original': 'Unverändertes Original herunterladen',
+  'Preserved structure and verification': 'Erhaltene Struktur und Prüfsummen',
+  Profile: 'Profil',
+  Encoding: 'Zeichenkodierung',
+  'Interpretation checksum': 'Prüfsumme der Interpretation',
+  'Show original structure': 'Originalstruktur anzeigen',
+  'Next structure page': 'Nächste Strukturseite',
+  'This standard field is not supported by this import profile.':
+    'Dieses Standardfeld wird von diesem Importprofil nicht unterstützt.',
+  'Vendor information is preserved in the original structure but is not interpreted.':
+    'Herstellerinformationen bleiben in der Originalstruktur erhalten, werden aber nicht interpretiert.',
+  'An unreferenced note remains in the original structure.':
+    'Eine nicht verknüpfte Notiz bleibt in der Originalstruktur erhalten.',
+  'This date remains literal wording; no calendar date was inferred.':
+    'Dieses Datum bleibt als Wortlaut erhalten; es wurde kein Kalenderdatum abgeleitet.',
+  'A reference is missing or points to a different kind of record.':
+    'Ein Verweis fehlt oder zeigt auf eine andere Art von Eintrag.',
+  'The full name and its components disagree.':
+    'Der vollständige Name und seine Bestandteile widersprechen sich.',
+  'Use UTF-8, ASCII, or UTF-16 with a byte-order mark and matching declaration.':
+    'Verwende UTF-8, ASCII oder UTF-16 mit Byte-Reihenfolgemarkierung und passender Deklaration.',
+  'Only GEDCOM 5.5 and 5.5.1 are supported by this profile.':
+    'Dieses Profil unterstützt nur GEDCOM 5.5 und 5.5.1.',
+  'The destination is no longer empty. Nothing was imported.':
+    'Der Zielstammbaum ist nicht mehr leer. Es wurde nichts importiert.',
+  'The destination changed after review. Nothing was imported.':
+    'Der Zielstammbaum wurde nach der Prüfung geändert. Es wurde nichts importiert.',
+  'The initiating permission changed. Nothing was imported.':
+    'Die ursprüngliche Berechtigung wurde geändert. Es wurde nichts importiert.',
+  'The initiating account no longer has import permission.':
+    'Das ursprüngliche Konto hat keine Importberechtigung mehr.',
+  'The initiating account no longer has access to this tree.':
+    'Das ursprüngliche Konto hat keinen Zugriff mehr auf diesen Stammbaum.',
+  'The initiating account is no longer active.': 'Das ursprüngliche Konto ist nicht mehr aktiv.',
+  'Processing was interrupted repeatedly. The original remains retained.':
+    'Die Verarbeitung wurde mehrfach unterbrochen. Das Original bleibt erhalten.',
+  'The stored original failed its integrity check.':
+    'Die Integritätsprüfung des gespeicherten Originals ist fehlgeschlagen.',
+  'The reviewed plan failed its integrity check.':
+    'Die Integritätsprüfung des geprüften Importplans ist fehlgeschlagen.',
+  'This run could not finish safely. No partial import was published.':
+    'Dieser Lauf konnte nicht sicher abgeschlossen werden. Es wurde kein Teilimport veröffentlicht.',
+  'This input structure needs attention before it can be imported.':
+    'Diese Eingabestruktur muss vor dem Import geprüft werden.',
   'Linked records': 'Verknüpfte Einträge',
   'Shared records linked to this person become unavailable until the person is restored.':
     'Gemeinsame Einträge mit dieser Person sind bis zu ihrer Wiederherstellung nicht verfügbar.',
