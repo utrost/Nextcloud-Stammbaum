@@ -18,7 +18,19 @@ async function answer(page, accept, action) {
   await (accept ? d.accept() : d.dismiss());
   await pending;
 }
-test.beforeEach(async ({ page }) => login(page));
+async function language(page, value) {
+  await page.getByLabel('Language', { exact: true }).selectOption(value);
+  await expect.poll(async () => (await good(page, '/preferences')).locale).toBe(value);
+}
+test.beforeEach(async ({ page }) => {
+  await login(page);
+  const pref = await good(page, '/preferences');
+  if (pref.locale !== 'en') {
+    await good(page, '/preferences', 'PUT', { locale: 'en', revision: pref.revision });
+    await page.reload();
+    await expect(page.locator('#stammbaum-app .brand')).toBeVisible();
+  }
+});
 
 test('file selections survive declined main and person tab navigation; accepted discard clears them', async ({
   page,
@@ -145,13 +157,13 @@ test('tree details protect hash and tree navigation; saves and accepted discard 
   await expect(page.locator('form.panel').getByRole('button', { name: 'Save', exact: true })).toBeEnabled();
   await mainTabs(page).getByRole('tab', { name: 'People', exact: true }).click();
   await expect(page.getByRole('searchbox')).toBeVisible();
-  await page.getByLabel('Language', { exact: true }).selectOption('de');
+  await language(page, 'de');
   await page.getByRole('tab', { name: 'Verwalten', exact: true }).click();
   await page.locator('form.panel textarea').fill('Ungespeichert');
   await answer(page, false, () => page.getByRole('tab', { name: 'Personen', exact: true }).click());
   await expect(page.locator('form.panel textarea')).toHaveValue('Ungespeichert');
   await answer(page, true, () => page.getByRole('tab', { name: 'Personen', exact: true }).click());
-  await page.getByLabel('Language', { exact: true }).selectOption('en');
+  await language(page, 'en');
 });
 
 test('main and person tablists support manual keyboard activation and named panels', async ({
@@ -195,7 +207,7 @@ test('main and person tablists support manual keyboard activation and named pane
   try {
     await login(viewer, 'stb_viewer');
     await openTree(viewer, t);
-    await viewer.getByLabel('Language', { exact: true }).selectOption('de');
+    await language(viewer, 'de');
     await viewer.setViewportSize({ width: 320, height: 844 });
     const vt = viewer.getByRole('tablist', { name: 'Stammbaum-Arbeitsbereich' });
     await expect(vt.getByRole('tab')).toHaveCount(4);
@@ -204,7 +216,7 @@ test('main and person tablists support manual keyboard activation and named pane
     await viewer.keyboard.press('Enter');
     await expect(viewer.getByRole('tabpanel', { name: 'Medien', exact: true })).toBeVisible();
     await viewer.setViewportSize({ width: 1440, height: 1000 });
-    await viewer.getByLabel('Language', { exact: true }).selectOption('en');
+    await language(viewer, 'en');
   } finally {
     await context.close();
   }
