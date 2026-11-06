@@ -220,7 +220,7 @@ useDraftGuard(dirty, busy);
             :disabled="draft.fields.length >= 32"
             @click="draft.fields.push({ label: '', value: '', unit: '' })"
           >
-            ＋ {{ t('Add field') }}
+            + {{ t('Add field') }}
           </button></template
         >
         <section v-if="draft.category === 'event'" class="record-participants">
