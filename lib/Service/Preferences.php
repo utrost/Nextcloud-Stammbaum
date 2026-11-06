@@ -48,7 +48,36 @@ final class Preferences
     }
     private function state(string $tree, string $actor): array
     {
-        return $this->read($actor, 'views:' . $tree, ['revision' => 1, 'items' => []]);
+        // Read after acquiring Store's write guard, rather than a request-local
+        // Nextcloud user-config cache which may predate a concurrent writer.
+        $row = $this->store->one(
+            'SELECT data_json FROM *PREFIX*stb_preferences WHERE tree_id = ? AND user_id = ?',
+            [$tree, $actor],
+        );
+        $state = $row
+            ? json_decode($row['data_json'], true, 32, JSON_THROW_ON_ERROR)
+            : $this->read($actor, 'views:' . $tree, ['revision' => 1, 'items' => []]);
+        return $state + ['homeId' => null, 'openingViewId' => null];
+    }
+    private function saveState(string $tree, string $actor, array $state): void
+    {
+        if (
+            $this->store->one(
+                'SELECT tree_id FROM *PREFIX*stb_preferences WHERE tree_id = ? AND user_id = ?',
+                [$tree, $actor],
+            )
+        ) {
+            $this->store->execute(
+                'UPDATE *PREFIX*stb_preferences SET data_json = ? WHERE tree_id = ? AND user_id = ?',
+                [Store::json($state), $tree, $actor],
+            );
+        } else {
+            $this->store->insert('stb_preferences', [
+                'tree_id' => $tree,
+                'user_id' => $actor,
+                'data_json' => Store::json($state),
+            ]);
+        }
     }
     private function allowed(string $tree, array $view, array $m): bool
     {
@@ -66,8 +95,27 @@ final class Preferences
     {
         $m = $this->trees->access($tree, $actor);
         $r = $this->state($tree, $actor);
-        $r['items'] = array_values(array_filter($r['items'], fn($v) => $this->allowed($tree, $v, $m)));
-        return $r;
+        $items = array_values(array_filter($r['items'], fn($v) => $this->allowed($tree, $v, $m)));
+        $home = null;
+        if ($r['homeId']) {
+            try {
+                $p = $this->people->row($tree, $r['homeId'], $m);
+                $home = [
+                    'id' => $p['id'],
+                    'givenName' => $p['given_name'],
+                    'familyName' => $p['family_name'],
+                ];
+            } catch (Problem) {
+                // Never return the inaccessible ID or a distinguishing existence flag.
+            }
+        }
+        $opening = null;
+        foreach ($items as $view) {
+            if ($view['id'] === $r['openingViewId']) {
+                $opening = $view;
+            }
+        }
+        return ['revision' => $r['revision'], 'items' => $items, 'home' => $home, 'openingView' => $opening];
     }
     public function saveView(string $tree, string $actor, array $b): array
     {
@@ -124,7 +172,7 @@ final class Preferences
                         }
                         $camera[$key] = (float) $camera[$key];
                     }
-                    if ($camera['zoom'] < 0.2 || $camera['zoom'] > 2) {
+                    if ($camera['zoom'] < 0.001 || $camera['zoom'] > 2) {
                         throw new Problem('camera', 'Choose a supported zoom.');
                     }
                     $id = Store::id();
@@ -137,8 +185,9 @@ final class Preferences
                         ...$depths,
                         'camera' => array_intersect_key($camera, array_flip(['x', 'y', 'zoom'])),
                     ];
+                    $state['openingViewId'] = $id;
                     $state['revision']++;
-                    $this->config->setUserValue($actor, 'stammbaum', 'views:' . $tree, Store::json($state));
+                    $this->saveState($tree, $actor, $state);
                     return $id;
                 },
             );
@@ -147,6 +196,25 @@ final class Preferences
                 throw Problem::missing();
             }
             return $views;
+        });
+    }
+    public function saveHome(string $tree, string $actor, array $b): array
+    {
+        return $this->store->write(function () use ($tree, $actor, $b) {
+            $m = $this->trees->access($tree, $actor);
+            $state = $this->state($tree, $actor);
+            $this->store->version($state, $b['revision'] ?? null);
+            if (!array_key_exists('homeId', $b)) {
+                throw new Problem('home_required', 'Choose a personal home or clear it explicitly.');
+            }
+            $home = $b['homeId'] === null ? null : Values::text($b['homeId'], 'homeId', 36, true);
+            if ($home !== null) {
+                $this->people->row($tree, $home, $m);
+            }
+            $state['homeId'] = $home;
+            $state['revision']++;
+            $this->saveState($tree, $actor, $state);
+            return $this->views($tree, $actor);
         });
     }
     public function deleteView(string $tree, string $id, string $actor, array $b): array
@@ -160,8 +228,11 @@ final class Preferences
                 throw Problem::missing();
             }
             $r['items'] = $items;
+            if ($r['openingViewId'] === $id) {
+                $r['openingViewId'] = null;
+            }
             $r['revision']++;
-            $this->config->setUserValue($actor, 'stammbaum', 'views:' . $tree, Store::json($r));
+            $this->saveState($tree, $actor, $r);
             return $this->views($tree, $actor);
         });
     }

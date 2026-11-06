@@ -12,7 +12,12 @@ import MediaPanel from './components/MediaPanel.vue';
 import ImportPanel from './components/ImportPanel.vue';
 import ContextPanel from './components/ContextPanel.vue';
 import TabList from './components/TabList.vue';
-const savedViews = ref({ revision: 1, items: [] }),
+const savedViews = ref({ revision: 1, items: [], home: null, openingView: null }),
+  preferenceDraft = ref(null),
+  preferenceCurrent = ref(null),
+  preferenceError = ref(''),
+  preferenceFailure = ref(null),
+  preferenceBusy = ref(false),
   viewLabel = ref(''),
   viewChoice = ref(''),
   localeRevision = ref(null);
@@ -37,6 +42,7 @@ const trees = ref([]),
   loading = ref(true),
   busy = ref(false),
   error = ref(''),
+  treeLoadFailure = ref(null),
   notice = ref(''),
   navOpen = ref(false);
 const portrait = ref(null),
@@ -62,6 +68,7 @@ const graph = ref({ people: [], relations: [], limited: false, focusId: null }),
   up = ref(3),
   down = ref(2),
   camera = ref({ x: 20, y: 20, zoom: 1 }),
+  cameraReady = ref(false),
   branches = ref([]);
 const editor = ref(null),
   treeDialog = ref(null),
@@ -91,6 +98,7 @@ let searchTimer,
 const name = (p) => personName(p, t('Unnamed person'));
 const management = computed(() => ['manager', 'owner'].includes(tree.value?.role));
 const canEdit = computed(() => ['editor', 'manager', 'owner'].includes(tree.value?.role));
+const homeId = computed(() => savedViews.value.home?.id || tree.value?.homeId || null);
 const selectedOnBranch = computed(() => graph.value.people.some((p) => p.id === selected.value?.id));
 const roleOptions = computed(() => (tree.value?.role === 'owner' ? roles : ['viewer', 'editor']));
 const mainTabs = computed(() => [
@@ -121,7 +129,18 @@ useDraftGuard(
   computed(() => newTreeDirty.value || treeDetailsDirty.value),
   computed(() => busy.value && (treeDialogOpen.value || tab.value === 'manage')),
 );
+useDraftGuard(
+  computed(() => preferenceDraft.value !== null),
+  preferenceBusy,
+);
+function setCamera(value) {
+  camera.value = value;
+  cameraReady.value = true;
+}
 function resetTreeDrafts() {
+  preferenceDraft.value = null;
+  preferenceCurrent.value = null;
+  preferenceError.value = '';
   if (tree.value) {
     editTreeName.value = tree.value.name;
     editTreeDescription.value = tree.value.description;
@@ -133,7 +152,13 @@ function navigate() {
   return true;
 }
 function treeUnload(event) {
-  if (newTreeDirty.value || treeDetailsDirty.value || (treeDialogOpen.value && busy.value)) {
+  if (
+    newTreeDirty.value ||
+    treeDetailsDirty.value ||
+    preferenceDraft.value ||
+    preferenceBusy.value ||
+    (treeDialogOpen.value && busy.value)
+  ) {
     event.preventDefault();
     event.returnValue = '';
   }
@@ -144,7 +169,7 @@ function closeTreeDialog() {
   treeDialog.value.close();
 }
 function changeDetailTab(value) {
-  if (value !== detailTab.value && canNavigate()) detailTab.value = value;
+  if (value !== detailTab.value && navigate()) detailTab.value = value;
 }
 const datetime = (x) =>
   new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(
@@ -162,6 +187,12 @@ const claimName = (k) =>
   );
 const claimValue = (c) =>
   c.kind === 'name' ? name(c.value) : c.kind.endsWith('_date') ? dateText(c.value) : c.value;
+const orderedRelations = computed(() => {
+  const rank = (r) => (r.kind === 'partner' ? 1 : r.sourceId === selected.value?.id ? 2 : 0);
+  return [...relations.value].sort(
+    (a, b) => rank(a) - rank(b) || name(a.person).localeCompare(name(b.person)) || a.id.localeCompare(b.id),
+  );
+});
 const orderedClaims = computed(() => {
   const kinds = ['name', 'birth_date', 'birth_place', 'death_date', 'death_place'];
   return [...claims.value].sort(
@@ -248,10 +279,15 @@ function search() {
 async function chooseTree(id, initial = {}, authorized = false) {
   if (!authorized && !navigate()) return;
   const seq = ++treeSequence;
+  treeLoadFailure.value = null;
+  savedViews.value = { revision: 1, items: [], home: null, openingView: null };
+  viewChoice.value = '';
   tree.value = null;
   researchExpanded.value = false;
   selected.value = null;
   focus.value = '';
+  camera.value = { x: 20, y: 20, zoom: 1 };
+  cameraReady.value = false;
   branches.value = [];
   people.value = [];
   query.value = '';
@@ -274,19 +310,43 @@ async function chooseTree(id, initial = {}, authorized = false) {
       : 'family';
     if (['manage', 'imports'].includes(tab.value) && !management.value) tab.value = 'family';
     await loadPeople();
-    savedViews.value = await api(`/trees/${id}/views`);
-    viewChoice.value = '';
     if (seq !== treeSequence) return;
-    focus.value = initial.focus || r.homeId || people.value[0]?.id || '';
-    if (initial.person) await inspect(initial.person);
+    if (peopleError.value) throw new Error(peopleError.value);
+    const preferences = await api(`/trees/${id}/views`);
+    if (seq !== treeSequence) return;
+    savedViews.value = preferences;
+    const opening =
+      !initial.focus || initial.focus === savedViews.value.openingView?.focus
+        ? savedViews.value.openingView
+        : null;
+    mode.value = opening?.mode || 'family';
+    up.value = opening?.up ?? 3;
+    down.value = opening?.down ?? 2;
+    if (opening) setCamera({ ...opening.camera });
+    focus.value =
+      initial.focus || opening?.focus || savedViews.value.home?.id || r.homeId || people.value[0]?.id || '';
+    if (initial.person || opening?.selected) await inspect(initial.person || opening.selected);
+    if (seq !== treeSequence) return;
     if (focus.value) await loadGraph();
+    if (seq !== treeSequence) return;
     if (tab.value === 'manage') await loadManage();
+    if (seq !== treeSequence) return;
     urlState();
   } catch (e) {
-    if (seq === treeSequence) error.value = t(e.message);
+    if (seq === treeSequence) {
+      error.value = t(e.message);
+      treeLoadFailure.value = { id, initial };
+      tree.value = null;
+    }
   } finally {
     if (seq === treeSequence) loading.value = false;
   }
+}
+function retryError() {
+  const failed = treeLoadFailure.value;
+  error.value = '';
+  if (failed) chooseTree(failed.id, failed.initial);
+  else if (!tree.value) startup();
 }
 async function loadGraph() {
   const seq = ++graphSequence;
@@ -308,7 +368,7 @@ async function loadGraph() {
   }
 }
 async function selectPerson(id) {
-  if (selected.value?.id === id || !canNavigate()) return;
+  if (selected.value?.id === id || !navigate()) return;
   await inspect(id);
 }
 async function inspect(id) {
@@ -359,7 +419,7 @@ async function mediaChanged() {
     portrait.value = r.items.find((m) => m.assignments.some((a) => a.personId === id && a.preferred)) || null;
 }
 async function dismissDetails() {
-  if (!canNavigate()) return;
+  if (!navigate()) return;
   const id = selected.value?.id;
   closeDetails();
   await nextTick();
@@ -396,7 +456,7 @@ async function branch(id) {
   urlState();
 }
 async function previous() {
-  if (!canNavigate()) return;
+  if (!navigate()) return;
   const prior = branches.value.pop();
   if (!prior) return;
   focus.value = prior.focus;
@@ -625,27 +685,96 @@ async function moreHistory() {
     }
   });
 }
-async function saveNamedView() {
-  await action(async () => {
-    savedViews.value = await api(`/trees/${tree.value.id}/views`, {
-      method: 'POST',
-      body: {
-        revision: savedViews.value.revision,
-        requestId: requestId(),
-        label: viewLabel.value,
-        focus: focus.value,
-        selected: selected.value?.id || '',
-        mode: mode.value,
-        up: up.value,
-        down: down.value,
-        camera: camera.value,
-      },
+async function savePreference(draft) {
+  if (preferenceBusy.value) return;
+  preferenceDraft.value = draft;
+  preferenceError.value = '';
+  preferenceFailure.value = null;
+  preferenceCurrent.value = null;
+  preferenceBusy.value = true;
+  const tid = tree.value.id;
+  try {
+    const result = await api(`/trees/${tid}/views${draft.suffix}`, {
+      method: draft.method,
+      body: draft.body,
     });
-    viewLabel.value = '';
-  }, 'View saved');
+    if (tree.value?.id !== tid) return;
+    savedViews.value = result;
+    if (draft.kind === 'view') viewLabel.value = '';
+    if (draft.kind === 'remove') viewChoice.value = '';
+    preferenceDraft.value = null;
+    preferenceCurrent.value = null;
+    notice.value = t('Personal navigation preference saved');
+  } catch (e) {
+    if (tree.value?.id === tid) {
+      preferenceError.value = t(e.message);
+      preferenceFailure.value = e.status || 0;
+    }
+  } finally {
+    preferenceBusy.value = false;
+  }
+}
+function saveNamedView() {
+  if (preferenceDraft.value || preferenceBusy.value) return;
+  savePreference({
+    kind: 'view',
+    label: viewLabel.value,
+    suffix: '',
+    method: 'POST',
+    body: {
+      revision: savedViews.value.revision,
+      requestId: requestId(),
+      label: viewLabel.value,
+      focus: focus.value,
+      selected: selected.value?.id || '',
+      mode: mode.value,
+      up: up.value,
+      down: down.value,
+      camera: { ...camera.value },
+    },
+  });
+}
+function savePersonalHome(person) {
+  if (preferenceDraft.value || preferenceBusy.value) return;
+  savePreference({
+    kind: 'home',
+    label: person ? name(person) : t('Follow shared home'),
+    suffix: '/home',
+    method: 'PUT',
+    body: {
+      revision: savedViews.value.revision,
+      homeId: person?.id || null,
+    },
+  });
+}
+async function comparePreferences() {
+  if (preferenceBusy.value) return;
+  preferenceBusy.value = true;
+  try {
+    preferenceCurrent.value = await api(`/trees/${tree.value.id}/views`);
+  } catch (e) {
+    preferenceError.value = t(e.message);
+  } finally {
+    preferenceBusy.value = false;
+  }
+}
+function applyPreference() {
+  const draft = preferenceDraft.value;
+  if (!draft || !preferenceCurrent.value) return;
+  const body = { ...draft.body, revision: preferenceCurrent.value.revision };
+  if (draft.kind === 'view') body.requestId = requestId();
+  preferenceCurrent.value = null;
+  savePreference({ ...draft, body });
+}
+function discardPreference() {
+  if (preferenceBusy.value) return;
+  if (preferenceCurrent.value) savedViews.value = preferenceCurrent.value;
+  preferenceDraft.value = null;
+  preferenceCurrent.value = null;
+  preferenceError.value = '';
 }
 async function openNamedView() {
-  if (!canNavigate()) return;
+  if (!navigate()) return;
   const v = savedViews.value.items.find((v) => v.id === viewChoice.value);
   if (!v) return;
   mode.value = v.mode;
@@ -657,16 +786,16 @@ async function openNamedView() {
   await nextTick();
   camera.value = { ...v.camera };
 }
-async function deleteNamedView() {
-  const id = viewChoice.value;
-  if (!id) return;
-  await action(async () => {
-    savedViews.value = await api(`/trees/${tree.value.id}/views/${id}`, {
-      method: 'DELETE',
-      body: { revision: savedViews.value.revision },
-    });
-    viewChoice.value = '';
-  }, 'Saved view removed');
+function deleteNamedView() {
+  const view = savedViews.value.items.find((v) => v.id === viewChoice.value);
+  if (!view || preferenceDraft.value || preferenceBusy.value) return;
+  savePreference({
+    kind: 'remove',
+    label: view.label,
+    suffix: `/${view.id}`,
+    method: 'DELETE',
+    body: { revision: savedViews.value.revision },
+  });
 }
 async function startup(authorized = false) {
   loading.value = true;
@@ -769,18 +898,47 @@ onBeforeUnmount(() => {
       </button>
       <div v-if="error" class="feedback error" role="alert">
         {{ error }}
-        <button
-          @click="
-            error = '';
-            !tree && startup();
-          "
-        >
+        <button @click="retryError">
           {{ t('Retry') }}
         </button>
       </div>
       <div v-if="notice" class="feedback success" role="status">
         {{ notice }}<button class="icon-button" :aria-label="t('Close')" @click="notice = ''">×</button>
       </div>
+      <section v-if="preferenceDraft && preferenceError" class="panel preference-conflict" role="alert">
+        <h2>{{ t('Review your navigation preference') }}</h2>
+        <p>{{ preferenceError }}</p>
+        <p>
+          {{ t('Your proposed preference') }}: <strong>{{ preferenceDraft.label }}</strong>
+        </p>
+        <div v-if="preferenceCurrent">
+          <p>
+            {{ t('Current personal home') }}:
+            {{ preferenceCurrent.home ? name(preferenceCurrent.home) : t('Follow shared home') }}
+          </p>
+          <p>
+            {{ t('Current starting view') }}: {{ preferenceCurrent.openingView?.label || t('Home person') }}
+          </p>
+        </div>
+        <div class="button-row">
+          <button
+            v-if="preferenceFailure !== 412"
+            :disabled="preferenceBusy"
+            @click="savePreference(preferenceDraft)"
+          >
+            {{ t('Retry same operation') }}
+          </button>
+          <button v-else :disabled="preferenceBusy" @click="comparePreferences">
+            {{ t('Load current preferences for comparison') }}
+          </button>
+          <button v-if="preferenceCurrent" :disabled="preferenceBusy" @click="applyPreference">
+            {{ t('Apply my preference to this version') }}
+          </button>
+          <button :disabled="preferenceBusy" @click="discardPreference">
+            {{ t('Discard proposed preference') }}
+          </button>
+        </div>
+      </section>
       <section v-if="invitation" class="welcome invitation">
         <span class="eyebrow">{{ t('Invitation') }}</span>
         <h1>{{ t('You have been invited to') }} {{ invitation.treeName }}</h1>
@@ -1028,7 +1186,7 @@ onBeforeUnmount(() => {
                   <div class="button-row">
                     <button :disabled="!branches.length || graphLoading" @click="previous">
                       ← {{ t('Previous branch') }}</button
-                    ><button :disabled="!tree.homeId || graphLoading" @click="branch(tree.homeId)">
+                    ><button :disabled="!homeId || graphLoading" @click="branch(homeId)">
                       {{ t('Home person') }}
                     </button>
                   </div>
@@ -1052,8 +1210,16 @@ onBeforeUnmount(() => {
                 <details v-if="focus" class="saved-views">
                   <summary>{{ t('Saved views') }}</summary>
                   <form class="button-row" @submit.prevent="saveNamedView">
-                    <label>{{ t('View name') }}<input v-model="viewLabel" maxlength="100" required /></label
-                    ><button :disabled="busy">{{ t('Save current view') }}</button>
+                    <label
+                      >{{ t('View name')
+                      }}<input
+                        v-model="viewLabel"
+                        maxlength="100"
+                        required
+                        :disabled="preferenceBusy || !!preferenceDraft" /></label
+                    ><button :disabled="busy || preferenceBusy || !!preferenceDraft">
+                      {{ t('Save current view') }}
+                    </button>
                   </form>
                   <div v-if="savedViews.items.length" class="button-row">
                     <label
@@ -1070,8 +1236,22 @@ onBeforeUnmount(() => {
                   </div>
                   <p class="muted">
                     {{ t('Saved views belong to your account and respect your current tree access.') }}
+                    {{ t('The most recently saved view is used when reopening this tree.') }}
                   </p>
                 </details>
+                <div class="personal-home">
+                  <span
+                    >{{ t('Personal home') }}:
+                    {{ savedViews.home ? name(savedViews.home) : t('Follow shared home') }}</span
+                  >
+                  <button
+                    v-if="savedViews.home"
+                    :disabled="preferenceBusy || !!preferenceDraft"
+                    @click="savePersonalHome(null)"
+                  >
+                    {{ t('Clear personal home') }}
+                  </button>
+                </div>
                 <div v-if="graphLoading && !graph.people.length" class="empty" role="status">
                   <span class="spinner"></span>{{ t('Loading…') }}
                 </div>
@@ -1082,7 +1262,9 @@ onBeforeUnmount(() => {
                   v-else-if="graph.people.length"
                   :graph="graph"
                   :selected="selected?.id"
-                  v-model="camera"
+                  :model-value="camera"
+                  :restore-camera="cameraReady"
+                  @update:model-value="setCamera"
                   @select="(p) => selectPerson(p.id)"
                 />
                 <div v-else class="empty">
@@ -1151,6 +1333,12 @@ onBeforeUnmount(() => {
                   </dl>
                 </div>
                 <div class="detail-actions">
+                  <button
+                    :disabled="preferenceBusy || !!preferenceDraft || savedViews.home?.id === selected.id"
+                    @click="savePersonalHome(selected)"
+                  >
+                    {{ t('Set as personal home') }}
+                  </button>
                   <button @click="branch(selected.id)">{{ t('Show family branch') }}</button
                   ><button v-if="canEdit" @click="editor = { person: selected }">
                     {{ t('Edit person') }}</button
@@ -1175,7 +1363,7 @@ onBeforeUnmount(() => {
                   >
                     <section v-if="detailTab === 'connections'" class="detail-section">
                       <p v-if="!relations.length" class="muted">{{ t('No connections yet') }}</p>
-                      <div v-for="r in relations" :key="r.id" class="relation-row">
+                      <div v-for="r in orderedRelations" :key="r.id" class="relation-row">
                         <div>
                           <small
                             >{{
@@ -1316,7 +1504,7 @@ onBeforeUnmount(() => {
                     </div>
                     <h4>{{ t('Connections') }}</h4>
                     <p v-if="!relations.length" class="muted">{{ t('No connections yet') }}</p>
-                    <div v-for="r in relations" :key="r.id" class="relation-row">
+                    <div v-for="r in orderedRelations" :key="r.id" class="relation-row">
                       <span
                         >{{ name(r.person)
                         }}<small
@@ -1339,6 +1527,8 @@ onBeforeUnmount(() => {
                 <div v-if="management" class="danger-actions">
                   <button :disabled="busy" @click="saveTreeDetails(selected.id)">
                     {{ t('Set as shared home') }}</button
+                  ><button v-if="tree.homeId" :disabled="busy" @click="saveTreeDetails(null)">
+                    {{ t('Clear shared home') }}</button
                   ><button class="danger" :disabled="busy" @click="removePerson">
                     {{ t('Delete person') }}
                   </button>

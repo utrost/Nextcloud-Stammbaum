@@ -20,6 +20,7 @@ return [
         ['name' => 'api#preferences', 'url' => '/api/v1/preferences', 'verb' => 'GET'],
         ['name' => 'api#savePreferences', 'url' => '/api/v1/preferences', 'verb' => 'PUT'],
         ['name' => 'api#views', 'url' => '/api/v1/trees/{tree}/views', 'verb' => 'GET'],
+        ['name' => 'api#saveHome', 'url' => '/api/v1/trees/{tree}/views/home', 'verb' => 'PUT'],
         ['name' => 'api#saveView', 'url' => '/api/v1/trees/{tree}/views', 'verb' => 'POST'],
         ['name' => 'api#deleteView', 'url' => '/api/v1/trees/{tree}/views/{id}', 'verb' => 'DELETE'],
         ['name' => 'api#contexts', 'url' => '/api/v1/trees/{tree}/contexts', 'verb' => 'GET'],

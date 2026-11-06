@@ -22,6 +22,9 @@ final class AccountLifecycle implements IEventListener
         }
         $uid = $event->getUser()->getUID();
         $this->store->write(function () use ($uid, $remove) {
+            if ($remove) {
+                $this->store->execute('DELETE FROM *PREFIX*stb_preferences WHERE user_id = ?', [$uid]);
+            }
             $rows = $this->store->rows('SELECT tree_id FROM *PREFIX*stb_members WHERE user_id = ?', [$uid]);
             $this->store->execute(
                 'UPDATE *PREFIX*stb_members SET revision = revision + 1' .

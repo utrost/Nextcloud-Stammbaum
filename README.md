@@ -6,6 +6,8 @@ A native Nextcloud app for private, collaborative family-history research. The d
 
 Open **Stammbaum** in Nextcloud, create a tree, and add a person. Use the person workspace to add relatives, group siblings, record evidence and events, or upload an original photograph. Tree owners manage membership and invitations under **Manage**. Nextcloud administrators receive no automatic genealogy access.
 
+Use **Expand person research** to read evidence alongside retained assertions and relatives. Each member can set a personal home without changing the shared home. Saved views retain their focus, selection and camera; the most recently saved view is used when reopening the tree. The diagram supports mouse, keyboard and two-finger navigation, with a text alternative.
+
 For existing research, create an empty tree and open **Imports**. Upload a supported GEDCOM file, review its diagnostics and preview, then explicitly confirm activation. Nextcloud processes it in the background. The [named import profile](docs/gedcom-import-profile.md) is deliberately bounded; unsupported standard fields block activation.
 
 The app currently targets **Nextcloud 34**, PHP **8.3+**, with MariaDB verified. It uses Nextcloud accounts and private app storage; Library and Relate are development references, not dependencies.

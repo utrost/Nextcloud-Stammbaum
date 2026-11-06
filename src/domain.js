@@ -42,6 +42,7 @@ export function editable(person) {
     Object.keys(emptyPerson()).map((k) => [k, structuredClone(person[k] ?? emptyPerson()[k])]),
   );
 }
+export const graphZoom = { min: 0.001, max: 2 };
 export const graphCard = { width: 220, height: 104 };
 export function layoutGraph(people) {
   const groups = new Map();

@@ -26,6 +26,7 @@ Mutations carry the record revision. A stale write returns HTTP 412; omitted rev
 | `stb_sources`, `stb_citations`, `stb_targets` | Reusable sources, citations and independent target effects |
 | `stb_records`, `stb_participants` | Shared events, notes, contacts, structured details and ordered participants |
 | `stb_contexts`, `stb_context_people` | Ordered family groupings and references to existing connections |
+| `stb_preferences` | Per-account/per-tree saved views, personal home and opening view, with transactional revisions |
 | `stb_media`, `stb_media_people` | Original integrity/quota reservations, publication state, assignments and reversible crop/portrait metadata |
 | `stb_history`, `stb_receipts` | Attributed operations and creation retry identities |
 | `stb_imports`, `stb_import_nodes`, `stb_import_maps` | Durable import runs/leases/review bindings, immutable ordered input structure and source-line ownership mappings |
@@ -35,6 +36,8 @@ Language and private saved views use app-scoped Nextcloud user configuration. Th
 Original files live in the app's private `IAppData` `originals` folder under random opaque IDs. They are not ordinary user Files objects and have no public-sharing route. Uploads validate type, decoded image dimensions and byte limits before reserving quota. The reservation commits before filesystem writing; interrupted originals remain counted. A hash-verified original becomes visible only after another current-role and membership-generation check. Revocation followed by regrant cannot revive a pending upload. There is no physical-purge interface.
 
 Previews are separately decoded and re-encoded PNG responses. Crops are normalized assignment metadata and never overwrite original bytes. PDFs have no inline preview and download as attachments. JPEG orientation/EXIF-aware presentation and preview caching remain future work.
+
+The diagram keeps focus, selection and camera independent. Resizing preserves the viewed center; expanding research keeps the diagram mounted. Fit supports the full bounded 200-person projection, including narrow viewports; the percentage control restores the focus to a readable 100%. Saved camera zoom is validated between 0.1% and 200%. Two-finger gestures transform the camera around their midpoint without selecting a card or changing genealogy.
 
 ## Genealogy semantics
 
@@ -53,6 +56,10 @@ Notes render a small, text-node-based formatting vocabulary. HTML and image inst
 Logical person deletion deactivates connections and clears a shared home. The UI reviews counts against a tree revision before deletion. Shared records depending on a deleted person become unavailable. Restoration makes the person available again but does not reactivate relationships.
 
 ## API and lifecycle
+
+Personal navigation uses `GET /trees/{tree}/views` and versioned `PUT /trees/{tree}/views/home` with an explicit `homeId` (or `null` to clear). Every member can change only their own preferences. Responses include an authorized home summary and opening view; hidden or deleted pointers become `null` without exposing their IDs. The most recently saved named view supplies the opening focus, selection, generations and camera. Otherwise opening falls back to personal home, shared home and the first visible person. An explicit focus in a view link takes precedence. Home navigation uses personal then shared home independently of the opening view.
+
+Home and view changes share a revision. Conflicts preserve the proposed operation and require loading the current preferences and explicitly applying the proposal to that version, or discarding it. Clearing personal home preserves the active camera, branch history and saved views. Legacy native user-config saved views remain readable and migrate into `stb_preferences` on their next successful mutation. Subsequent reads use the app-owned row inside the write transaction, avoiding stale user-config caches during concurrent writes. Account deletion/recreation removes these rows. Language remains a native account preference.
 
 Native browser routes are under `/apps/stammbaum/api/v1`; their declarations are in `appinfo/routes.php`. Families include trees/members/invitations, people/assertions/history, relations/graph, sources/citations, records, contexts, media, imports, personal views and language preferences. These authenticated browser routes are **not** the scoped external-tool API promised by I02. No external credential or webhook endpoint is exposed.
 

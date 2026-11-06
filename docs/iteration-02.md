@@ -38,3 +38,14 @@ All 59 work-issue titles, bodies and milestones still match `backlog.json`, with
 No issue specification, original priority, A01–A30 mapping or archived source document is weakened to match this increment. The original 60-issue backlog remains authoritative. Original-file download does not implement [M07 current-state export](https://github.com/utrost/Nextcloud-Stammbaum/issues/38), [M08 export jobs](https://github.com/utrost/Nextcloud-Stammbaum/issues/39), ZIP/media matching, scoped external credentials, integration APIs, webhooks, portable archives or full operational recovery.
 
 The original private-storage reservation limits and global write guard remain conservative alpha choices. The advertised import bounds are exercised in a fictional fixture; production throughput, universal consumer interoperability and broad accessibility certification are not claimed.
+
+
+## Subsequent workspace iteration — alpha.13
+
+The native workspace now uses Nextcloud font and colour tokens, readable diagram labels, and an expanded person research layout. The expanded view keeps evidence beside retained assertions and relatives while preserving the mounted diagram, focus, selection, camera and upload drafts. Import review groups counts compactly, places the active review ahead of previous runs on phones, and retains explicit confirmation, diagnostics, original download and structure access.
+
+Personal home is separate from the shared tree home. All members can set their own home; managers can change or clear the shared home. The most recently saved named view supplies an accessible opening focus and camera, followed by personal home, shared home and the first visible person. Clearing personal home preserves camera and branch history. Preference conflicts retain the proposal and require explicit comparison/retry. Uncertain saved-view retries reuse the original operation, preventing duplication when a successful response is lost. Existing saved views migrate on their next successful preference write into the new transactional `stb_preferences` table.
+
+Playwright review also exposed and reproduced dense-family Fit clipping and absent two-finger zoom. Both are fixed, including a 100% focus reset and a rendered 200-person phone check. Resizing keeps the viewed center; partner lines no longer inherit the unknown-parent pattern. The German catalog now covers the literal UI and validation messages checked by the source audit; browser checks verify translated errors without translating authored names, places or literal dates.
+
+This work addresses the focused UI follow-ups #66–#68 and personal-home requirements #14, and advances the existing diagram/navigation/localization work #27, #28 and #43. Local expansions, broader device/accessibility certification and the full release-0.15 acceptance matrix remain open. Native screenshot baselines test the app's own design rather than reproducing the standalone illustrations.

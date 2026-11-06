@@ -43,6 +43,10 @@ Nextcloud 34.0.4 and MariaDB 11 are the fixture images. Five fictional accounts 
 
 Playwright currently uses `/usr/bin/google-chrome`. Unit tests use Node; PHP syntax can be checked in `php:8.3-cli`. `tests/unit/values.php` and `tests/unit/gedcom.php` need `mbstring`, available in the Nextcloud container. Browser results and screenshots are in ignored `test-results/`.
 
+Native screenshot baselines live beside `research-ui.spec.js` and `import-ui.spec.js`. Install `fonts-noto-core` for these checks; screenshot assertions explicitly select Noto Sans from Nextcloud's font stack to avoid operating-system font substitutions. Review generated images before accepting baseline changes. CI retains result JSON and screenshots as `stammbaum-browser-results`; fixture credentials and browser traces are excluded.
+
+Alpha.13 adds `stb_preferences` for versioned personal navigation. Existing saved views remain readable and migrate on their next successful preference write. Include this table with the other `stb_` tables in consistent backups. Personal-home writes do not modify shared tree metadata or grant editing rights.
+
 The suite tests actual native sessions, CSRF, MariaDB transactions, Nextcloud account events, upload/download bytes and browser journeys. A passed build alone is not application acceptance. The fixture retains fictional test records; its growing tree list is not production seed data.
 
 ## Original-media retention
