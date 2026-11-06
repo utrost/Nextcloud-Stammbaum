@@ -1271,9 +1271,7 @@ onBeforeUnmount(() => {
                   <span class="empty-glyph">⌘</span>
                   <h2>{{ t('No people yet') }}</h2>
                   <p>{{ t('Add the first person to start your family history.') }}</p>
-                  <button v-if="canEdit" class="primary" @click="editor = {}">
-                    + {{ t('New person') }}
-                  </button>
+                  <button v-if="canEdit" class="primary" @click="editor = {}">+ {{ t('New person') }}</button>
                 </div>
               </template>
             </section>
