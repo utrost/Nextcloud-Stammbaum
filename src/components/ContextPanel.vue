@@ -190,7 +190,7 @@ useDraftGuard(dirty, busy);
         )
       }}
     </p>
-    <button v-if="canEdit" @click="edit()">＋ {{ t('New context') }}</button>
+    <button v-if="canEdit" @click="edit()">+ {{ t('New context') }}</button>
     <p v-if="error && !editing" class="feedback error" role="alert">
       {{ error }} <button @click="load()">{{ t('Retry') }}</button>
     </p>

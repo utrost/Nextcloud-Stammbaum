@@ -97,7 +97,7 @@ onBeforeUnmount(() => sequence++);
             : ['event']"
         @click="editor = { category }"
       >
-        ＋ {{ t('New ' + category) }}
+        + {{ t('New ' + category) }}
       </button>
     </div>
     <p v-if="error" class="feedback error" role="alert">

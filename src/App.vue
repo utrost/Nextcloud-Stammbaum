@@ -879,7 +879,7 @@ onBeforeUnmount(() => {
           ><small>{{ t(title(tr.role)) }} · {{ tr.id.slice(0, 6) }}</small></span
         >
       </button>
-      <button class="new-tree-button" @click="createTree">＋ {{ t('New tree') }}</button>
+      <button class="new-tree-button" @click="createTree">+ {{ t('New tree') }}</button>
       <div class="nav-bottom">
         <span class="badge">0.1 · {{ t('Early version') }}</span>
         <p>{{ t('Only invited members can see a tree.') }}</p>
@@ -969,7 +969,7 @@ onBeforeUnmount(() => {
         <h2>{{ t(trees.length ? 'Your trees' : 'No trees yet') }}</h2>
         <p>{{ t('Start with someone you know.') }}</p>
         <button class="primary" @click="createTree">
-          ＋ {{ t(trees.length ? 'New tree' : 'Create your first tree') }}
+          + {{ t(trees.length ? 'New tree' : 'Create your first tree') }}
         </button>
         <div v-if="trees.length" class="tree-tiles">
           <button v-for="tr in trees" @click="chooseTree(tr.id)">
@@ -987,7 +987,7 @@ onBeforeUnmount(() => {
             <h1>{{ tree.name }}</h1>
             <p v-if="tree.description" class="muted">{{ tree.description }}</p>
           </div>
-          <button v-if="canEdit" class="primary" @click="editor = {}">＋ {{ t('New person') }}</button>
+          <button v-if="canEdit" class="primary" @click="editor = {}">+ {{ t('New person') }}</button>
         </header>
         <button
           class="leave-tree"
@@ -1272,7 +1272,7 @@ onBeforeUnmount(() => {
                   <h2>{{ t('No people yet') }}</h2>
                   <p>{{ t('Add the first person to start your family history.') }}</p>
                   <button v-if="canEdit" class="primary" @click="editor = {}">
-                    ＋ {{ t('New person') }}
+                    + {{ t('New person') }}
                   </button>
                 </div>
               </template>

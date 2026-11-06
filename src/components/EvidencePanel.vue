@@ -111,9 +111,9 @@ onBeforeUnmount(() => sequence++);
       <h2 v-if="!person">{{ source ? source.title : t('Sources') }}</h2>
       <button v-if="source" @click="back">← {{ t('Sources') }}</button
       ><button v-if="canEdit && !person && !source" class="primary" @click="editor = { kind: 'source' }">
-        ＋ {{ t('New source') }}</button
+        + {{ t('New source') }}</button
       ><button v-if="canEdit && (person || source)" @click="editor = { kind: 'citation' }">
-        ＋ {{ t('New citation') }}</button
+        + {{ t('New citation') }}</button
       ><button
         v-if="person && canEdit"
         @click="
