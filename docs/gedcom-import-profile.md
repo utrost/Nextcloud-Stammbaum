@@ -1,6 +1,6 @@
 # Native GEDCOM import profile
 
-Profile **`nc-gedcom-551-alpha1`**, introduced in **0.1.0-alpha.8**, is a conservative development subset. It does **not** claim the cumulative M2a–M2d migration profile or full release-0.15 parity. [M04 #35](https://github.com/utrost/Nextcloud-Stammbaum/issues/35), [M05 #36](https://github.com/utrost/Nextcloud-Stammbaum/issues/36), [M06 #37](https://github.com/utrost/Nextcloud-Stammbaum/issues/37) and [F06 #7](https://github.com/utrost/Nextcloud-Stammbaum/issues/7) remain open with their original requirements and priorities.
+Current profile **`nc-gedcom-551-alpha2`**, introduced in **0.1.0-alpha.9**, is a conservative development subset. It does **not** claim the cumulative M2a–M2d migration profile or full release-0.15 parity. [M04 #35](https://github.com/utrost/Nextcloud-Stammbaum/issues/35), [M05 #36](https://github.com/utrost/Nextcloud-Stammbaum/issues/36), [M06 #37](https://github.com/utrost/Nextcloud-Stammbaum/issues/37) and [F06 #7](https://github.com/utrost/Nextcloud-Stammbaum/issues/7) remain open with their original requirements and priorities.
 
 The source contracts are pinned at `d5809c3470fe53604ffd4307428c3a68053e77b5`: [M2a](https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/migration/m2a-profile.md) and the cumulative [M2d amendment](https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/migration/m2d-profile.md). This document records the native implementation boundary, not a replacement specification.
 
@@ -33,7 +33,9 @@ Reports show complete error/warning totals with up to 200 details, errors first,
 
 Confirmation acknowledges the report and binds the original SHA-256, profile-derived interpretation hash, run revision and destination revision. The server stores the confirming account and its membership generation. The destination must contain no genealogy, including standalone sources, tombstones, media or contexts; memberships and personal navigation preferences are allowed. Same `(tree, SHA-256, profile)` returns the existing run, including failed, cancelled and committed runs, preserving its original metadata. Matching repeated confirmations are idempotent. There is no misleading restart action: another copy requires another empty tree.
 
-Profile semantics must not change under an already published identifier. Future profile expansion needs a new identifier and explicit handling of old pending plans. The current worker rejects profiles other than alpha1 rather than reinterpreting them silently.
+Profile semantics do not change under an already published identifier. New uploads use alpha2; stored alpha1 runs from alpha.8 continue through their original interpreter and retain their original review/plan hash. Exact hashes captured from the deployed alpha.8 binary are regression fixtures. Unknown profiles fail closed.
+
+Alpha2 corrects two edge cases: GEDCOM calendar escapes remain literal dates with warnings, and an unreferenced NOTE no longer hides an unsupported standard subfield. Alpha1 rejected calendar escapes and retained the entire orphan NOTE subtree as structural material. Existing alpha1 reports/plans are not rewritten; their unchanged original and recorded profile remain available. New alpha2 orphan-note preservation recognizes text continuations and restrictions, while other standard subfields block activation.
 
 ## Durable execution and atomic publication
 

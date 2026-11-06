@@ -5,7 +5,8 @@ namespace OCA\Stammbaum\Service;
 /** Deliberately closed semantic whitelist. Never fetches input references. */
 final class Gedcom
 {
-    public const PROFILE = 'nc-gedcom-551-alpha1';
+    public const PROFILE = 'nc-gedcom-551-alpha2';
+    public const PROFILES = ['nc-gedcom-551-alpha1', self::PROFILE];
     public const MAX_BYTES = 8388608;
     private array $nodes = [],
         $children = [],
@@ -18,6 +19,7 @@ final class Gedcom
     private string $encoding = '';
     private array $plan = [];
     private int $units = 0;
+    private bool $legacy = false;
 
     private function issue(string $code, int $line = 0, bool $warning = false): void
     {
@@ -37,8 +39,12 @@ final class Gedcom
     {
         throw new Problem($code, 'The GEDCOM input cannot be interpreted safely.', 422, ['line' => $line]);
     }
-    public function analyze(string $bytes): array
+    public function analyze(string $bytes, string $profile = self::PROFILE): array
     {
+        if (!in_array($profile, self::PROFILES, true)) {
+            $this->fail('profile_unavailable');
+        }
+        $this->legacy = $profile === 'nc-gedcom-551-alpha1';
         // Fresh instance state also makes repeated use by a long-lived worker deterministic.
         $this->nodes = $this->children = $this->roots = $this->xref = $this->errors = $this->warnings = [];
         $this->errorCount = $this->warningCount = 0;
@@ -83,7 +89,7 @@ final class Gedcom
             'report' => $report,
             'nodes' => array_values($this->nodes),
             'plan' => $this->plan,
-            'planHash' => hash('sha256', Store::json([self::PROFILE, $this->plan, $report])),
+            'planHash' => hash('sha256', Store::json([$profile, $this->plan, $report])),
         ];
     }
     private function parse(string $bytes): void
@@ -200,6 +206,16 @@ final class Gedcom
             $this->structural($c, $reason);
         }
     }
+    private function structuralText(int $id): void
+    {
+        $this->mark($id, 'STRUCTURAL');
+        $this->nodes[$id]['reason'] = 'unreferenced_note';
+        foreach ($this->children[$id] ?? [] as $child) {
+            if (in_array($this->nodes[$child]['tag'], ['CONT', 'CONC'], true)) {
+                $this->structuralText($child);
+            }
+        }
+    }
     private function all(int $id, string $tag): array
     {
         return array_values(
@@ -214,7 +230,7 @@ final class Gedcom
         }
         return $items[0] ?? null;
     }
-    private function literal(int $id, int $max = 20000): string
+    private function literal(int $id, int $max = 20000, bool $calendar = false): string
     {
         $this->mark($id);
         $v = $this->nodes[$id]['value'];
@@ -224,7 +240,8 @@ final class Gedcom
             }
         }
         // Pointer-like scalar text is never silently interpreted as plain prose.
-        if (preg_match('/(?<!@)@[^@]+@(?!@)/', $v)) {
+        $pointerText = $calendar && !$this->legacy ? preg_replace('/@#D[A-Z0-9 ]+@/', '', $v) : $v;
+        if (preg_match('/(?<!@)@[^@]+@(?!@)/', $pointerText)) {
             $this->fail('unexpected_pointer', $id);
         }
         return Values::text(str_replace('@@', '@', $v), 'GEDCOM text', $max);
@@ -268,7 +285,7 @@ final class Gedcom
         if ($id === null) {
             return Values::date(['kind' => 'exact', 'value' => '']);
         }
-        $v = $this->literal($id, 250);
+        $v = $this->literal($id, 250, true);
         $convert = static function (string $v): ?string {
             $months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
             if (preg_match('/^[0-9]{4}$/D', $v)) {
@@ -553,7 +570,15 @@ final class Gedcom
                 $this->issue('vendor_extension', $id, true);
             } elseif ($n['tag'] === 'NOTE' && $n['level'] === 0) {
                 // An unreferenced standalone note is retained, never promoted to evidence.
-                $this->structural($id, 'unreferenced_note');
+                if ($this->legacy) {
+                    $this->structural($id, 'unreferenced_note');
+                } else {
+                    $this->structuralText($id);
+                    $this->restriction($id);
+                    foreach ($this->all($id, 'RESN') as $restriction) {
+                        $this->structuralText($restriction);
+                    }
+                }
                 $this->issue('orphan_note', $id, true);
             } else {
                 $this->issue('unsupported_standard_field', $id);
