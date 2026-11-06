@@ -154,3 +154,48 @@ check(
 echo "GEDCOM resource boundaries and restricted-event projection passed.\n";
 $reordered = $parser->analyze(str_replace("1 HUSB @I1@\n1 WIFE @I2@", "1 WIFE @I2@\n1 HUSB @I1@", $bytes));
 check($reordered['plan']['contexts'][0]['parents'] === ['@I2@', '@I1@'], 'recorded parent order');
+$calendarBytes = str_replace('ABT 1840', '@#DJULIAN@ 12 FEB 1840', $bytes);
+$calendar = $parser->analyze($calendarBytes);
+check(
+    $calendar['report']['errors'] === 0 && $calendar['report']['warnings'] > 0,
+    'calendar escapes remain literal with warnings',
+);
+check(
+    $calendar['plan']['people']['@I1@']['data']['birthDate'] === [
+        'kind' => 'literal',
+        'value' => '@#DJULIAN@ 12 FEB 1840',
+        'end' => '',
+    ],
+    'calendar wording is unchanged',
+);
+$orphan = str_replace('0 TRLR', "0 @N1@ NOTE Unlinked wording\n1 CONT Second line\n0 TRLR", $bytes);
+check($parser->analyze($orphan)['report']['errors'] === 0, 'orphan text is preserved');
+$orphanBytes = str_replace(
+    '0 TRLR',
+    "0 @N1@ NOTE Unlinked wording\n1 OCCU unsupported standard field\n0 TRLR",
+    $bytes,
+);
+$unsupportedOrphan = $parser->analyze($orphanBytes);
+check(
+    $unsupportedOrphan['report']['errors'] === 1 && $unsupportedOrphan['report']['warnings'] === 1,
+    'orphan note does not hide unsupported standard fields',
+);
+// Captured from the deployed alpha.8 binary, before adding alpha.2 interpretation.
+foreach (
+    [
+        [$bytes, 'f8407f2363fcaff18d772d9506a4b3982f0071430901dac18a5d1737aa25048e'],
+        [$calendarBytes, '0d9d8db78874c099da112ca2c404690cb06a0684b5470e9735b6a70b51c053a9'],
+        [$orphanBytes, '38fb07cfca6abd3a526a708260d9589ab742058f13a330a3ab8062a08d9a6f83'],
+    ]
+    as [$input, $hash]
+) {
+    check(
+        $parser->analyze($input, 'nc-gedcom-551-alpha1')['planHash'] === $hash,
+        'old profile remains exactly reproducible',
+    );
+}
+echo "Calendar/orphan-note diagnostics and exact alpha.1 compatibility passed.\n";
+check(
+    $parser->analyze(str_replace('ABT 1840', 'ABT @#DJULIAN@ 12 FEB 1840', $bytes))['report']['errors'] === 0,
+    'calendar escapes inside approximated wording stay literal',
+);

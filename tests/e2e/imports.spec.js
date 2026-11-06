@@ -51,6 +51,52 @@ const binding = (run) => ({
   planHash: run.planHash,
   acknowledgeReview: true,
 });
+
+test('stored alpha.1 runs keep their interpretation while new uploads use the corrected alpha.2 profile', async ({
+  page,
+}) => {
+  await login(page);
+  const legacyTree = await tree(page),
+    up = await upload(page, legacyTree);
+  expect(up.status).toBe(201);
+  fixtureDatabase('UPDATE *PREFIX*stb_imports SET profile = ? WHERE id = ?', [
+    'nc-gedcom-551-alpha1',
+    up.body.id,
+  ]);
+  work();
+  const legacy = await good(page, path(legacyTree, up.body));
+  expect(legacy.status).toBe('ready');
+  expect(legacy.profile).toBe('nc-gedcom-551-alpha1');
+  expect(legacy.planHash).toBe('f8407f2363fcaff18d772d9506a4b3982f0071430901dac18a5d1737aa25048e');
+  await confirm(page, legacyTree, legacy);
+  work();
+  expect((await good(page, path(legacyTree, legacy))).status).toBe('committed');
+  const currentTree = await tree(page),
+    calendar = await analyzed(
+      page,
+      currentTree,
+      Buffer.from(sample.toString().replace('ABT 1840', '@#DJULIAN@ 12 FEB 1840')),
+    );
+  expect(calendar.profile).toBe('nc-gedcom-551-alpha2');
+  expect(calendar.status).toBe('ready');
+  expect(calendar.report.warnings).toBeGreaterThan(0);
+  await confirm(page, currentTree, calendar);
+  work();
+  const ada = (await good(page, `/trees/${currentTree.id}/people`)).items.find((p) => p.givenName === 'Ada');
+  expect(ada.birthDate).toEqual({ kind: 'literal', value: '@#DJULIAN@ 12 FEB 1840', end: '' });
+  const blockedTree = await tree(page),
+    blocked = await analyzed(
+      page,
+      blockedTree,
+      Buffer.from(
+        sample
+          .toString()
+          .replace('0 TRLR', '0 @N1@ NOTE Unlinked wording\n1 OCCU unsupported standard field\n0 TRLR'),
+      ),
+    );
+  expect(blocked.status).toBe('blocked');
+  expect(blocked.report.errors).toBe(1);
+});
 async function confirm(page, tr, run) {
   return good(page, path(tr, run) + '/confirm', 'POST', binding(run));
 }

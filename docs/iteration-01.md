@@ -49,7 +49,7 @@ The CI workflow is configured; remote results are reported separately after it r
 
 ## Explicit remaining work at the end of iteration 1
 
-The subsequent [GEDCOM iteration](iteration-02.md) adds a bounded parser and durable reviewed import. The following records the alpha.7 boundary, not the current alpha.8 feature list.
+The subsequent [GEDCOM iteration](iteration-02.md) adds a bounded parser and durable reviewed import. The following records the alpha.7 boundary, not the current alpha.9 feature list.
 
 GEDCOM parsing/preservation, reviewed atomic import activation, current-state export, expiring export jobs, ZIP/media matching, scoped external credentials, integration APIs, webhooks and a complete durable-job subsystem are **not implemented**. No parser/export compatibility or full backup restoration is claimed. Those remain F06, M03–M08 and I01–I03/I06 work with their original priority.
 

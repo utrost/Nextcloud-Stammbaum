@@ -364,12 +364,12 @@ final class Imports
         }
         try {
             $this->authority($job, $job['status'] === 'activating');
-            if ($job['profile'] !== Gedcom::PROFILE) {
+            if (!in_array($job['profile'], Gedcom::PROFILES, true)) {
                 throw new Problem('profile_unavailable', 'This import profile is not available.', 409);
             }
             $bytes = $this->bytes($job);
             if ($job['status'] === 'analyzing') {
-                $result = $this->parser->analyze($bytes);
+                $result = $this->parser->analyze($bytes, $job['profile']);
                 $this->store->write(function () use ($job, $result) {
                     $r = $this->leased($job);
                     if (!$r) {
