@@ -1,4 +1,4 @@
-# First-iteration architecture
+# Native app architecture
 
 ## Native application
 
@@ -28,6 +28,7 @@ Mutations carry the record revision. A stale write returns HTTP 412; omitted rev
 | `stb_contexts`, `stb_context_people` | Ordered family groupings and references to existing connections |
 | `stb_media`, `stb_media_people` | Original integrity/quota reservations, publication state, assignments and reversible crop/portrait metadata |
 | `stb_history`, `stb_receipts` | Attributed operations and creation retry identities |
+| `stb_imports`, `stb_import_nodes`, `stb_import_maps` | Durable import runs/leases/review bindings, immutable ordered input structure and source-line ownership mappings |
 
 Language and private saved views use app-scoped Nextcloud user configuration. They do not modify the host's language setting. Saved views are filtered against current access before being returned.
 
@@ -39,7 +40,7 @@ Previews are separately decoded and re-encoded PNG responses. Crops are normaliz
 
 Unknown names, dates, sex and living status remain unknown. Partial, approximate, ranged and literal dates preserve their form. Calendar validation and mixed-precision boundary checks do not replace missing components with invented dates.
 
-Editing a person's name or life values retains previous assertions. Historical assessment is independent of display preference. Explicitly releasing a private person's current values creates releasable current assertions while retaining restricted historic values. Assertions and history are not an import-preservation implementation; no GEDCOM parser exists in this iteration.
+Editing a person's name or life values retains previous assertions. Historical assessment is independent of display preference. Explicitly releasing a private person's current values creates releasable current assertions while retaining restricted historic values. The separate [GEDCOM import profile](gedcom-import-profile.md) retains original bytes, ordered nodes and mappings in addition to the current assertions/history.
 
 Parent connections have explicit types. Biological cycles and duplicate parent connections are rejected; nonbiological loops remain navigable with bounded traversal. Partnerships require an explicit action; a further episode requires confirmation. Atomic relative creation rolls back the new person when its connection fails.
 
@@ -53,10 +54,18 @@ Logical person deletion deactivates connections and clears a shared home. The UI
 
 ## API and lifecycle
 
-Native browser routes are under `/apps/stammbaum/api/v1`; their declarations are in `appinfo/routes.php`. Families include trees/members/invitations, people/assertions/history, relations/graph, sources/citations, records, contexts, media, personal views and language preferences. These authenticated browser routes are **not** the scoped external-tool API promised by I02. No external credential or webhook endpoint is exposed.
+Native browser routes are under `/apps/stammbaum/api/v1`; their declarations are in `appinfo/routes.php`. Families include trees/members/invitations, people/assertions/history, relations/graph, sources/citations, records, contexts, media, imports, personal views and language preferences. These authenticated browser routes are **not** the scoped external-tool API promised by I02. No external credential or webhook endpoint is exposed.
 
 All writes retain Nextcloud CSRF protection. Read-only routes explicitly permit normal authenticated browser GETs. Uploads use bounded multipart input; original and preview reads reauthorize every request. Application errors expose controlled messages; unexpected exceptions are logged server-side without returning stack traces.
 
 Native disable and password-change events invalidate outstanding invitation authority by advancing membership generations. Native deletion and creation revoke old memberships, preventing a recreated account ID from inheriting access. Nextcloud owns sessions, provisioning and password recovery. A host administrator can still forcibly disable the last owner; the app does not block host administration or silently appoint an administrator as owner. Operator-assisted ownership recovery is unfinished.
 
 `occ stammbaum:invalidate-authority` revokes invitations and advances membership generations after a consistent restore. It leaves host sessions and valid genealogy memberships intact. This command is not a complete backup/recovery system, and it does not claim to invalidate external credentials or exports that have not yet been implemented.
+
+## Import jobs
+
+`Imports` reserves durable quota before private original storage, then queues analysis. `Gedcom` is a bounded parser with a closed semantic whitelist; unsupported standard fields block activation. A report/plan hash binds explicit confirmation. Nextcloud background execution and the one-job CLI command share the same persisted lease and current-authority checks. There is no browser endpoint for executing arbitrary worker code.
+
+A successful activation uses the existing global write guard and one database transaction for people, assertions, relations, contexts, evidence, mappings, history, the destination revision and terminal status. Readers cannot observe partial research. Lease fencing prevents a cancelled or replaced worker from publishing. The source-line maps remain independent of subsequent edited values.
+
+Read [the profile contract](gedcom-import-profile.md) for exact mappings, native privacy adaptations, state transitions, limits, retention and remaining parity obligations. This is the first durable import worker, not a completed general job system for exports or integrations.

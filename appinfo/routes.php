@@ -1,6 +1,17 @@
 <?php
 return [
     'routes' => [
+        ['name' => 'import#index', 'url' => '/api/v1/trees/{tree}/imports', 'verb' => 'GET'],
+        ['name' => 'import#upload', 'url' => '/api/v1/trees/{tree}/imports', 'verb' => 'POST'],
+        ['name' => 'import#show', 'url' => '/api/v1/trees/{tree}/imports/{id}', 'verb' => 'GET'],
+        [
+            'name' => 'import#structure',
+            'url' => '/api/v1/trees/{tree}/imports/{id}/structure',
+            'verb' => 'GET',
+        ],
+        ['name' => 'import#original', 'url' => '/api/v1/trees/{tree}/imports/{id}/original', 'verb' => 'GET'],
+        ['name' => 'import#confirm', 'url' => '/api/v1/trees/{tree}/imports/{id}/confirm', 'verb' => 'POST'],
+        ['name' => 'import#cancel', 'url' => '/api/v1/trees/{tree}/imports/{id}/cancel', 'verb' => 'POST'],
         [
             'name' => 'api#deletionImpact',
             'url' => '/api/v1/trees/{tree}/people/{id}/deletion-impact',

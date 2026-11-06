@@ -22,7 +22,7 @@ npm run package
 python3 scripts/deploy-test.py --container nextcloud
 ```
 
-The installer verifies the archive checksum and layout, requires a healthy Nextcloud 34, installs only `custom_apps/stammbaum`, and enables the app. It invokes Nextcloud's public app-specific upgrade API, not a global upgrade command. Apache reloads gracefully so PHP picks up the new code. Before/after checks require unchanged host version, maintenance state, and sibling app enablement/versions. A local verification record is written to ignored `build/`.
+The installer verifies the archive checksum and layout, requires a healthy Nextcloud 34, installs only `custom_apps/stammbaum`, and enables the app. It invokes Nextcloud's public app-specific upgrade API, not a global upgrade command. Apache reloads gracefully so PHP picks up the new code. A fresh process resolves and idempotently registers Stammbaum’s declared background jobs, and deployment records that check. Before/after checks require unchanged host version, maintenance state, and sibling app enablement/versions. A local verification record is written to ignored `build/`.
 
 Open the native **Stammbaum** navigation entry. Existing Nextcloud accounts can create their own trees. No initial administrator tree membership or genealogy records are seeded by installation.
 
@@ -41,7 +41,7 @@ The fixture uses only `stammbaum-iteration-nc`, `stammbaum-iteration-db` and the
 
 Nextcloud 34.0.4 and MariaDB 11 are the fixture images. Five fictional accounts are created; `stb_outsider` is a Nextcloud administrator with no automatic tree access. Generated credentials live only in ignored, mode-0600 `build/test-instance.json`. Do not publish that file. Tests involving account deletion, quota manipulation and recovery use this fixture exclusively.
 
-Playwright currently uses `/usr/bin/google-chrome`. Unit tests use Node; PHP syntax can be checked in `php:8.3-cli`. `tests/unit/values.php` needs `mbstring`, available in the Nextcloud container. Browser results and screenshots are in ignored `test-results/`.
+Playwright currently uses `/usr/bin/google-chrome`. Unit tests use Node; PHP syntax can be checked in `php:8.3-cli`. `tests/unit/values.php` and `tests/unit/gedcom.php` need `mbstring`, available in the Nextcloud container. Browser results and screenshots are in ignored `test-results/`.
 
 The suite tests actual native sessions, CSRF, MariaDB transactions, Nextcloud account events, upload/download bytes and browser journeys. A passed build alone is not application acceptance. The fixture retains fictional test records; its growing tree list is not production seed data.
 
@@ -63,4 +63,28 @@ After restoring a consistent host/app snapshot, before reopening genealogy acces
 docker exec -u www-data nextcloud php occ stammbaum:invalidate-authority
 ```
 
-This revokes restored invitation links and invalidates unfinished-upload authority while preserving current memberships and completed originals. Nextcloud session/app-password recovery remains a host responsibility. The isolated test verifies this command's effects, not an end-to-end backup restoration.
+This revokes restored invitation links and invalidates unfinished-upload and pending-import authority while preserving current memberships and completed originals. Nextcloud session/app-password recovery remains a host responsibility. The isolated test verifies this command's effects, not an end-to-end backup restoration.
+
+## Import background processing
+
+The [GEDCOM profile](gedcom-import-profile.md) describes the exact supported subset. Managers/owners upload and review under **Imports**, then confirm activation into an empty tree. Native host cron processes the app's registered `ProcessImports` timed job. The desired interval is 60 seconds; a host running cron every five minutes may take up to another cycle for each analysis/activation phase. The browser can be closed while a queued job runs. Do not change a shared host's scheduling merely to accelerate a test.
+
+To process one pending Stammbaum job manually through the same authority and lease checks:
+
+```sh
+docker exec -u www-data nextcloud php occ stammbaum:process-imports
+```
+
+Use `stammbaum-iteration-nc` instead for isolated fixtures. The CLI prints only the processed UUID or that nothing is pending; inspect the manager-only report for the actual outcome. Expired 300-second leases are recovered by a later worker, with at most three interrupted attempts per phase. Failed/cancelled runs retain their original reservation and cannot be restarted by uploading identical bytes to the same tree.
+
+The 512 MiB import-original allowance is separate from the 1 GiB media allowance. All `stb_imports`, `stb_import_nodes`, `stb_import_maps` rows and private `IAppData/imports` files belong to the consistent recovery set. There is no purge command or automatic retention expiry. A failed original write may retain a reservation without a complete downloadable file. Neither deletion behind live rows nor code downgrade is a supported repair.
+
+The import integration suite uses fictional data and temporary database triggers to test mid-transaction failures and concurrent visibility. Those fault tests are pinned to the disposable fixture and must never run against the shared host.
+
+### Long-lived host workers during an app upgrade
+
+Alice had a pre-existing `background-job:worker --stop_after=5m` process that had remained alive for several days. It could not resolve the newly added Stammbaum job and Nextcloud removed that job registration; fresh PHP processes resolved it correctly. Reloading Apache alone does not reload such a CLI worker.
+
+Before relying on new app jobs, gracefully recycle an identified long-lived host worker through its normal process manager, preserving its arguments and scheduling. In the inspected Nextcloud 34 code, SIGTERM/SIGINT are cooperative: the worker checks the interrupted flag between jobs. Check currently running work first; do not force-kill an active job. Then run the app deployment verification again to reconcile its declared jobs. Alice’s identified idle worker was reloaded this way, with no cron schedule or sibling app configuration changes.
+
+The app installer does not automatically signal arbitrary host processes. `occ background-job:list --class='OCA\Stammbaum\BackgroundJob\ProcessImports'` checks the exact class name; this option is not a substring search.
