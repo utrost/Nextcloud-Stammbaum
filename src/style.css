@@ -1,10 +1,13 @@
 #stammbaum-app {
   height: 100%;
-  --stb-accent: #24734b;
+  --stb-accent: var(--color-primary-element, #00679e);
+  --stb-accent-text: var(--color-primary-element-text, #fff);
   --stb-tint: color-mix(in srgb, var(--stb-accent) 9%, var(--color-main-background, #fff));
   --stb-border: var(--color-border, #ddd);
   color: var(--color-main-text, #222);
   font-size: 14px;
+  font-family: var(--font-face, system-ui, sans-serif);
+  line-height: 1.5;
 }
 #stammbaum-app * {
   box-sizing: border-box;
@@ -42,11 +45,11 @@
 #stammbaum-app .primary {
   background: var(--stb-accent);
   border-color: var(--stb-accent);
-  color: #fff;
+  color: var(--stb-accent-text);
   font-weight: 600;
 }
 #stammbaum-app .primary:hover {
-  background: #185c3a;
+  background: var(--color-primary-element-hover, #005a8a);
 }
 #stammbaum-app input:not([type='checkbox']),
 #stammbaum-app select,
@@ -206,7 +209,7 @@
   margin: 10px 0 25px;
   background: transparent;
   text-align: left;
-  border-style: dashed;
+  border-top-style: dashed;
 }
 .nav-bottom {
   margin-top: auto;
@@ -578,7 +581,7 @@
   font-size: 12px !important;
 }
 .danger {
-  color: var(--color-error, #b32929) !important;
+  color: var(--color-text-error, #b32929) !important;
 }
 .branch-toolbar {
   display: flex;
@@ -672,13 +675,13 @@
   stroke: var(--color-text-maxcontrast, #667);
   stroke-width: 2;
 }
-.edge.adoptive,
-.edge.foster {
+.edge.parent.adoptive,
+.edge.parent.foster {
   stroke-dasharray: 8 5;
 }
-.edge.step,
-.edge.other,
-.edge.unknown {
+.edge.parent.step,
+.edge.parent.other,
+.edge.parent.unknown {
   stroke-dasharray: 2 5;
 }
 .edge.partner {
@@ -753,13 +756,15 @@
 }
 .line {
   width: 20px;
+  height: 0;
+  border: 0;
   border-top: 2px solid var(--color-text-maxcontrast);
 }
 .line.adoptive {
-  border-style: dashed;
+  border-top-style: dashed;
 }
 .line.other {
-  border-style: dotted;
+  border-top-style: dotted;
 }
 .line.partner {
   border-color: var(--stb-accent);
@@ -1471,4 +1476,140 @@
 }
 #stammbaum-app [role='tabpanel'] {
   min-width: 0;
+}
+
+/* Keep research readable without shrinking the diagram or recreating its state. */
+.workspace.research-expanded {
+  grid-template-columns: minmax(0, 1fr);
+}
+.research-expanded .details {
+  padding: 0;
+  border: 0;
+}
+.research-toggle {
+  margin: 0 44px 16px 0 !important;
+}
+.research-content,
+.research-context,
+#person-panel {
+  min-width: 0;
+}
+.research-expanded .research-content {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.research-context {
+  padding: 20px;
+  background: var(--color-background-hover);
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+.research-context h4 {
+  margin-top: 20px;
+}
+.research-context small {
+  display: block;
+}
+.research-expanded .person-heading {
+  padding-right: 44px;
+}
+.research-expanded .life-dates {
+  max-width: 700px;
+}
+#stammbaum-app .graph-toolbar button,
+.segmented button {
+  font-size: 14px !important;
+  min-height: 38px !important;
+}
+.graph-toolbar .button-row span {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  min-width: 42px;
+  text-align: center;
+}
+.node-text strong {
+  font-size: 15px;
+  max-height: 40px;
+}
+.node-text small {
+  font-size: 12px !important;
+  line-height: 1.5;
+}
+.focus-label {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+.legend {
+  font-size: 13px;
+  line-height: 1.5;
+  gap: 10px 18px;
+}
+@media (max-width: 1000px) {
+  .research-expanded .research-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .research-context {
+    padding: 16px;
+  }
+}
+
+#stammbaum-app dt,
+#stammbaum-app dd {
+  display: block;
+  float: none;
+  width: auto;
+  padding: 0;
+  margin-block: 0;
+  margin-inline-start: 0;
+  text-align: start;
+}
+#stammbaum-app .branch-options label,
+#stammbaum-app .life-dates dt {
+  font-size: 13px;
+}
+#stammbaum-app .branch-toolbar button,
+#stammbaum-app .detail-actions button,
+#stammbaum-app .small-tabs button {
+  font-size: 14px !important;
+}
+.research-expanded .person-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 1fr);
+  gap: 24px;
+  align-items: center;
+}
+.research-expanded .person-heading {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  column-gap: 18px;
+  align-items: center;
+}
+.research-expanded .person-heading > .avatar,
+.research-expanded .person-heading > img {
+  grid-column: 1;
+  grid-row: 1 / 5;
+}
+.research-expanded .person-heading > :not(.avatar):not(img) {
+  grid-column: 2;
+}
+.research-expanded .person-heading > .badge {
+  justify-self: start;
+}
+.research-expanded .person-heading h2 {
+  margin: 4px 0 !important;
+}
+.research-expanded .person-heading p {
+  margin: 0 !important;
+}
+@media (max-width: 700px) {
+  .research-expanded .person-overview {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+
+.life-dates > div {
+  display: block;
 }

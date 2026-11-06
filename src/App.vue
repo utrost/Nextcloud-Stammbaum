@@ -51,7 +51,9 @@ const portrait = ref(null),
   claims = ref([]),
   history = ref([]),
   historyPage = ref(null),
-  detailTab = ref('connections');
+  detailTab = ref('connections'),
+  researchExpanded = ref(false),
+  researchToggle = ref(null);
 const graph = ref({ people: [], relations: [], limited: false, focusId: null }),
   graphLoading = ref(false),
   graphError = ref(''),
@@ -160,6 +162,16 @@ const claimName = (k) =>
   );
 const claimValue = (c) =>
   c.kind === 'name' ? name(c.value) : c.kind.endsWith('_date') ? dateText(c.value) : c.value;
+const orderedClaims = computed(() => {
+  const kinds = ['name', 'birth_date', 'birth_place', 'death_date', 'death_place'];
+  return [...claims.value].sort(
+    (a, b) =>
+      kinds.indexOf(a.kind) - kinds.indexOf(b.kind) ||
+      Number(b.preferred) - Number(a.preferred) ||
+      String(claimValue(a)).localeCompare(String(claimValue(b))) ||
+      a.id.localeCompare(b.id),
+  );
+});
 const actionName = (a) =>
   t(
     {
@@ -237,6 +249,7 @@ async function chooseTree(id, initial = {}, authorized = false) {
   if (!authorized && !navigate()) return;
   const seq = ++treeSequence;
   tree.value = null;
+  researchExpanded.value = false;
   selected.value = null;
   focus.value = '';
   branches.value = [];
@@ -294,6 +307,10 @@ async function loadGraph() {
     if (seq === graphSequence) graphLoading.value = false;
   }
 }
+async function selectPerson(id) {
+  if (selected.value?.id === id || !canNavigate()) return;
+  await inspect(id);
+}
 async function inspect(id) {
   const seq = ++detailSequence;
   detailLoading.value = true;
@@ -328,6 +345,12 @@ async function inspect(id) {
     if (seq === detailSequence) detailLoading.value = false;
   }
 }
+async function toggleResearch() {
+  // The current panel and diagram stay mounted: drafts and camera are unchanged.
+  researchExpanded.value = !researchExpanded.value;
+  await nextTick();
+  researchToggle.value?.focus();
+}
 async function mediaChanged() {
   if (!selected.value) return;
   const id = selected.value.id;
@@ -335,13 +358,25 @@ async function mediaChanged() {
   if (selected.value?.id === id)
     portrait.value = r.items.find((m) => m.assignments.some((a) => a.personId === id && a.preferred)) || null;
 }
+async function dismissDetails() {
+  if (!canNavigate()) return;
+  const id = selected.value?.id;
+  closeDetails();
+  await nextTick();
+  const target = [...document.querySelectorAll('[data-person-id]')].find(
+    (element) => element.dataset.personId === id,
+  );
+  (target || document.querySelector('.graph-viewport, .people-toolbar input'))?.focus();
+}
 function closeDetails() {
+  researchExpanded.value = false;
   detailSequence++;
   selected.value = null;
   detailLoading.value = false;
   urlState();
 }
 async function branch(id) {
+  researchExpanded.value = false;
   if (focus.value) {
     branches.value = [
       ...branches.value.slice(-29),
@@ -361,6 +396,7 @@ async function branch(id) {
   urlState();
 }
 async function previous() {
+  if (!canNavigate()) return;
   const prior = branches.value.pop();
   if (!prior) return;
   focus.value = prior.focus;
@@ -376,6 +412,7 @@ async function previous() {
 }
 async function changeTab(value) {
   if (value === tab.value || !navigate()) return;
+  researchExpanded.value = false;
   tab.value = value;
   urlState();
   if (value === 'manage') await action(loadManage);
@@ -608,6 +645,7 @@ async function saveNamedView() {
   }, 'View saved');
 }
 async function openNamedView() {
+  if (!canNavigate()) return;
   const v = savedViews.value.items.find((v) => v.id === viewChoice.value);
   if (!v) return;
   mode.value = v.mode;
@@ -925,8 +963,12 @@ onBeforeUnmount(() => {
             :management="management"
             :can-edit="canEdit"
           />
-          <div v-else class="workspace" :class="{ 'has-details': selected || detailLoading }">
-            <section class="work-area">
+          <div
+            v-else
+            class="workspace"
+            :class="{ 'has-details': selected || detailLoading, 'research-expanded': researchExpanded }"
+          >
+            <section v-show="!researchExpanded" class="work-area">
               <div v-if="tab === 'people'" class="people-toolbar">
                 <label class="search-label"
                   ><span class="sr-only">{{ t('Search people') }}</span
@@ -960,7 +1002,8 @@ onBeforeUnmount(() => {
                     :key="p.id"
                     :aria-pressed="selected?.id === p.id"
                     class="person-row"
-                    @click="inspect(p.id)"
+                    :data-person-id="p.id"
+                    @click="selectPerson(p.id)"
                   >
                     <span class="avatar">{{
                       (p.givenName?.[0] || p.familyName?.[0] || '?').toUpperCase()
@@ -1040,7 +1083,7 @@ onBeforeUnmount(() => {
                   :graph="graph"
                   :selected="selected?.id"
                   v-model="camera"
-                  @select="(p) => inspect(p.id)"
+                  @select="(p) => selectPerson(p.id)"
                 />
                 <div v-else class="empty">
                   <span class="empty-glyph">⌘</span>
@@ -1053,46 +1096,60 @@ onBeforeUnmount(() => {
               </template>
             </section>
             <aside v-if="selected || detailLoading" class="details" :aria-label="t('Current values')">
-              <button class="detail-close icon-button" :aria-label="t('Close details')" @click="closeDetails">
+              <button
+                class="detail-close icon-button"
+                :aria-label="t('Close details')"
+                @click="dismissDetails"
+              >
                 ×
               </button>
               <div v-if="detailLoading" class="empty" role="status">{{ t('Loading…') }}</div>
               <template v-else-if="selected">
-                <div class="person-heading">
-                  <img
-                    v-if="portrait"
-                    class="person-portrait"
-                    :src="`${apiBase}/trees/${tree.id}/media/${portrait.id}/preview?person=${selected.id}&revision=${portrait.revision}`"
-                    :alt="name(selected)"
-                  /><span v-else class="avatar large">{{
-                    (selected.givenName?.[0] || selected.familyName?.[0] || '?').toUpperCase()
-                  }}</span
-                  ><span class="badge">{{ t(title(selected.livingStatus)) }}</span>
-                  <h2>{{ name(selected) }}</h2>
-                  <p v-if="selected.displayNote" class="preserve-text muted">{{ selected.displayNote }}</p>
-                  <span v-if="selected.visibility === 'management'" class="badge">{{
-                    t('Management only')
-                  }}</span>
-                  <p v-if="tab === 'family' && !selectedOnBranch" class="muted">
-                    {{ t('Outside this branch') }}
-                  </p>
+                <button
+                  ref="researchToggle"
+                  class="research-toggle"
+                  :aria-expanded="researchExpanded"
+                  @click="toggleResearch"
+                >
+                  {{ t(researchExpanded ? 'Back to family workspace' : 'Expand person research') }}
+                </button>
+                <div class="person-overview">
+                  <div class="person-heading">
+                    <img
+                      v-if="portrait"
+                      class="person-portrait"
+                      :src="`${apiBase}/trees/${tree.id}/media/${portrait.id}/preview?person=${selected.id}&revision=${portrait.revision}`"
+                      :alt="name(selected)"
+                    /><span v-else class="avatar large">{{
+                      (selected.givenName?.[0] || selected.familyName?.[0] || '?').toUpperCase()
+                    }}</span
+                    ><span class="badge">{{ t(title(selected.livingStatus)) }}</span>
+                    <h2>{{ name(selected) }}</h2>
+                    <p v-if="selected.displayNote" class="preserve-text muted">{{ selected.displayNote }}</p>
+                    <span v-if="selected.visibility === 'management'" class="badge">{{
+                      t('Management only')
+                    }}</span>
+                    <p v-if="tab === 'family' && !selectedOnBranch" class="muted">
+                      {{ t('Outside this branch') }}
+                    </p>
+                  </div>
+                  <dl class="life-dates">
+                    <div>
+                      <dt>{{ t('Birth') }}</dt>
+                      <dd>
+                        {{ dateText(selected.birthDate) || t('Not recorded')
+                        }}<small v-if="selected.birthPlace">{{ selected.birthPlace }}</small>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{{ t('Death') }}</dt>
+                      <dd>
+                        {{ dateText(selected.deathDate) || t('Not recorded')
+                        }}<small v-if="selected.deathPlace">{{ selected.deathPlace }}</small>
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
-                <dl class="life-dates">
-                  <div>
-                    <dt>{{ t('Birth') }}</dt>
-                    <dd>
-                      {{ dateText(selected.birthDate) || t('Not recorded')
-                      }}<small v-if="selected.birthPlace">{{ selected.birthPlace }}</small>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>{{ t('Death') }}</dt>
-                    <dd>
-                      {{ dateText(selected.deathDate) || t('Not recorded')
-                      }}<small v-if="selected.deathPlace">{{ selected.deathPlace }}</small>
-                    </dd>
-                  </div>
-                </dl>
                 <div class="detail-actions">
                   <button @click="branch(selected.id)">{{ t('Show family branch') }}</button
                   ><button v-if="canEdit" @click="editor = { person: selected }">
@@ -1109,17 +1166,160 @@ onBeforeUnmount(() => {
                   :model-value="detailTab"
                   @select="changeDetailTab"
                 />
-                <div
-                  id="person-panel"
-                  role="tabpanel"
-                  :aria-labelledby="`person-tab-${detailTab}`"
-                  tabindex="0"
-                >
-                  <section v-if="detailTab === 'connections'" class="detail-section">
+                <div class="research-content">
+                  <div
+                    id="person-panel"
+                    role="tabpanel"
+                    :aria-labelledby="`person-tab-${detailTab}`"
+                    tabindex="0"
+                  >
+                    <section v-if="detailTab === 'connections'" class="detail-section">
+                      <p v-if="!relations.length" class="muted">{{ t('No connections yet') }}</p>
+                      <div v-for="r in relations" :key="r.id" class="relation-row">
+                        <div>
+                          <small
+                            >{{
+                              t(
+                                r.kind === 'partner'
+                                  ? 'Partner'
+                                  : r.sourceId === selected.id
+                                    ? 'Child'
+                                    : 'Parent',
+                              )
+                            }}<template v-if="r.kind === 'parent'">
+                              · {{ t(title(r.parentType)) }}</template
+                            ></small
+                          ><button class="text-button" @click="selectPerson(r.person.id)">
+                            {{ name(r.person) }}
+                          </button>
+                        </div>
+                        <button
+                          v-if="canEdit"
+                          class="icon-button"
+                          :aria-label="t('Remove connection')"
+                          :disabled="busy"
+                          @click="removeConnection(r)"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </section>
+                    <section v-if="detailTab === 'assertions'" class="detail-section">
+                      <p class="muted">{{ t('Display preference is separate from historical judgment.') }}</p>
+                      <div v-for="c in orderedClaims" :key="c.id" class="assertion">
+                        <small
+                          >{{ claimName(c.kind) }}
+                          <span v-if="c.preferred" class="badge">{{ t('Preferred') }}</span></small
+                        ><strong>{{ claimValue(c) }}</strong
+                        ><span v-if="c.visibility === 'management'" class="muted">{{
+                          t('Management only')
+                        }}</span
+                        ><label v-if="canEdit"
+                          >{{ t('Assessment')
+                          }}<select
+                            :value="c.assessment"
+                            :disabled="busy"
+                            @change="claimAction(c, 'assess', $event.target.value)"
+                          >
+                            <option
+                              v-for="v in ['unassessed', 'supported', 'disputed', 'rejected']"
+                              :value="v"
+                            >
+                              {{ t(title(v)) }}
+                            </option>
+                          </select></label
+                        ><small v-else>{{ t(title(c.assessment)) }}</small
+                        ><button
+                          v-if="canEdit && !c.preferred"
+                          :disabled="busy"
+                          @click="claimAction(c, 'prefer')"
+                        >
+                          {{ t('Use for display') }}
+                        </button>
+                      </div>
+                    </section>
+                    <ContextPanel
+                      v-if="detailTab === 'connections'"
+                      :tree-id="tree.id"
+                      :person="selected"
+                      :can-edit="canEdit"
+                      :management="management"
+                      @changed="loadGraph"
+                      @select="selectPerson"
+                    />
+                    <MediaPanel
+                      v-if="detailTab === 'media'"
+                      :tree-id="tree.id"
+                      :person="selected"
+                      :can-edit="canEdit"
+                      :management="management"
+                      @changed="mediaChanged"
+                    />
+                    <RecordPanel
+                      v-if="['timeline', 'notes', 'details'].includes(detailTab)"
+                      :tree-id="tree.id"
+                      :person="selected"
+                      :can-edit="canEdit"
+                      :management="management"
+                      :section="detailTab"
+                      @evidence="changeDetailTab('evidence')"
+                    />
+                    <EvidencePanel
+                      v-if="detailTab === 'evidence'"
+                      :tree-id="tree.id"
+                      :management="management"
+                      :can-edit="canEdit"
+                      :person="selected"
+                      :claims="claims"
+                      :relations="relations"
+                    />
+                    <section v-if="detailTab === 'history'" class="detail-section">
+                      <p class="muted">
+                        {{ t('All changes are attributed to the account that made them.') }}
+                      </p>
+                      <div v-for="h in history" :key="h.id" class="history-entry">
+                        <strong>{{ actionName(h.action) }}</strong
+                        ><small>{{ datetime(h.createdAt) }} · {{ h.actorId }}</small>
+                        <details v-if="h.data.givenName !== undefined">
+                          <summary>{{ t('Current values') }}</summary>
+                          <p>{{ name(h.data) }}</p>
+                          <p>
+                            {{ t('Birth') }}: {{ dateText(h.data.birthDate) || t('Not recorded') }}
+                            {{ h.data.birthPlace }}
+                          </p>
+                          <p>
+                            {{ t('Death') }}: {{ dateText(h.data.deathDate) || t('Not recorded') }}
+                            {{ h.data.deathPlace }}
+                          </p>
+                        </details>
+                      </div>
+                      <button v-if="historyPage !== null" @click="moreHistory">{{ t('Load more') }}</button>
+                    </section>
+                  </div>
+                  <section
+                    v-if="researchExpanded"
+                    class="research-context"
+                    :aria-label="t('Research context')"
+                  >
+                    <h3>{{ t('Research context') }}</h3>
+                    <p class="muted">
+                      {{ t('Retained assertions and connections for comparison with the current panel.') }}
+                    </p>
+                    <h4>{{ t('Assertions') }}</h4>
+                    <div v-for="c in orderedClaims" :key="c.id" class="assertion">
+                      <small
+                        >{{ claimName(c.kind) }}
+                        <span v-if="c.preferred" class="badge">{{ t('Preferred') }}</span></small
+                      >
+                      <strong>{{ claimValue(c) }}</strong>
+                      <small>{{ t(title(c.assessment)) }}</small>
+                    </div>
+                    <h4>{{ t('Connections') }}</h4>
                     <p v-if="!relations.length" class="muted">{{ t('No connections yet') }}</p>
                     <div v-for="r in relations" :key="r.id" class="relation-row">
-                      <div>
-                        <small
+                      <span
+                        >{{ name(r.person)
+                        }}<small
                           >{{
                             t(
                               r.kind === 'partner'
@@ -1131,106 +1331,9 @@ onBeforeUnmount(() => {
                           }}<template v-if="r.kind === 'parent'">
                             · {{ t(title(r.parentType)) }}</template
                           ></small
-                        ><button class="text-button" @click="inspect(r.person.id)">
-                          {{ name(r.person) }}
-                        </button>
-                      </div>
-                      <button
-                        v-if="canEdit"
-                        class="icon-button"
-                        :aria-label="t('Remove connection')"
-                        :disabled="busy"
-                        @click="removeConnection(r)"
+                        ></span
                       >
-                        ×
-                      </button>
                     </div>
-                  </section>
-                  <section v-if="detailTab === 'assertions'" class="detail-section">
-                    <p class="muted">{{ t('Display preference is separate from historical judgment.') }}</p>
-                    <div v-for="c in claims" :key="c.id" class="assertion">
-                      <small
-                        >{{ claimName(c.kind) }}
-                        <span v-if="c.preferred" class="badge">{{ t('Preferred') }}</span></small
-                      ><strong>{{ claimValue(c) }}</strong
-                      ><span v-if="c.visibility === 'management'" class="muted">{{
-                        t('Management only')
-                      }}</span
-                      ><label v-if="canEdit"
-                        >{{ t('Assessment')
-                        }}<select
-                          :value="c.assessment"
-                          :disabled="busy"
-                          @change="claimAction(c, 'assess', $event.target.value)"
-                        >
-                          <option v-for="v in ['unassessed', 'supported', 'disputed', 'rejected']" :value="v">
-                            {{ t(title(v)) }}
-                          </option>
-                        </select></label
-                      ><small v-else>{{ t(title(c.assessment)) }}</small
-                      ><button
-                        v-if="canEdit && !c.preferred"
-                        :disabled="busy"
-                        @click="claimAction(c, 'prefer')"
-                      >
-                        {{ t('Use for display') }}
-                      </button>
-                    </div>
-                  </section>
-                  <ContextPanel
-                    v-if="detailTab === 'connections'"
-                    :tree-id="tree.id"
-                    :person="selected"
-                    :can-edit="canEdit"
-                    :management="management"
-                    @changed="loadGraph"
-                    @select="inspect"
-                  />
-                  <MediaPanel
-                    v-if="detailTab === 'media'"
-                    :tree-id="tree.id"
-                    :person="selected"
-                    :can-edit="canEdit"
-                    :management="management"
-                    @changed="mediaChanged"
-                  />
-                  <RecordPanel
-                    v-if="['timeline', 'notes', 'details'].includes(detailTab)"
-                    :tree-id="tree.id"
-                    :person="selected"
-                    :can-edit="canEdit"
-                    :management="management"
-                    :section="detailTab"
-                    @evidence="changeDetailTab('evidence')"
-                  />
-                  <EvidencePanel
-                    v-if="detailTab === 'evidence'"
-                    :tree-id="tree.id"
-                    :management="management"
-                    :can-edit="canEdit"
-                    :person="selected"
-                    :claims="claims"
-                    :relations="relations"
-                  />
-                  <section v-if="detailTab === 'history'" class="detail-section">
-                    <p class="muted">{{ t('All changes are attributed to the account that made them.') }}</p>
-                    <div v-for="h in history" :key="h.id" class="history-entry">
-                      <strong>{{ actionName(h.action) }}</strong
-                      ><small>{{ datetime(h.createdAt) }} · {{ h.actorId }}</small>
-                      <details v-if="h.data.givenName !== undefined">
-                        <summary>{{ t('Current values') }}</summary>
-                        <p>{{ name(h.data) }}</p>
-                        <p>
-                          {{ t('Birth') }}: {{ dateText(h.data.birthDate) || t('Not recorded') }}
-                          {{ h.data.birthPlace }}
-                        </p>
-                        <p>
-                          {{ t('Death') }}: {{ dateText(h.data.deathDate) || t('Not recorded') }}
-                          {{ h.data.deathPlace }}
-                        </p>
-                      </details>
-                    </div>
-                    <button v-if="historyPage !== null" @click="moreHistory">{{ t('Load more') }}</button>
                   </section>
                 </div>
                 <div v-if="management" class="danger-actions">

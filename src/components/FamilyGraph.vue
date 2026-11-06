@@ -1,7 +1,7 @@
 <script setup>
-import { computed, ref, watch, nextTick, onMounted } from 'vue';
+import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { t, title } from '../i18n.js';
-import { layoutGraph, personName, dateText } from '../domain.js';
+import { layoutGraph, graphCard, personName, dateText } from '../domain.js';
 const props = defineProps({ graph: Object, selected: String, modelValue: Object });
 const emit = defineEmits(['select', 'update:modelValue']);
 const viewport = ref(null),
@@ -37,15 +37,35 @@ function center() {
   const p = layout.value.positions[props.graph.focusId];
   if (p && viewport.value)
     move({
-      x: viewport.value.clientWidth / 2 - (p.x + 100) * camera.value.zoom,
-      y: viewport.value.clientHeight / 2 - (p.y + 45) * camera.value.zoom,
+      x: viewport.value.clientWidth / 2 - (p.x + graphCard.width / 2) * camera.value.zoom,
+      y: viewport.value.clientHeight / 2 - (p.y + graphCard.height / 2) * camera.value.zoom,
     });
 }
 watch(
   () => props.graph.focusId,
   () => nextTick(center),
 );
-onMounted(() => nextTick(fit));
+let resizeObserver;
+let viewportSize = null;
+watch(viewport, (element) => {
+  resizeObserver?.disconnect();
+  if (!element) return;
+  resizeObserver = new ResizeObserver(() => {
+    const width = element.clientWidth,
+      height = element.clientHeight;
+    // A hidden research canvas reports zero; retain its last visible dimensions.
+    if (!width || !height) return;
+    if (viewportSize)
+      move({
+        x: camera.value.x + (width - viewportSize.width) / 2,
+        y: camera.value.y + (height - viewportSize.height) / 2,
+      });
+    viewportSize = { width, height };
+  });
+  resizeObserver.observe(element);
+});
+onBeforeUnmount(() => resizeObserver?.disconnect());
+onMounted(() => nextTick(center));
 let drag = null;
 function down(e) {
   if (e.target.closest('button')) return;
@@ -78,10 +98,10 @@ function path(edge) {
   const a = layout.value.positions[edge.sourceId],
     b = layout.value.positions[edge.targetId];
   if (!a || !b) return '';
-  const x1 = a.x + 100,
-    y1 = a.y + 45,
-    x2 = b.x + 100,
-    y2 = b.y + 45;
+  const x1 = a.x + graphCard.width / 2,
+    y1 = a.y + graphCard.height / 2,
+    x2 = b.x + graphCard.width / 2,
+    y2 = b.y + graphCard.height / 2;
   return edge.kind === 'partner'
     ? `M${x1},${y1} L${x2},${y2}`
     : `M${x1},${y1} C${x1},${(y1 + y2) / 2} ${x2},${(y1 + y2) / 2} ${x2},${y2}`;
@@ -143,9 +163,16 @@ function path(edge) {
           v-for="p in graph.people"
           :key="p.id"
           class="person-node"
+          :data-person-id="p.id"
           :class="{ selected: p.id === selected, focus: p.id === graph.focusId }"
-          :style="{ left: layout.positions[p.id].x + 'px', top: layout.positions[p.id].y + 'px' }"
+          :style="{
+            left: layout.positions[p.id].x + 'px',
+            top: layout.positions[p.id].y + 'px',
+            width: graphCard.width + 'px',
+            height: graphCard.height + 'px',
+          }"
           :aria-pressed="p.id === selected"
+          :title="name(p)"
           @click="emit('select', p)"
         >
           <span class="node-avatar" aria-hidden="true">{{
@@ -165,7 +192,7 @@ function path(edge) {
     <div v-else class="graph-text">
       <ul>
         <li v-for="p in graph.people" :key="p.id">
-          <button @click="emit('select', p)">{{ name(p) }}</button>
+          <button :data-person-id="p.id" @click="emit('select', p)">{{ name(p) }}</button>
         </li>
       </ul>
       <h3>{{ t('Connections') }}</h3>
