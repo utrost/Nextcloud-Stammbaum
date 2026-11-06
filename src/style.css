@@ -1456,3 +1456,19 @@
   margin: 10px 0 0 !important;
   font-size: 12px;
 }
+
+/* Supported archive identifiers must remain readable, including unbroken text. */
+#stammbaum-app .evidence-panel {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+#stammbaum-app .evidence-panel h2,
+#stammbaum-app .evidence-panel h3,
+#stammbaum-app .evidence-panel .text-button {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+#stammbaum-app [role='tabpanel'] {
+  min-width: 0;
+}
