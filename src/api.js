@@ -12,6 +12,9 @@ export async function api(path, { method = 'GET', body, signal } = {}) {
       requesttoken: window.OC?.requestToken || root.dataset.requestToken,
     },
     body: body === undefined ? undefined : JSON.stringify(body),
+  }).catch((error) => {
+    if (error?.name === 'AbortError') throw error;
+    throw new Error('The connection was interrupted. Please try again.');
   });
   let data;
   try {

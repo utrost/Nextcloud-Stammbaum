@@ -90,6 +90,24 @@ test('large fictional family remains bounded at 200 people, 400 neighbors and 20
   expect(graph.limited).toBe(true);
   expect((await good(page, `/trees/${tr.id}/people`)).items).toHaveLength(50);
   test.info().annotations.push({ type: 'bounded-graph-ms', description: String(Date.now() - started) });
+  await page.setViewportSize({ width: 320, height: 1000 });
+  await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&focus=${root.id}`);
+  await expect(page.locator('.person-node')).toHaveCount(200);
+  await expect(page.locator('.graph-shell .feedback')).toBeVisible();
+  await page.getByRole('button', { name: 'Fit', exact: true }).click();
+  expect(
+    await page.locator('.graph-viewport').evaluate((viewport) => {
+      const bounds = viewport.getBoundingClientRect();
+      return [...viewport.querySelectorAll('.person-node')].every((node) => {
+        const r = node.getBoundingClientRect();
+        return (
+          r.left >= bounds.left && r.right <= bounds.right && r.top >= bounds.top && r.bottom <= bounds.bottom
+        );
+      });
+    }),
+  ).toBe(true);
+  await page.getByRole('button', { name: 'Text view', exact: true }).click();
+  await expect(page.locator('.graph-text button')).toHaveCount(200);
 });
 
 test('deletion review detects shared dependencies and rejects a changed tree before applying the reviewed action', async ({

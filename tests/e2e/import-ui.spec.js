@@ -38,7 +38,7 @@ test('compact import review retains diagnostics, deliberate activation and uncha
   await expect(page.locator('.import-review')).toHaveScreenshot('import-ready.png', {
     animations: 'disabled',
     style: '#stammbaum-app { font-family: "Noto Sans", sans-serif !important; }',
-    maxDiffPixelRatio: 0.003,
+    maxDiffPixels: 100,
   });
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 1000 });

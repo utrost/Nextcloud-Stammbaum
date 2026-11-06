@@ -420,6 +420,13 @@ final class ApiController extends Controller
         return $this->respond(fn($a) => $this->preferences->views($tree, $a));
     }
     #[NoAdminRequired]
+    public function saveHome(string $tree): JSONResponse
+    {
+        return $this->respond(
+            fn($a) => $this->preferences->saveHome($tree, $a, $this->body(['homeId', 'revision'])),
+        );
+    }
+    #[NoAdminRequired]
     public function saveView(string $tree): JSONResponse
     {
         return $this->respond(

@@ -1,8 +1,8 @@
 <script setup>
 import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { t, title } from '../i18n.js';
-import { layoutGraph, graphCard, personName, dateText } from '../domain.js';
-const props = defineProps({ graph: Object, selected: String, modelValue: Object });
+import { layoutGraph, graphCard, graphZoom, personName, dateText } from '../domain.js';
+const props = defineProps({ graph: Object, selected: String, modelValue: Object, restoreCamera: Boolean });
 const emit = defineEmits(['select', 'update:modelValue']);
 const viewport = ref(null),
   textView = ref(false);
@@ -15,7 +15,7 @@ function move(v) {
 }
 function zoom(delta, px, py) {
   const c = camera.value;
-  const z = Math.max(0.2, Math.min(2, c.zoom * delta));
+  const z = Math.max(graphZoom.min, Math.min(graphZoom.max, c.zoom * delta));
   px ??= viewport.value.clientWidth / 2;
   py ??= viewport.value.clientHeight / 2;
   move({ zoom: z, x: px - ((px - c.x) * z) / c.zoom, y: py - ((py - c.y) * z) / c.zoom });
@@ -28,17 +28,18 @@ function fit() {
     (viewport.value.clientHeight - 30) / layout.value.height,
   );
   move({
-    zoom: Math.max(0.2, z),
-    x: (viewport.value.clientWidth - layout.value.width * Math.max(0.2, z)) / 2,
+    zoom: Math.max(graphZoom.min, z),
+    x: (viewport.value.clientWidth - layout.value.width * Math.max(graphZoom.min, z)) / 2,
     y: 20,
   });
 }
-function center() {
+function center(zoom = camera.value.zoom) {
   const p = layout.value.positions[props.graph.focusId];
   if (p && viewport.value)
     move({
-      x: viewport.value.clientWidth / 2 - (p.x + graphCard.width / 2) * camera.value.zoom,
-      y: viewport.value.clientHeight / 2 - (p.y + graphCard.height / 2) * camera.value.zoom,
+      zoom,
+      x: viewport.value.clientWidth / 2 - (p.x + graphCard.width / 2) * zoom,
+      y: viewport.value.clientHeight / 2 - (p.y + graphCard.height / 2) * zoom,
     });
 }
 watch(
@@ -49,7 +50,11 @@ let resizeObserver;
 let viewportSize = null;
 watch(viewport, (element) => {
   resizeObserver?.disconnect();
-  if (!element) return;
+  if (!element) {
+    pointers.clear();
+    drag = pinch = null;
+    return;
+  }
   resizeObserver = new ResizeObserver(() => {
     const width = element.clientWidth,
       height = element.clientHeight;
@@ -65,16 +70,70 @@ watch(viewport, (element) => {
   resizeObserver.observe(element);
 });
 onBeforeUnmount(() => resizeObserver?.disconnect());
-onMounted(() => nextTick(center));
-let drag = null;
+onMounted(() => {
+  if (!props.restoreCamera) nextTick(center);
+});
+const pointers = new Map();
+let drag = null,
+  pinch = null,
+  suppressClick = false;
+function midpoint() {
+  const [a, b] = [...pointers.values()];
+  const rect = viewport.value.getBoundingClientRect();
+  return {
+    x: (a.x + b.x) / 2 - rect.left,
+    y: (a.y + b.y) / 2 - rect.top,
+    distance: Math.hypot(a.x - b.x, a.y - b.y),
+  };
+}
 function down(e) {
-  if (e.target.closest('button')) return;
-  drag = { x: e.clientX, y: e.clientY, c: { ...camera.value } };
-  e.currentTarget.setPointerCapture(e.pointerId);
+  if (e.button !== 0 || pointers.size >= 2) return;
+  const button = !!e.target.closest('button');
+  if (e.pointerType !== 'touch' && button) return;
+  if (!pointers.size) suppressClick = false;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, button });
+  if (pointers.size === 2) {
+    pinch = { ...midpoint(), c: { ...camera.value } };
+    drag = null;
+    suppressClick = true;
+  } else if (!button) {
+    drag = { x: e.clientX, y: e.clientY, c: { ...camera.value } };
+    if (e.pointerType !== 'touch') e.currentTarget.setPointerCapture(e.pointerId);
+  }
 }
 function pointer(e) {
-  if (!drag) return;
-  move({ x: drag.c.x + e.clientX - drag.x, y: drag.c.y + e.clientY - drag.y });
+  const point = pointers.get(e.pointerId);
+  if (!point) return;
+  pointers.set(e.pointerId, { ...point, x: e.clientX, y: e.clientY });
+  if (pinch && pointers.size === 2) {
+    const next = midpoint();
+    const z = Math.max(
+      graphZoom.min,
+      Math.min(graphZoom.max, (pinch.c.zoom * next.distance) / Math.max(1, pinch.distance)),
+    );
+    move({
+      zoom: z,
+      x: next.x - ((pinch.x - pinch.c.x) * z) / pinch.c.zoom,
+      y: next.y - ((pinch.y - pinch.c.y) * z) / pinch.c.zoom,
+    });
+  } else if (drag) {
+    if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 6) suppressClick = true;
+    move({ x: drag.c.x + e.clientX - drag.x, y: drag.c.y + e.clientY - drag.y });
+  }
+}
+function releasePointer(e) {
+  if (!pointers.delete(e.pointerId)) return;
+  pinch = null;
+  drag = null;
+  const point = [...pointers.values()][0];
+  if (point && !point.button) drag = { x: point.x, y: point.y, c: { ...camera.value } };
+}
+function filterClick(e) {
+  if (suppressClick && e.detail > 0) {
+    e.preventDefault();
+    e.stopPropagation();
+    suppressClick = false;
+  }
 }
 function key(e) {
   if (e.target !== viewport.value) return;
@@ -116,7 +175,13 @@ function path(edge) {
       </div>
       <div v-if="!textView" class="button-row">
         <button :aria-label="t('Zoom out')" @click="zoom(1 / 1.2)">−</button
-        ><span>{{ Math.round(camera.zoom * 100) }}%</span
+        ><button
+          class="zoom-reset"
+          :aria-label="t('Center focus at 100%')"
+          :title="t('Center focus at 100%')"
+          @click="center(1)"
+        >
+          {{ Math.round(camera.zoom * 1000) / 10 }}%</button
         ><button :aria-label="t('Zoom in')" @click="zoom(1.2)">+</button
         ><button @click="fit">{{ t('Fit') }}</button>
       </div>
@@ -134,8 +199,10 @@ function path(edge) {
       @keydown="key"
       @pointerdown="down"
       @pointermove="pointer"
-      @pointerup="drag = null"
-      @pointercancel="drag = null"
+      @pointerup="releasePointer"
+      @pointercancel="releasePointer"
+      @lostpointercapture="releasePointer"
+      @click.capture="filterClick"
       @wheel.prevent="
         (e) => {
           const r = viewport.getBoundingClientRect();

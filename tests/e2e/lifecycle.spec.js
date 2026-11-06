@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
-import { login, tree, grant, good, request, key, fixture } from './helpers.js';
+import { fixtureDatabase } from './server-fixture.js';
+import { login, tree, grant, good, request, key, fixture, person } from './helpers.js';
 const occ = (...args) =>
   execFileSync('docker', ['exec', '-u', 'www-data', 'stammbaum-iteration-nc', 'php', 'occ', ...args], {
     encoding: 'utf8',
@@ -79,6 +80,8 @@ test('Nextcloud disable and password events revoke invitation authority; recreat
     expect((await good(again, `/trees/${tr.id}`)).membershipRevision).toBeGreaterThan(
       before.membershipRevision,
     );
+    const homePerson = await person(page, tr.id, 'Account home');
+    await good(again, `/trees/${tr.id}/views/home`, 'PUT', { revision: 1, homeId: homePerson.id });
     const second = await good(again, `/trees/${tr.id}/invitations`, 'POST', { role: 'viewer' }, 201);
     execFileSync(
       'docker',
@@ -99,6 +102,9 @@ test('Nextcloud disable and password events revoke invitation authority; recreat
     );
     expect((await request(page, '/invitations/review', 'POST', { token: second.token })).status).toBe(404);
     occ('user:delete', uid);
+    expect(
+      fixtureDatabase('SELECT user_id FROM *PREFIX*stb_preferences WHERE user_id = ?', [uid], true),
+    ).toEqual([]);
     add(uid);
     await ctx.close();
     ctx = await browser.newContext();

@@ -1,6 +1,6 @@
 import { editable } from '../../src/domain.js';
 import { test, expect } from '@playwright/test';
-import { login, tree, person, good, relative, key, endpoint } from './helpers.js';
+import { login, tree, person, good, relative, key, endpoint, grant } from './helpers.js';
 const main = (page) => page.getByRole('tablist', { name: 'Tree workspace' });
 const details = (page) => page.getByRole('tablist', { name: 'Person details' });
 async function language(page, value) {
@@ -149,6 +149,11 @@ test('expanded research retains camera, selection, evidence and drafts while exp
   await expect(page.locator('.research-context')).toContainText('1840');
   await expect(page.locator('.research-context')).toContainText('1841');
   await expect(page.locator('.research-context')).toContainText('Emil Linden');
+  await expect(page.locator('.research-context .relation-row')).toContainText([
+    'Clara Berg',
+    'Emil Linden',
+    'Johanna Elisabeth',
+  ]);
   expect((await page.locator('#person-panel').boundingBox()).width).toBeGreaterThan(500);
   await page.screenshot({ path: 'test-results/research-evidence-desktop.png' });
   await details(page).getByRole('tab', { name: 'Timeline', exact: true }).click();
@@ -242,7 +247,7 @@ test('native visual baselines cover family, expanded evidence and narrow screens
   const options = {
     animations: 'disabled',
     style: '#stammbaum-app { font-family: "Noto Sans", sans-serif !important; }',
-    maxDiffPixelRatio: 0.003,
+    maxDiffPixels: 100,
   };
   for (const theme of ['light', 'dark']) {
     await page.emulateMedia({ colorScheme: theme });
@@ -257,4 +262,35 @@ test('native visual baselines cover family, expanded evidence and narrow screens
   await expect(page.locator('.citation-card')).toHaveScreenshot('research-evidence-phone.png', options);
   await page.locator('.research-toggle').click();
   await expect(page.locator('.graph-shell')).toHaveScreenshot('family-phone.png', options);
+});
+
+test('expanded viewer research excludes private assertions and hidden relatives', async ({
+  page,
+  browser,
+}) => {
+  const tr = await tree(page),
+    p = await person(page, tr.id, 'Confidential original', { visibility: 'management' }),
+    secret = await person(page, tr.id, 'Confidential relative', { visibility: 'management' });
+  const released = await good(page, `/trees/${tr.id}/people/${p.id}`, 'PUT', {
+    ...editable(p),
+    givenName: 'Public research',
+    visibility: 'members',
+    confirmRelease: true,
+    revision: p.revision,
+  });
+  expect((await relative(page, tr.id, released, secret)).status).toBe(201);
+  await grant(page, tr.id, 'stb_viewer');
+  const context = await browser.newContext(),
+    viewer = await context.newPage();
+  await login(viewer, 'stb_viewer');
+  const locale = await good(viewer, '/preferences');
+  await good(viewer, '/preferences', 'PUT', { locale: 'en', revision: locale.revision });
+  await viewer.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&focus=${p.id}&person=${p.id}`);
+  await expect(viewer.locator('.person-heading h2')).toHaveText('Public research Example');
+  await viewer.getByRole('button', { name: 'Expand person research', exact: true }).click();
+  await expect(viewer.locator('.research-context')).toContainText('Public research Example');
+  await expect(viewer.locator('#stammbaum-app')).not.toContainText('Confidential');
+  await expect(viewer.getByRole('button', { name: 'Edit person', exact: true })).toHaveCount(0);
+  await expect(viewer.getByRole('button', { name: 'Delete person', exact: true })).toHaveCount(0);
+  await context.close();
 });

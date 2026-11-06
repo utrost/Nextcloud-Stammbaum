@@ -581,7 +581,7 @@
   font-size: 12px !important;
 }
 .danger {
-  color: var(--color-text-error, #b32929) !important;
+  color: var(--color-error-text, #8a0000) !important;
 }
 .branch-toolbar {
   display: flex;
@@ -1612,4 +1612,22 @@
 
 .life-dates > div {
   display: block;
+}
+
+.personal-home {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  margin: 12px 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.preference-conflict {
+  margin-bottom: 20px;
+  border-inline-start: 4px solid var(--color-warning-element, #a46700);
+}
+
+#stammbaum-app .error {
+  color: var(--color-error-text, #8a0000);
 }
