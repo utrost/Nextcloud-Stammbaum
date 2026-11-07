@@ -332,7 +332,10 @@ onBeforeUnmount(() => {
             {{ selected.report.errors }} {{ t('errors') }} · {{ selected.report.warnings }}
             {{ t('warnings') }}
           </p>
-          <details v-if="selected.report.issueCounts" class="import-diagnostic-groups">
+          <details
+            v-if="selected.report.issueCounts && selected.report.errors + selected.report.warnings > 0"
+            class="import-diagnostic-groups"
+          >
             <summary>{{ t('All diagnostic categories') }}</summary>
             <ul>
               <li v-for="(count, code) in selected.report.issueCounts" :key="code">

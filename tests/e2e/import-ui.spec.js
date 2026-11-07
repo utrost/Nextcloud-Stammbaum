@@ -32,6 +32,7 @@ test('compact import review retains diagnostics, deliberate activation and uncha
   expect((await page.locator('.import-counts').boundingBox()).height).toBeLessThan(190);
   await expect(page.getByRole('button', { name: 'Confirm import', exact: true })).toBeDisabled();
   await expect(page.locator('.import-review')).toContainText('warnings');
+  await expect(page.locator('.import-diagnostic-groups')).toHaveCount(0);
   await page.locator('.import-review').scrollIntoViewIfNeeded();
   await page.screenshot({ path: 'test-results/import-ready-desktop.png' });
   await page.setViewportSize({ width: 1440, height: 1800 });
