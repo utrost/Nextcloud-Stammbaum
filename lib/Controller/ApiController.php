@@ -293,8 +293,9 @@ final class ApiController extends Controller
         string $mode = 'family',
         int $up = 3,
         int $down = 2,
+        mixed $expand = [],
     ): JSONResponse {
-        return $this->respond(fn($a) => $this->family->graph($tree, $a, $focus, $mode, $up, $down));
+        return $this->respond(fn($a) => $this->family->graph($tree, $a, $focus, $mode, $up, $down, $expand));
     }
     #[NoAdminRequired]
     #[NoCSRFRequired]

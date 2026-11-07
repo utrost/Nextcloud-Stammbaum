@@ -64,6 +64,8 @@ const graph = ref({ people: [], relations: [], limited: false, focusId: null }),
   graphLoading = ref(false),
   graphError = ref(''),
   focus = ref(''),
+  expansions = ref([]),
+  graphTextView = ref(false),
   mode = ref('family'),
   up = ref(3),
   down = ref(2),
@@ -98,6 +100,13 @@ let searchTimer,
 const name = (p) => personName(p, t('Unnamed person'));
 const management = computed(() => ['manager', 'owner'].includes(tree.value?.role));
 const canEdit = computed(() => ['editor', 'manager', 'owner'].includes(tree.value?.role));
+const expandableSelection = computed(
+  () =>
+    !graphError.value &&
+    selected.value &&
+    graph.value.boundaryIds?.includes(selected.value.id) &&
+    !expansions.value.includes(selected.value.id),
+);
 const homeId = computed(() => savedViews.value.home?.id || tree.value?.homeId || null);
 const selectedOnBranch = computed(() => graph.value.people.some((p) => p.id === selected.value?.id));
 const roleOptions = computed(() => (tree.value?.role === 'owner' ? roles : ['viewer', 'editor']));
@@ -289,6 +298,8 @@ async function chooseTree(id, initial = {}, authorized = false) {
   camera.value = { x: 20, y: 20, zoom: 1 };
   cameraReady.value = false;
   branches.value = [];
+  expansions.value = [];
+  graphTextView.value = false;
   people.value = [];
   query.value = '';
   graph.value = { people: [], relations: [], limited: false, focusId: null };
@@ -354,10 +365,14 @@ async function loadGraph() {
   graphError.value = '';
   const id = tree.value.id;
   try {
+    const expansionQuery = expansions.value.map((id) => '&expand[]=' + encodeURIComponent(id)).join('');
     const r = await api(
-      `/trees/${id}/graph?focus=${encodeURIComponent(focus.value)}&mode=${mode.value}&up=${up.value}&down=${down.value}`,
+      `/trees/${id}/graph?focus=${encodeURIComponent(focus.value)}&mode=${mode.value}&up=${up.value}&down=${down.value}${expansionQuery}`,
     );
-    if (seq === graphSequence && tree.value?.id === id) graph.value = r;
+    if (seq === graphSequence && tree.value?.id === id) {
+      graph.value = r;
+      return true;
+    }
   } catch (e) {
     if (seq === graphSequence) {
       graphError.value = t(e.message);
@@ -366,6 +381,29 @@ async function loadGraph() {
   } finally {
     if (seq === graphSequence) graphLoading.value = false;
   }
+}
+async function expandRelatives() {
+  if (!expandableSelection.value || graphLoading.value || expansions.value.length >= 20 || !navigate())
+    return;
+  const id = selected.value.id;
+  const tid = tree.value.id;
+  expansions.value = [...expansions.value, id];
+  const loaded = await loadGraph();
+  if (tree.value?.id !== tid || selected.value?.id !== id) return;
+  await nextTick();
+  const target = loaded
+    ? document.querySelector(`.graph-shell [data-person-id="${id}"]`)
+    : document.querySelector('.graph-error button');
+  target?.focus({ preventScroll: true });
+}
+async function resetExpansions() {
+  if (graphLoading.value || !navigate()) return;
+  expansions.value = [];
+  await loadGraph();
+}
+function changeProjection() {
+  expansions.value = [];
+  return loadGraph();
 }
 async function selectPerson(id) {
   if (selected.value?.id === id || !navigate()) return;
@@ -435,7 +473,8 @@ function closeDetails() {
   detailLoading.value = false;
   urlState();
 }
-async function branch(id) {
+async function branch(id, view = null) {
+  if (!navigate()) return;
   researchExpanded.value = false;
   if (focus.value) {
     branches.value = [
@@ -447,10 +486,18 @@ async function branch(id) {
         up: up.value,
         down: down.value,
         camera: { ...camera.value },
+        expansions: [...expansions.value],
+        textView: graphTextView.value,
       },
     ];
   }
   focus.value = id;
+  expansions.value = [];
+  if (view) {
+    mode.value = view.mode;
+    up.value = view.up;
+    down.value = view.down;
+  }
   tab.value = 'family';
   await loadGraph();
   urlState();
@@ -463,6 +510,8 @@ async function previous() {
   mode.value = prior.mode;
   up.value = prior.up;
   down.value = prior.down;
+  expansions.value = [...(prior.expansions || [])];
+  graphTextView.value = prior.textView ?? false;
   await loadGraph();
   if (prior.selected) await inspect(prior.selected);
   else closeDetails();
@@ -633,7 +682,10 @@ async function removePerson() {
     });
     closeDetails();
     await loadPeople();
-    if (focus.value === id) focus.value = people.value[0]?.id || '';
+    if (focus.value === id) {
+      focus.value = people.value[0]?.id || '';
+      expansions.value = [];
+    }
     await loadGraph();
     tree.value = await api(`/trees/${tree.value.id}`);
     notice.value = t('Person deleted');
@@ -777,10 +829,7 @@ async function openNamedView() {
   if (!navigate()) return;
   const v = savedViews.value.items.find((v) => v.id === viewChoice.value);
   if (!v) return;
-  mode.value = v.mode;
-  up.value = v.up;
-  down.value = v.down;
-  await branch(v.focus);
+  await branch(v.focus, v);
   if (v.selected) await inspect(v.selected);
   else closeDetails();
   await nextTick();
@@ -1193,17 +1242,22 @@ onBeforeUnmount(() => {
                   <div class="branch-options">
                     <label
                       ><span class="sr-only">{{ t('Family') }}</span
-                      ><select v-model="mode" @change="loadGraph">
+                      ><select v-model="mode" @change="changeProjection">
                         <option value="family">{{ t('Family') }}</option>
                         <option value="ancestors">{{ t('Ancestors') }}</option>
                         <option value="descendants">{{ t('Descendants') }}</option>
                       </select></label
                     ><label
                       >{{ t('Generations up')
-                      }}<input type="number" min="0" max="8" v-model.number="up" @change="loadGraph" /></label
+                      }}<input
+                        type="number"
+                        min="0"
+                        max="8"
+                        v-model.number="up"
+                        @change="changeProjection" /></label
                     ><label
                       >{{ t('Generations down')
-                      }}<input type="number" min="0" max="8" v-model.number="down" @change="loadGraph"
+                      }}<input type="number" min="0" max="8" v-model.number="down" @change="changeProjection"
                     /></label>
                   </div>
                 </div>
@@ -1237,6 +1291,9 @@ onBeforeUnmount(() => {
                   <p class="muted">
                     {{ t('Saved views belong to your account and respect your current tree access.') }}
                     {{ t('The most recently saved view is used when reopening this tree.') }}
+                    {{
+                      t('Local expansions are kept in branch history, not in saved views or copied links.')
+                    }}
                   </p>
                 </details>
                 <div class="personal-home">
@@ -1252,15 +1309,36 @@ onBeforeUnmount(() => {
                     {{ t('Clear personal home') }}
                   </button>
                 </div>
+                <div v-if="expansions.length || expandableSelection" class="expansion-toolbar">
+                  <span v-if="expansions.length"
+                    >{{ t('Local expansions') }}: {{ expansions.length }} / 20</span
+                  >
+                  <button
+                    v-if="expandableSelection"
+                    :disabled="graphLoading || expansions.length >= 20"
+                    @click="expandRelatives"
+                  >
+                    {{ t('Expand relatives') }}
+                  </button>
+                  <button v-if="expansions.length" :disabled="graphLoading" @click="resetExpansions">
+                    {{ t('Reset local expansions') }}
+                  </button>
+                  <p v-if="expansions.length >= 20" class="muted" role="status">
+                    {{ t('Local expansion limit reached. Refocus to explore another branch.') }}
+                  </p>
+                </div>
+                <p v-if="graphLoading && graph.people.length" role="status">{{ t('Loading…') }}</p>
                 <div v-if="graphLoading && !graph.people.length" class="empty" role="status">
                   <span class="spinner"></span>{{ t('Loading…') }}
                 </div>
-                <div v-else-if="graphError" class="feedback error" role="alert">
+                <div v-else-if="graphError" class="feedback error graph-error" role="alert">
                   {{ graphError }} <button @click="loadGraph">{{ t('Retry') }}</button>
                 </div>
                 <FamilyGraph
                   v-else-if="graph.people.length"
                   :graph="graph"
+                  v-model:text-view="graphTextView"
+                  :aria-busy="graphLoading"
                   :selected="selected?.id"
                   :model-value="camera"
                   :restore-camera="cameraReady"

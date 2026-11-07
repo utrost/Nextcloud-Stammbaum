@@ -1631,3 +1631,15 @@
 #stammbaum-app .error {
   color: var(--color-error-text, #8a0000);
 }
+
+.expansion-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
+}
+.expansion-toolbar p {
+  flex-basis: 100%;
+  margin: 0;
+}

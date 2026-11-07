@@ -66,13 +66,11 @@ final class Contexts
     {
         return $this->dto($this->row($tree, $id, $this->trees->access($tree, $actor)));
     }
-    public function list(string $tree, string $actor, string $person = '', int $page = 0): array
+    private function visibleScope(string $tree, array $m, string $person): array
     {
-        $m = $this->trees->access($tree, $actor);
         $where = 'c.tree_id = ?';
         $params = [$tree];
         if ($person !== '') {
-            $this->people->row($tree, $person, $m);
             $where .=
                 ' AND EXISTS (SELECT 1 FROM *PREFIX*stb_context_people a WHERE a.context_id = c.id AND a.person_id = ?)';
             $params[] = $person;
@@ -84,6 +82,30 @@ final class Contexts
             ' AND NOT EXISTS (SELECT 1 FROM *PREFIX*stb_context_people a LEFT JOIN *PREFIX*stb_people p ON p.id = a.person_id WHERE a.context_id = c.id AND (p.id IS NULL OR p.deleted = 1' .
             (!Trees::management($m) ? " OR p.visibility <> 'members'" : '') .
             '))';
+        return [$where, $params];
+    }
+    public function hasOutsideMember(string $tree, array $m, string $person, array $visible): bool
+    {
+        // Boundary discovery needs an authorized existence check, not up to
+        // twenty fully hydrated contexts for each of two hundred graph people.
+        [$where, $params] = $this->visibleScope($tree, $m, $person);
+        $slots = implode(',', array_fill(0, count($visible), '?'));
+        return $this->store->one(
+            'SELECT c.id FROM *PREFIX*stb_contexts c WHERE ' .
+                $where .
+                ' AND EXISTS (SELECT 1 FROM *PREFIX*stb_context_people outside_member WHERE outside_member.context_id = c.id AND outside_member.person_id NOT IN (' .
+                $slots .
+                ')) LIMIT 1',
+            array_merge($params, $visible),
+        ) !== null;
+    }
+    public function list(string $tree, string $actor, string $person = '', int $page = 0): array
+    {
+        $m = $this->trees->access($tree, $actor);
+        if ($person !== '') {
+            $this->people->row($tree, $person, $m);
+        }
+        [$where, $params] = $this->visibleScope($tree, $m, $person);
         $rows = $this->store->rows(
             'SELECT c.id FROM *PREFIX*stb_contexts c WHERE ' .
                 $where .

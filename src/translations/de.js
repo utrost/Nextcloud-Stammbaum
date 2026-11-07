@@ -1,4 +1,14 @@
 export default {
+  'Choose up to 20 local expansions.': 'Wähle höchstens 20 lokale Erweiterungen.',
+  'Choose each local expansion only once.': 'Wähle jede lokale Erweiterung nur einmal.',
+  'Local expansions': 'Lokale Erweiterungen',
+  'Expand relatives': 'Verwandte einblenden',
+  'Reset local expansions': 'Lokale Erweiterungen zurücksetzen',
+  'Local expansion limit reached. Refocus to explore another branch.':
+    'Die Grenze lokaler Erweiterungen ist erreicht. Wähle einen neuen Fokus, um einen anderen Zweig zu erkunden.',
+  'Local expansions are kept in branch history, not in saved views or copied links.':
+    'Lokale Erweiterungen bleiben im Zweigverlauf erhalten, nicht in gespeicherten Ansichten oder kopierten Links.',
+
   'The connection was interrupted. Please try again.':
     'Die Verbindung wurde unterbrochen. Bitte versuche es erneut.',
   'A between date needs both boundaries.': 'Ein Datum zwischen zwei Zeitpunkten benötigt beide Grenzen.',
