@@ -1643,3 +1643,122 @@
   flex-basis: 100%;
   margin: 0;
 }
+
+/* Media derivatives stay readable within Nextcloud's themed shell. */
+.media-preview {
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--stb-tint);
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.media-preview img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.media-card > .media-preview {
+  height: 200px;
+  overflow: auto;
+}
+.media-card > .media-preview img {
+  max-height: 200px;
+}
+.preview-fallback {
+  padding: 16px;
+  text-align: center;
+}
+.document-symbol {
+  font-size: 42px;
+  color: var(--stb-muted);
+}
+.media-viewer {
+  width: min(1100px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  padding: 0;
+}
+.media-viewer header {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: start;
+  padding: 16px;
+}
+.media-viewer header > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.media-viewer h2 {
+  margin: 0;
+}
+.media-viewer header p {
+  margin: 4px 0 0;
+}
+.viewer-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px 12px;
+}
+.viewer-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.viewer-toolbar select {
+  width: auto;
+}
+.viewer-stage {
+  margin: 0 16px;
+  max-height: 65vh;
+  min-height: 180px;
+  overflow: auto;
+  background: var(--stb-tint);
+  border-radius: 8px;
+}
+.viewer-stage .media-preview {
+  min-height: 180px;
+  max-width: none;
+}
+.viewer-stage .media-preview img {
+  width: 100%;
+  max-height: none;
+}
+.viewer-note {
+  padding: 0 16px;
+  font-size: 13px;
+}
+@media (max-width: 600px) {
+  .media-viewer header {
+    flex-wrap: wrap;
+  }
+  .viewer-toolbar button {
+    min-height: 44px;
+  }
+  .viewer-stage {
+    max-height: 55vh;
+  }
+}
+
+.viewer-pages {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+@media (max-width: 600px) {
+  .viewer-pages {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+  .viewer-pages [role='status'] {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    text-align: center;
+  }
+}

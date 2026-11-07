@@ -1,4 +1,37 @@
 export default {
+  'Fit width': 'Breite einpassen',
+  Zoom: 'Vergrößerung',
+  'The preview is being prepared. Please retry.':
+    'Die Vorschau wird erstellt. Bitte versuchen Sie es erneut.',
+  'This preview exceeds the display limits. Download the original instead.':
+    'Diese Vorschau überschreitet die Anzeigegrenzen. Laden Sie stattdessen das Original herunter.',
+  'Preview unavailable. You can still download the original.':
+    'Vorschau nicht verfügbar. Sie können das Original weiterhin herunterladen.',
+  'The media changed. Close the viewer and reload the library.':
+    'Das Medium wurde geändert. Schließen Sie die Vorschau und laden Sie die Mediathek neu.',
+  'Choose a supported preview size and page.': 'Wählen Sie eine unterstützte Vorschaugröße und Seite.',
+  'This page is not available.': 'Diese Seite ist nicht verfügbar.',
+  'Preparing preview\u2026': 'Vorschau wird erstellt…',
+  'Retry preview': 'Vorschau erneut laden',
+  'Close viewer': 'Vorschau schließen',
+  'Preview controls': 'Vorschau-Steuerung',
+  'Previous page': 'Vorherige Seite',
+  'Next page': 'Nächste Seite',
+  Page: 'Seite',
+  'Media preview': 'Medienvorschau',
+  'Open preview': 'Vorschau öffnen',
+  'Image-based preview. Download the original for selectable text and document accessibility features.':
+    'Bildbasierte Vorschau. Laden Sie das Original für auswählbaren Text und die Barrierefreiheitsfunktionen des Dokuments herunter.',
+
+  'Choose from Nextcloud Files': 'Aus Nextcloud Dateien auswählen',
+  'Import private copy': 'Private Kopie importieren',
+  'The Nextcloud file picker is unavailable. Reload the page and try again.':
+    'Die Nextcloud-Dateiauswahl ist nicht verfügbar. Laden Sie die Seite neu und versuchen Sie es erneut.',
+  'The source file changed. Choose it again before importing.':
+    'Die Quelldatei wurde geändert. Wählen Sie sie vor dem Import erneut aus.',
+  'A private copy will be stored in this tree and count toward its installation quota. Later changes, deletion or sharing changes in Files will not affect this copy.':
+    'Eine private Kopie wird in diesem Stammbaum gespeichert und auf das Speicherkontingent der Installation angerechnet. Spätere Änderungen, Löschungen oder Freigabeänderungen in Dateien wirken sich nicht auf diese Kopie aus.',
+
   'Imported contact or religious details remain management-only, including after edits.':
     'Importierte Kontakt- oder Religionsangaben bleiben auch nach Änderungen nur für die Verwaltung sichtbar.',
   'All diagnostic categories': 'Alle Diagnosekategorien',
