@@ -50,6 +50,9 @@ test('two-finger gestures zoom around their midpoint without selecting or changi
   await page.setViewportSize({ width: 390, height: 1000 });
   await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&focus=${p.id}`);
   await expect(page.locator('.person-node')).toHaveCount(1);
+  // A hash-only navigation can leave the old graph mounted while the new tree loads.
+  await expect(page.locator('.page-header h1')).toHaveText(tr.name);
+  await expect(page.locator(`.person-node[data-person-id="${p.id}"]`)).toBeVisible();
   await page.locator('.graph-viewport').scrollIntoViewIfNeeded();
   const node = await page.locator('.person-node').boundingBox();
   const x = node.x + node.width / 2,
