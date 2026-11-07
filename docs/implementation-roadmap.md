@@ -226,3 +226,19 @@ Implementation tests must cover privacy across all dependencies, historical conf
 The documentation task verifies archive preservation, portable HTML resources, screenshot provenance checksums, issue/dependency integrity, milestones and coverage. It does not execute nonexistent application code. Future implementation evidence belongs to individual issues and the parity acceptance matrix.
 
 See [archive manifest](intial-spec/archive-manifest.json) for original and archived hashes. All 100 original files remain; only HTML resource URLs change. Original render-check artifacts are retained as historical evidence, not regenerated claims. Twelve added screenshots match the original local export provenance manifest; the later illustration export was not present at the pinned application source revision. Three explanatory SVGs and the print stylesheet are copied from that same local documentation export.
+
+
+## Alpha.15 gap review — 7 November 2026
+
+The remaining parity work is already assigned: required GEDCOM mappings and reviewed import to #35–#37; current-state export/jobs to #38–#39; ZIP matching and broader media assignments to #34/#33; scoped credentials/API/webhooks to #40–#42; provenance/assertions/source metadata/citation targets and access audit to #15/#17/#20/#21/#13; diagram references and navigation to #26–#28; in-session draft/conflict behavior to #29; account-lifecycle/last-owner adaptations to #8; backup/recovery, capacity and delivery to #45–#47; localization/keyboard access and executed requirement evidence to #43/#44/#48. Existing implemented increments do not imply completion of all criteria in those issues.
+
+Two items from the gap discussion are explicitly excluded from the existing parity issues and are now separately tracked enhancements:
+
+| Follow-up | Scope | Dependencies |
+| --- | --- | --- |
+| [E01 · #69](https://github.com/utrost/Nextcloud-Stammbaum/issues/69) | EXIF-oriented derived previews with unchanged originals and defined crop compatibility | #32, #33 |
+| [E02 · #70](https://github.com/utrost/Nextcloud-Stammbaum/issues/70) | Deliberate, authorization-aware draft recovery across browser sessions | #29, #11 |
+
+Neither is a parity blocker: #32 excludes automatic EXIF interpretation, and #29 excludes a promise of drafts surviving browser closure. Broad cleanup/purge is already deferred under #56; parity still requires safe retention, quota accounting and recovery under #5/#37/#45. No automatic original expiration or purge is introduced by this review.
+
+The original 59 work-issue specifications remain unchanged in `backlog.json`; the two additional specifications are stored in its separate `followups` array. The A01–A30 mapping remains the original parity acceptance boundary.
