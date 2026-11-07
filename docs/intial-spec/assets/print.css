@@ -1,0 +1,41 @@
+/* Document layout only. The application and source screenshots are unchanged. */
+@page { size: A4; margin: 18mm 16mm 18mm; }
+@page illustration { size: A3; margin: 16mm 16mm 18mm; }
+html { color: #233e32; background: white; }
+body { max-width: 100%; margin: 0; font: 11pt/1.48 Arial, sans-serif; color: #263c32; }
+h1, h2, h3 { font-family: Georgia, serif; font-weight: normal; line-height: 1.2; color: #214d3a; }
+h1 { font-size: 31pt; margin: 15mm 0 10mm; max-width: 160mm; }
+h2 { font-size: 22pt; margin: 0 0 7mm; break-before: page; }
+h3 { font-size: 15pt; margin: 8mm 0 3mm; }
+h1, h2, h3, h4 { break-after: avoid; }
+p { margin: 0 0 3.5mm; orphans: 3; widows: 3; break-inside: avoid; }
+strong { color: #234b39; }
+a { color: #285c45; text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+ul, ol { padding-left: 6mm; margin: 3mm 0 5mm; }
+li { margin-bottom: 1.8mm; break-inside: avoid; }
+#contents + ol li { position: relative; padding-right: 12mm; }
+.contents-page { position: absolute; right: 0; color: #596a60; }
+table { width: 100%; border-collapse: collapse; margin: 5mm 0; font-size: 9.2pt; line-height: 1.36; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+th { background: #e4eddf; text-align: left; font-weight: bold; }
+td, th { vertical-align: top; padding: 2.4mm 2mm; border-bottom: 0.3mm solid #d2decf; overflow-wrap: anywhere; }
+tbody tr:nth-child(even) { background: #f6f8f3; }
+.role-matrix { table-layout: fixed; font-size: 8.8pt; }
+.role-matrix th:first-child { width: 44%; }
+.role-matrix th { white-space: nowrap; }
+.traceability td, .traceability th { padding-top: 1.5mm; padding-bottom: 1.5mm; }
+figure { margin: 7mm 0; }
+figure.diagram { break-inside: avoid; }
+figure.diagram img { display: block; width: 100%; height: auto; }
+figcaption { font-size: 9pt; line-height: 1.4; padding-top: 3mm; }
+figure:not(.diagram) > img { max-width: 100%; }
+.illustration-page { page: illustration; break-before: page; break-after: page; }
+.illustration-caption { font-size: 10pt; line-height: 1.35; margin: 0 0 4mm; min-height: 10mm; }
+.illustration-window { position: relative; overflow: hidden; width: 258mm; margin: 0 auto; }
+.illustration-window img { position: absolute; left: 0; width: 258mm; height: auto; max-width: none; }
+@media screen {
+  body { max-width: 980px; margin: 40px auto; padding: 0 20px; }
+  h2 { margin-top: 60px; }
+  figure:not(.diagram) { border-top: 1px solid #d2decf; padding-top: 20px; }
+}
