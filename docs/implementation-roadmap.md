@@ -241,4 +241,16 @@ Two items from the gap discussion are explicitly excluded from the existing pari
 
 Neither is a parity blocker: #32 excludes automatic EXIF interpretation, and #29 excludes a promise of drafts surviving browser closure. Broad cleanup/purge is already deferred under #56; parity still requires safe retention, quota accounting and recovery under #5/#37/#45. No automatic original expiration or purge is introduced by this review.
 
-The original 59 work-issue specifications remain unchanged in `backlog.json`; the two additional specifications are stored in its separate `followups` array. The A01–A30 mapping remains the original parity acceptance boundary.
+The original 59 work-issue specifications remain unchanged in `backlog.json`; additional enhancement specifications are stored in its separate `followups` array. The A01–A30 mapping remains the original parity acceptance boundary.
+
+## Media enhancements — 7 November 2026
+
+Original uploads, shared assignments/crops and reviewed GEDCOM media matching remain tracked by #32–#34 and #36. Missing-reference matching is not duplicated here. The following user-requested improvements extend the baseline and do not block parity completion:
+
+| Follow-up | Scope | Dependencies |
+| --- | --- | --- |
+| [E03 · #71](https://github.com/utrost/Nextcloud-Stammbaum/issues/71) | cache private media thumbnails and provide an accessible gallery viewer | #32, #33, #7, #69 |
+| [E04 · #72](https://github.com/utrost/Nextcloud-Stammbaum/issues/72) | add private PDF thumbnails and an inline document viewer | #32, #71 |
+| [E06 · #74](https://github.com/utrost/Nextcloud-Stammbaum/issues/74) | Choose existing Nextcloud images/PDFs and import unchanged private copies | #5, #32, #33 |
+
+Office documents and conversion are out of scope by user decision; #73 (E05) is closed as not planned and retained in the backlog only for history. Media entry points are device upload and explicit selection from Nextcloud Files. Existing files are copied into private Stammbaum storage with source-read authorization, original-byte validation and quota checks; subsequent source edits/deletion do not change an imported copy. Explain the independent copy and tree visibility before confirmation. PDF preview failure must leave original download available. EXIF orientation remains separately tracked in #69.

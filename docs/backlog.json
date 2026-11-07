@@ -1812,6 +1812,83 @@
       ],
       "number": 70,
       "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/70"
+    },
+    {
+      "key": "E03",
+      "title": "Deferred: cache private media thumbnails and provide an accessible gallery viewer",
+      "dependencies": [
+        "M01",
+        "M02",
+        "F06",
+        "E01"
+      ],
+      "body": "<!-- stammbaum-followup:E03 -->\n\n## Outcome and scope\n\nProvide small gallery thumbnails and a larger image viewer without repeatedly decoding originals on every request. Today JPEG/PNG previews are generated on demand at a maximum dimension of 600 pixels.\n\n## Acceptance criteria\n\n- [ ] Define bounded thumbnail/viewer sizes, cache budget, eviction and processing limits; retain current original-byte, dimension and pixel limits. Lazy-load paginated galleries without fetching full originals.\n- [ ] Store disposable derivatives in private AppData, keyed by original checksum, size, crop and renderer/orientation version. Cache loss regenerates previews without changing original bytes, genealogy records or tree revisions.\n- [ ] Enforce current tree, medium and all-target permissions on every preview request, including cache hits. Visibility changes, detachment, deletion, membership revocation and account changes cannot disclose cached content or leave stale images displayed after an authorization failure.\n- [ ] Coordinate EXIF and crop semantics with #69; strip embedded metadata from derivatives. Preserve independent assignment crops and unchanged-original SHA-256.\n- [ ] Use bounded background work where needed, with authority rechecks before publication, duplicate-work control and recoverable failure states. Preview failure leaves an authorized original download available.\n- [ ] Provide a pleasant Nextcloud-themed gallery, larger viewer, explicit Download original, loading/error/fallback states and keyboard controls with correct focus restoration. Verify 1440px, 390px and 320px layouts with Playwright screenshots.\n- [ ] Test cold/warm cache, regeneration, crop changes/reset, revoked access during generation, hidden shared targets, concurrent requests and malformed images using fictional fixtures.\n\n## Contracts and boundaries\n\nUse existing authorized media routes, private originals and Nextcloud background execution. Specify response/cache headers so private responses cannot leak through shared caches. Dependencies: #32, #33, #7; coordinate orientation with #69. No public URLs, original rewriting, new formats, PDF rendering or graph-card portrait redesign.\n\n## Specification and delivery\n\nUser-requested media enhancement, 7 November 2026. Related baseline: specification chapter 7, pp. 28–29 (MED, SICHT), chapter 12 p. 53 (ROB), A16 for original-integrity/privacy regression coverage; these references do not make this enhancement an original acceptance requirement. Roadmap: #1. Excluded from release-0.15 parity completion; existing #32–#34 and #36 retain their scope and priority.\n",
+      "deferred": true,
+      "milestone": "Deferred baseline obligations and expansion",
+      "labels": [
+        "enhancement",
+        "deferred",
+        "area:media-exchange"
+      ],
+      "number": 71,
+      "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/71"
+    },
+    {
+      "key": "E04",
+      "title": "Deferred: add private PDF thumbnails and an inline document viewer",
+      "dependencies": [
+        "M01",
+        "E03"
+      ],
+      "body": "<!-- stammbaum-followup:E04 -->\n\n## Outcome and scope\n\nLet users recognize PDF attachments from a first-page thumbnail and read them within Stammbaum while retaining unchanged originals and a reliable download action. PDFs currently have an icon and download only.\n\n## Acceptance criteria\n\n- [ ] Choose and document a supported renderer/viewer and deployment requirements before implementation; use private app-owned bytes and authorized routes rather than publishing originals in Nextcloud Files or public shares.\n- [ ] Generate a bounded first-page thumbnail and provide accessible page navigation, zoom, close and Download original. Missing renderer, encrypted/unsupported PDF and rendering failure show a clear fallback without blocking original download.\n- [ ] Define page, memory, time and output-size limits. Rendering must not execute embedded scripts, launch attachments or automatically fetch external resources; handle malformed and resource-exhausting PDFs safely.\n- [ ] Apply current medium/all-target permissions to every thumbnail, document and range request. Test revocation during generation/viewing, hidden dependencies and stale derivative URLs.\n- [ ] Keep source SHA-256 unchanged; make derivatives private and regenerable under the cache contract in #71. Preview generation does not change tree revisions.\n- [ ] Test fictional single/multipage, encrypted, malformed and oversized PDFs, keyboard/focus behavior, unavailable preview and desktop/390px/320px layouts in Playwright. Inspect screenshots and verify original downloads byte-for-byte.\n\n## Contracts and boundaries\n\nDepends on #32 and #71. PDF previews are explicitly excluded from #32 baseline parity; this enhancement does not redefine it. No OCR, full-text indexing, editing, signatures validation, remote conversion service or Office conversion.\n\n## Specification and delivery\n\nUser-requested media enhancement, 7 November 2026. Related baseline: specification chapter 7, pp. 28–29 (MED, SICHT), chapter 12 p. 53 (ROB), A16 for original-integrity/privacy regression coverage; these references do not make this enhancement an original acceptance requirement. Roadmap: #1. Excluded from release-0.15 parity completion; existing #32–#34 and #36 retain their scope and priority.\n",
+      "deferred": true,
+      "milestone": "Deferred baseline obligations and expansion",
+      "labels": [
+        "enhancement",
+        "deferred",
+        "area:media-exchange"
+      ],
+      "number": 72,
+      "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/72"
+    },
+    {
+      "key": "E05",
+      "title": "Deferred: support private Office document attachments with clear download fallbacks",
+      "dependencies": [
+        "M01",
+        "M02"
+      ],
+      "body": "<!-- stammbaum-followup:E05 -->\n\n## Disposition\n\nCancelled by user decision on 7 November 2026: media scope is images and PDF only. Office attachments and Office conversion will not be implemented. The original proposal below is retained only for history; its checklist is not an implementation commitment.\n\n## Original proposed outcome and scope\n\nAllow genealogy evidence supplied as Office documents to be attached and downloaded with clear document icons. Treat Office support separately from JPEG/PNG/PDF baseline behavior; conversion is not required for an attachment to be useful.\n\n## Acceptance criteria\n\n- [ ] Document an explicit initial allowlist for modern Office/OpenDocument formats and supported MIME/container validation before implementation; reject unsupported and macro-enabled formats rather than accepting arbitrary ZIPs or trusting extensions.\n- [ ] Validate package structure with bounded entry count, expanded size and processing; retain current upload/quota protections. Embedded content is never executed and remote relationships are never fetched.\n- [ ] Store exact original bytes privately with checksum, safe filenames and idempotent upload behavior. Downloads must match the upload hash and use safe attachment headers.\n- [ ] Reuse media assignments and current all-target visibility enforcement; documents cannot be portrait candidates. Unauthorized users cannot see document metadata, icons containing content or download URLs.\n- [ ] Show type, title and an accessible Download original action. Explain when no preview is available without presenting it as a broken image; support English/German and mobile/keyboard use.\n- [ ] Define how newly supported formats interact with #34 package validation and #39 media export; do not silently broaden their format contracts. Record intentional unsupported combinations.\n- [ ] Test fictional valid/invalid containers, MIME spoofing, macro content, expansion limits, quota failure, stale writes, revoked access and unchanged downloads; verify upload/assign/download/fallback journeys in Playwright.\n\n## Contracts and boundaries\n\nDependencies: #32, #33. Coordinate with #34 and #39. Use private Nextcloud AppData and Stammbaum tree authorization; administrator status grants no genealogy access. No inline Office editing, automatic conversion, external document services, OCR, legacy binary formats or blanket support for arbitrary documents. Optional Office preview conversion needs a separately reviewed implementation scope after attachment support.\n\n## Specification and delivery\n\nUser-requested media enhancement, 7 November 2026. Related baseline: specification chapter 7, pp. 28–29 (MED, SICHT), chapter 12 p. 53 (ROB), A16 for original-integrity/privacy regression coverage; these references do not make this enhancement an original acceptance requirement. Roadmap: #1. Excluded from release-0.15 parity completion; existing #32–#34 and #36 retain their scope and priority.\n",
+      "deferred": true,
+      "milestone": "Deferred baseline obligations and expansion",
+      "labels": [
+        "enhancement",
+        "deferred",
+        "area:media-exchange"
+      ],
+      "number": 73,
+      "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/73",
+      "state": "CLOSED",
+      "state_reason": "NOT_PLANNED"
+    },
+    {
+      "key": "E06",
+      "title": "Import existing Nextcloud images and PDFs as private genealogy media",
+      "dependencies": [
+        "F04",
+        "M01",
+        "M02"
+      ],
+      "body": "<!-- stammbaum-followup:E06 -->\n\n## Outcome and scope\n\nOffer both Upload from device and Choose from Nextcloud Files for JPEG/PNG images and PDF documents. The user confirmed that these files may already exist in Nextcloud; Office documents are explicitly excluded (#73 closed as not planned).\n\nImport a deliberate, unchanged private copy into Stammbaum rather than keeping a live link. Explain before confirmation that the copy consumes Stammbaum quota, is shared under the selected tree/media permissions, and remains independent of subsequent source-file edits, deletion or sharing changes.\n\n## Acceptance criteria\n\n- [ ] Use a supported Nextcloud file-selection interface to browse only files readable by the current account. Allow only JPEG, PNG and PDF candidates; validate actual server-side content through the same pipeline as device uploads, not merely picker extensions or client MIME values.\n- [ ] Resolve selected file IDs through the current user's authorized Nextcloud filesystem. Require source read permission and target-tree editor authority at execution and recheck before publishing; Nextcloud administrator status grants no tree access. Never accept arbitrary filesystem paths, public-share URLs or remote URLs as substitutes.\n- [ ] Show filename/type/size, target tree, intended visibility and copy semantics before explicit confirmation. Preserve existing media visibility defaults, manager-only visibility changes and all-target assignment rules. Do not expose source paths or sharing metadata to other tree members.\n- [ ] Enforce existing 10 MiB/file, image dimension/pixel limits and installation original-storage quota. Reuse byte validation, immutable storage, SHA-256 verification and idempotent creation; record only necessary private provenance, never credentials or public download links.\n- [ ] Define a consistent source-version capture contract. If the source changes, disappears, becomes unreadable or loses permission during copying, reject or require fresh selection instead of silently importing another version. Failed copies must not publish partial media or leak temporary data; retries cannot create duplicate media.\n- [ ] Source edits/deletion after successful import do not alter the stored copy, its hash, assignments or crops. Document that later source-share revocation does not revoke an explicitly imported copy; tree/media permissions govern it. Never modify or delete the source file.\n- [ ] Route imported media through the same authorized previews, PDF fallback/viewer and original downloads as uploads (#71/#72). Cached Nextcloud previews or source shares cannot bypass Stammbaum authorization.\n- [ ] Coordinate with #34/#36 so a selected copy can satisfy an explicitly reviewed missing GEDCOM reference, preserving original reference wording. Matching semantics remain owned by those issues; no automatic basename matching or reference fetching.\n- [ ] Test fictional owned and readable shared files, denied/revoked files, source mutation/deletion races, malformed or disguised content, quota failure, cancellation, duplicate retries and hidden shared genealogy targets. Verify byte-identical copies and unchanged source files.\n- [ ] Add Playwright coverage for selection, confirmation, upload alternative, successful attachment, permission/validation failures and keyboard operation at desktop, 390px and 320px. Verify isolation between accounts and trees and inspect screenshots.\n\n## Contracts and dependencies\n\nDependencies: #5 private originals/quota, #32 validation/downloads, #33 assignments. Coordinate with #34/#36 for reference matching and #71/#72 for presentation. Choose supported Nextcloud Files APIs during implementation and document version requirements; sibling apps are references, not runtime dependencies. Preserve Library and Relate.\n\nNo live file synchronization, public shares, automatic folder scanning, source modification, Office documents, new image formats, external downloads or unbounded bulk import. Existing PNG/JPEG/PDF baseline limits remain unchanged.\n\n## Specification and delivery\n\nUser-requested native Nextcloud enhancement, 7 November 2026. Related release-0.15 specification chapter 7 pp. 28–29 (MED, SICHT), chapter 12 p. 53 (ROB); A16 supplies unchanged-original and privacy regression coverage, A17 applies when explicitly matching a supplied reference. Choosing an existing Nextcloud file is an adaptation, not an original acceptance example. Roadmap #1. Track separately from original parity completion; existing obligations retain their priority.\n",
+      "deferred": true,
+      "milestone": "Deferred baseline obligations and expansion",
+      "labels": [
+        "enhancement",
+        "deferred",
+        "area:media-exchange"
+      ],
+      "number": 74,
+      "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/74"
     }
   ]
 }

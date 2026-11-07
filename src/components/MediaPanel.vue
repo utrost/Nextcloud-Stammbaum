@@ -5,6 +5,8 @@ import { api, apiBase } from '../api.js';
 import { t } from '../i18n.js';
 import { requestId, personName } from '../domain.js';
 import MediaEditor from './MediaEditor.vue';
+import MediaPreview from './MediaPreview.vue';
+import MediaViewer from './MediaViewer.vue';
 const props = defineProps({ treeId: String, person: Object, canEdit: Boolean, management: Boolean }),
   emit = defineEmits(['changed']);
 const items = ref([]),
@@ -12,19 +14,25 @@ const items = ref([]),
   loading = ref(false),
   error = ref(''),
   editor = ref(null),
+  viewer = ref(null),
   file = ref(null),
+  cloudFile = ref(null),
+  selecting = ref(false),
   fileInput = ref(null),
   uploading = ref(false),
   title = ref(''),
   visibility = ref('members');
 useDraftGuard(
-  computed(() => file.value !== null),
+  computed(() => file.value !== null || cloudFile.value !== null),
   uploading,
 );
 let sequence = 0,
   request = requestId();
 const url = (m, kind = 'preview') =>
   `${apiBase}/trees/${props.treeId}/media/${m.id}/${kind}?revision=${m.revision}${props.person ? '&person=' + props.person.id : ''}`;
+function unavailable(id) {
+  items.value = items.value.filter((item) => item.id !== id);
+}
 async function load(next = 0) {
   const seq = ++sequence;
   loading.value = true;
@@ -35,18 +43,85 @@ async function load(next = 0) {
     items.value = next ? [...items.value, ...r.items] : r.items;
     page.value = r.nextPage;
   } catch (e) {
-    if (seq === sequence) error.value = t(e.message);
+    if (seq === sequence) {
+      error.value = t(e.message);
+      if ([401, 403, 404].includes(e.status)) {
+        items.value = [];
+        viewer.value = null;
+      }
+    }
   } finally {
     if (seq === sequence) loading.value = false;
   }
 }
 function choose(e) {
+  cloudFile.value = null;
   file.value = e.target.files[0] || null;
   title.value = file.value?.name || '';
   request = requestId();
   error.value = '';
 }
+function chooseCloud() {
+  error.value = '';
+  if (!window.OC?.dialogs?.filepicker) {
+    error.value = t('The Nextcloud file picker is unavailable. Reload the page and try again.');
+    return;
+  }
+  window.OC.dialogs.filepicker(
+    t('Choose from Nextcloud Files'),
+    async (path) => {
+      if (!path) return;
+      selecting.value = true;
+      try {
+        const selected = await api(`/trees/${props.treeId}/media/select-file`, {
+          method: 'POST',
+          body: { path },
+        });
+        cloudFile.value = selected;
+        file.value = null;
+        fileInput.value.value = '';
+        title.value = selected.name;
+        request = requestId();
+      } catch (e) {
+        error.value = t(e.message);
+      } finally {
+        selecting.value = false;
+      }
+    },
+    false,
+    ['image/jpeg', 'image/png', 'application/pdf'],
+    true,
+  );
+}
+async function importCloud() {
+  uploading.value = true;
+  error.value = '';
+  try {
+    await api(`/trees/${props.treeId}/media/import-file`, {
+      method: 'POST',
+      body: {
+        fileId: cloudFile.value.id,
+        etag: cloudFile.value.etag,
+        requestId: request,
+        title: title.value,
+        personId: props.person?.id || '',
+        visibility: visibility.value,
+      },
+    });
+    cloudFile.value = null;
+    title.value = '';
+    request = requestId();
+    await load();
+    emit('changed');
+  } catch (e) {
+    if (e.code === 'retry_conflict') request = requestId();
+    error.value = t(e.message);
+  } finally {
+    uploading.value = false;
+  }
+}
 async function upload() {
+  if (cloudFile.value) return importCloud();
   if (!file.value) return;
   uploading.value = true;
   error.value = '';
@@ -125,6 +200,10 @@ onBeforeUnmount(() => {
           :disabled="uploading"
           @change="choose"
       /></label>
+      <button type="button" :disabled="uploading || selecting" @click="chooseCloud">
+        {{ t('Choose from Nextcloud Files') }}
+      </button>
+      <p v-if="selecting" role="status">{{ t('Loading…') }}</p>
       <p class="muted">
         {{
           t(
@@ -132,7 +211,7 @@ onBeforeUnmount(() => {
           )
         }}
       </p>
-      <template v-if="file"
+      <template v-if="file || cloudFile"
         ><label
           >{{ t('Title') }}<input v-model="title" maxlength="250" required :disabled="uploading" /></label
         ><label v-if="management"
@@ -141,8 +220,29 @@ onBeforeUnmount(() => {
             <option value="members">{{ t('All tree members') }}</option>
             <option value="management">{{ t('Management only') }}</option>
           </select></label
+        >
+        <p v-if="cloudFile" class="muted">
+          {{ cloudFile.name }} · {{ (cloudFile.size / 1024).toFixed(1) }} KiB · {{ cloudFile.mime }} <br />{{
+            t(
+              'A private copy will be stored in this tree and count toward its installation quota. Later changes, deletion or sharing changes in Files will not affect this copy.',
+            )
+          }}
+          <br />{{ t(visibility === 'management' ? 'Management only' : 'All tree members') }}
+        </p>
+        <button
+          v-if="cloudFile"
+          type="button"
+          :disabled="uploading"
+          @click="
+            cloudFile = null;
+            title = '';
+          "
+        >
+          {{ t('Cancel') }}</button
         ><button class="primary" :disabled="uploading">
-          {{ t(uploading ? 'Uploading and verifying…' : 'Upload original') }}
+          {{
+            t(uploading ? 'Uploading and verifying…' : cloudFile ? 'Import private copy' : 'Upload original')
+          }}
         </button></template
       >
     </form>
@@ -153,11 +253,7 @@ onBeforeUnmount(() => {
     <p v-if="!items.length && !loading && !error" class="muted">{{ t('No media yet') }}</p>
     <div class="media-grid">
       <article v-for="m in items" :key="m.id" class="panel media-card">
-        <img v-if="m.mime !== 'application/pdf'" :src="url(m)" :alt="m.title" loading="lazy" /><span
-          v-else
-          class="pdf-placeholder"
-          >PDF</span
-        >
+        <MediaPreview :url="url(m) + '&size=320'" :label="m.title" lazy @unavailable="unavailable(m.id)" />
         <h3>{{ m.title }}</h3>
         <small>{{ m.originalName }} · {{ (m.size / 1024).toFixed(1) }} KiB</small
         ><span v-if="m.visibility === 'management'" class="badge">{{ t('Management only') }}</span>
@@ -171,13 +267,21 @@ onBeforeUnmount(() => {
           <small class="file-hash">SHA-256 {{ m.sha256 }}</small>
         </details>
         <div class="button-row">
+          <button @click="viewer = m">{{ t('Open preview') }}</button>
           <a class="download-original" :href="url(m, 'original')">{{ t('Download original') }}</a
           ><button v-if="canEdit" @click="editor = m">{{ t('Edit media') }}</button>
         </div>
       </article>
     </div>
     <button v-if="page !== null" :disabled="loading" @click="load(page)">{{ t('Load more') }}</button
-    ><MediaEditor
+    ><MediaViewer
+      v-if="viewer"
+      :tree-id="treeId"
+      :record="viewer"
+      :person-id="person?.id || ''"
+      @close="viewer = null"
+      @unavailable="unavailable(viewer.id)"
+    /><MediaEditor
       v-if="editor"
       :record="editor"
       :tree-id="treeId"

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 namespace OCA\Stammbaum\Service;
-use OCP\Files\{IAppData, NotFoundException};
+use OCP\Files\{IAppData, IRootFolder, File, NotFoundException};
 use OCP\Files\SimpleFS\ISimpleFolder;
 final class Media
 {
@@ -12,6 +12,9 @@ final class Media
         private Trees $trees,
         private People $people,
         private IAppData $appData,
+        private IRootFolder $rootFolder,
+        private PreviewCache $previews,
+        private PdfPreview $pdf,
     ) {}
     private function folder(): ISimpleFolder
     {
@@ -110,6 +113,14 @@ final class Media
             throw new Problem('media_size', 'Choose a file up to 10 MiB.', 413);
         }
         $bytes = file_get_contents($f['tmp_name']);
+        return $this->validateBytes($bytes, (string) $f['name']);
+    }
+    private function validateBytes(string $bytes, string $name): array
+    {
+        $size = strlen($bytes);
+        if (!$size || $size > self::MAX_BYTES) {
+            throw new Problem('media_size', 'Choose a file up to 10 MiB.', 413);
+        }
         $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($bytes);
         $width = 0;
         $height = 0;
@@ -151,7 +162,7 @@ final class Media
             'height' => $height,
             'sha256' => hash('sha256', $bytes),
             'name' => Values::text(
-                preg_replace('/[\x00-\x1F\x7F]/', '_', basename(str_replace('\\', '/', (string) $f['name']))),
+                preg_replace('/[\x00-\x1F\x7F]/', '_', basename(str_replace('\\', '/', $name))),
                 'fileName',
                 250,
                 true,
@@ -161,7 +172,15 @@ final class Media
     public function upload(string $tree, string $actor, array $file, array $b): array
     {
         $this->trees->access($tree, $actor, 'editor');
-        $f = $this->validateUpload($file);
+        return $this->storeOriginal($tree, $actor, $this->validateUpload($file), $b);
+    }
+    private function storeOriginal(
+        string $tree,
+        string $actor,
+        array $f,
+        array $b,
+        ?callable $sourceCheck = null,
+    ): array {
         $id = $this->store->write(function () use ($tree, $actor, $f, $b) {
             $m = $this->trees->access($tree, $actor, 'editor');
             $visibility = Values::choice(
@@ -253,7 +272,10 @@ final class Media
                 500,
             );
         }
-        return $this->store->write(function () use ($tree, $id, $actor) {
+        return $this->store->write(function () use ($tree, $id, $actor, $sourceCheck) {
+            if ($sourceCheck) {
+                $sourceCheck();
+            }
             $m = $this->trees->access($tree, $actor, 'editor');
             $r = $this->row($tree, $id, $m, true);
             if ($r['status'] !== 'ready' && (int) $r['actor_revision'] !== (int) $m['revision']) {
@@ -270,6 +292,91 @@ final class Media
             }
             return $this->get($tree, $id, $actor);
         });
+    }
+    private function source(string $actor, int $id): File
+    {
+        foreach ($this->rootFolder->getUserFolder($actor)->getById($id) as $node) {
+            if ($node instanceof File && $node->isReadable()) {
+                return $node;
+            }
+        }
+        throw Problem::missing();
+    }
+    public function selectFile(string $tree, string $actor, string $path): array
+    {
+        $this->trees->access($tree, $actor, 'editor');
+        // The native picker returns a path relative to the current user's Files root.
+        if ($path === '' || str_contains($path, "\0") || in_array('..', explode('/', $path), true)) {
+            throw Problem::missing();
+        }
+        try {
+            $node = $this->rootFolder->getUserFolder($actor)->get($path);
+        } catch (NotFoundException) {
+            throw Problem::missing();
+        }
+        if (!($node instanceof File) || !$node->isReadable()) {
+            throw Problem::missing();
+        }
+        if ($node->getSize() <= 0 || $node->getSize() > self::MAX_BYTES) {
+            throw new Problem('media_size', 'Choose a file up to 10 MiB.', 413);
+        }
+        if (!in_array($node->getMimeType(), ['image/jpeg', 'image/png', 'application/pdf'], true)) {
+            throw new Problem(
+                'media_type',
+                'Choose a JPEG, PNG or PDF file. SVG and executable content are not accepted.',
+            );
+        }
+        return [
+            'id' => $node->getId(),
+            'etag' => $node->getEtag(),
+            'name' => $node->getName(),
+            'size' => $node->getSize(),
+            'mime' => $node->getMimeType(),
+        ];
+    }
+    public function importFile(string $tree, string $actor, int $fileId, string $etag, array $b): array
+    {
+        $this->trees->access($tree, $actor, 'editor');
+        $node = $this->source($actor, $fileId);
+        $node->lock(\OCP\Lock\ILockingProvider::LOCK_SHARED);
+        try {
+            $check = function () use ($actor, $fileId, $etag) {
+                $current = $this->source($actor, $fileId);
+                if ($etag === '' || !hash_equals($etag, $current->getEtag())) {
+                    throw new Problem(
+                        'source_changed',
+                        'The source file changed. Choose it again before importing.',
+                        409,
+                    );
+                }
+            };
+            $check();
+            if ($node->getSize() <= 0 || $node->getSize() > self::MAX_BYTES) {
+                throw new Problem('media_size', 'Choose a file up to 10 MiB.', 413);
+            }
+            $stream = $node->fopen('r');
+            if (!is_resource($stream)) {
+                throw Problem::missing();
+            }
+            try {
+                $bytes = stream_get_contents($stream, self::MAX_BYTES + 1);
+            } finally {
+                fclose($stream);
+            }
+            if ($bytes === false) {
+                throw Problem::missing();
+            }
+            $check();
+            return $this->storeOriginal(
+                $tree,
+                $actor,
+                $this->validateBytes($bytes, $node->getName()),
+                $b,
+                $check,
+            );
+        } finally {
+            $node->unlock(\OCP\Lock\ILockingProvider::LOCK_SHARED);
+        }
     }
     public function save(string $tree, string $id, string $actor, array $b): array
     {
@@ -387,25 +494,70 @@ final class Media
             return $this->get($tree, $id, $actor);
         });
     }
+    private function previewAuthority(
+        string $tree,
+        string $id,
+        string $actor,
+        array $row,
+        array $membership,
+    ): void {
+        $current = $this->trees->access($tree, $actor);
+        $media = $this->row($tree, $id, $current);
+        if (
+            (int) $current['revision'] !== (int) $membership['revision'] ||
+            (int) $row['revision'] !== (int) $media['revision']
+        ) {
+            throw new Problem(
+                'preview_changed',
+                'The media changed. Close the viewer and reload the library.',
+                409,
+            );
+        }
+    }
+    private function originalBytes(array $row): string
+    {
+        $bytes = $this->folder()->getFile($row['file_key'])->getContent();
+        if (!hash_equals($row['sha256'], hash('sha256', $bytes))) {
+            throw new Problem('original_mismatch', 'The stored original failed its integrity check.', 500);
+        }
+        return $bytes;
+    }
+    private function pdfPages(array $r, string $bytes, callable $authorize): int
+    {
+        return (int) $this->previews->remember(
+            'pdf-info-v1:' . $r['sha256'],
+            $authorize,
+            fn() => (string) $this->pdf->pages($bytes),
+        );
+    }
+    public function previewInfo(string $tree, string $id, string $actor): array
+    {
+        $m = $this->trees->access($tree, $actor);
+        $r = $this->row($tree, $id, $m);
+        $check = fn() => $this->previewAuthority($tree, $id, $actor, $r, $m);
+        $pages = $r['mime'] === 'application/pdf' ? $this->pdfPages($r, $this->originalBytes($r), $check) : 1;
+        $check();
+        return ['pages' => $pages, 'revision' => (int) $r['revision'], 'mime' => $r['mime']];
+    }
     public function download(
         string $tree,
         string $id,
         string $actor,
         bool $preview = false,
         string $person = '',
+        int $size = 600,
+        int $page = 1,
     ): array {
-        $r = $this->row($tree, $id, $this->trees->access($tree, $actor));
-        $bytes = $this->folder()->getFile($r['file_key'])->getContent();
-        if (!hash_equals($r['sha256'], hash('sha256', $bytes))) {
-            throw new Problem('original_mismatch', 'The stored original failed its integrity check.', 500);
-        }
+        $m = $this->trees->access($tree, $actor);
+        $r = $this->row($tree, $id, $m);
+        $bytes = $this->originalBytes($r);
         if (!$preview) {
             return ['bytes' => $bytes, 'name' => $r['original_name'], 'mime' => $r['mime']];
         }
-        if ($r['mime'] === 'application/pdf') {
-            throw new Problem('preview_unavailable', 'PDF attachments have no inline preview.', 404);
+        if (!in_array($size, [320, 600, 1600], true) || $page < 1 || $page > PdfPreview::MAX_PAGES) {
+            throw new Problem('preview_dimensions', 'Choose a supported preview size and page.');
         }
-        $im = imagecreatefromstring($bytes);
+        $crop = null;
         if ($person !== '') {
             $a =
                 array_values(array_filter($r['assignments'], fn($a) => $a['personId'] === $person))[0] ??
@@ -413,29 +565,78 @@ final class Media
             if (!$a) {
                 throw Problem::missing();
             }
-            $c = $a['crop'];
-            $crop = imagecrop($im, [
-                'x' => (int) floor($c['x'] * imagesx($im)),
-                'y' => (int) floor($c['y'] * imagesy($im)),
-                'width' => max(1, (int) floor($c['width'] * imagesx($im))),
-                'height' => max(1, (int) floor($c['height'] * imagesy($im))),
-            ]);
-            imagedestroy($im);
-            $im = $crop;
+            if ($r['mime'] !== 'application/pdf') {
+                $crop = $a['crop'];
+            }
         }
-        $ratio = min(1, 600 / max(imagesx($im), imagesy($im)));
-        $out = imagecreatetruecolor(
-            max(1, (int) (imagesx($im) * $ratio)),
-            max(1, (int) (imagesy($im) * $ratio)),
-        );
-        imagealphablending($out, false);
-        imagesavealpha($out, true);
-        imagecopyresampled($out, $im, 0, 0, 0, 0, imagesx($out), imagesy($out), imagesx($im), imagesy($im));
-        ob_start();
-        imagepng($out);
-        $bytes = ob_get_clean();
-        imagedestroy($im);
-        imagedestroy($out);
-        return ['bytes' => $bytes, 'name' => 'preview.png', 'mime' => 'image/png'];
+        $check = fn() => $this->previewAuthority($tree, $id, $actor, $r, $m);
+        $pages = $r['mime'] === 'application/pdf' ? $this->pdfPages($r, $bytes, $check) : 1;
+        if ($page > $pages) {
+            throw new Problem('preview_page', 'This page is not available.', 404);
+        }
+        // v1 intentionally retains raw-image crop coordinates; EXIF normalization remains #69.
+        $identity = Store::json(['raster-v1', $r['sha256'], $r['mime'], $crop, $size, $page]);
+        $result = $this->previews->remember($identity, $check, function () use (
+            $bytes,
+            $r,
+            $crop,
+            $size,
+            $page,
+        ) {
+            if ($r['mime'] === 'application/pdf') {
+                return $this->pdf->render($bytes, $page, $size);
+            }
+            $im = @imagecreatefromstring($bytes);
+            if (!$im) {
+                throw new Problem(
+                    'preview_unavailable',
+                    'Preview unavailable. You can still download the original.',
+                    422,
+                );
+            }
+            if ($crop !== null) {
+                $cropped = imagecrop($im, [
+                    'x' => (int) floor($crop['x'] * imagesx($im)),
+                    'y' => (int) floor($crop['y'] * imagesy($im)),
+                    'width' => max(1, (int) floor($crop['width'] * imagesx($im))),
+                    'height' => max(1, (int) floor($crop['height'] * imagesy($im))),
+                ]);
+                imagedestroy($im);
+                $im = $cropped;
+                if (!$im) {
+                    throw new Problem(
+                        'preview_unavailable',
+                        'Preview unavailable. You can still download the original.',
+                        422,
+                    );
+                }
+            }
+            $ratio = min(1, $size / max(imagesx($im), imagesy($im)));
+            $out = imagecreatetruecolor(
+                max(1, (int) (imagesx($im) * $ratio)),
+                max(1, (int) (imagesy($im) * $ratio)),
+            );
+            imagealphablending($out, false);
+            imagesavealpha($out, true);
+            imagecopyresampled(
+                $out,
+                $im,
+                0,
+                0,
+                0,
+                0,
+                imagesx($out),
+                imagesy($out),
+                imagesx($im),
+                imagesy($im),
+            );
+            ob_start();
+            imagepng($out);
+            $value = ob_get_clean();
+            imagedestroy($im);
+            imagedestroy($out);
+            return $value;
+        });
+        return ['bytes' => $result, 'name' => 'preview.png', 'mime' => 'image/png'];
     }
 }

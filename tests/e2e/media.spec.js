@@ -111,7 +111,7 @@ test('shared private media never leaks metadata, originals or previews to ordina
   await ctx.close();
 });
 
-test('uploads reject disguised active content, over-limit images and files; PDFs only download as attachments', async ({
+test('uploads reject disguised active content, over-limit images and files; malformed PDFs retain original downloads with an unavailable preview', async ({
   page,
 }) => {
   await login(page);
@@ -141,7 +141,7 @@ test('uploads reject disguised active content, over-limit images and files; PDFs
   expect(r.headers()['x-content-type-options']).toBe('nosniff');
   expect(await r.body()).toEqual(bytes);
   expect((await page.request.get(`${endpoint}/trees/${tr.id}/media/${pdf.body.id}/preview`)).status()).toBe(
-    404,
+    422,
   );
 });
 
