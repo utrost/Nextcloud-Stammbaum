@@ -1,0 +1,45 @@
+0 HEAD
+1 SOUR Fictional fixture
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Ada /Linden/
+2 GIVN Ada
+2 SURN Linden
+1 SEX F
+1 BIRT
+2 DATE ABT 1840
+2 PLAC Example village
+2 SOUR @S1@
+3 PAGE 12
+3 DATA
+4 TEXT Fictional birth entry
+4 DATE 1841
+3 QUAY 2
+1 FAMS @F1@
+1 NOTE First line with an escaped @@ sign.
+2 CONT Second line
+2 CONC , continued.
+0 @I2@ INDI
+1 NAME Robin /Linden/
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Emil /Linden/
+1 BIRT
+2 DATE 3 FEB 1865
+1 FAMC @F1@
+2 PEDI adopted
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 MARR
+2 DATE BET 1860 AND 1864
+2 PLAC Example town
+0 @S1@ SOUR
+1 TITL Fictional register
+1 AUTH Example clerk
+1 TEXT Test evidence only
+0 TRLR

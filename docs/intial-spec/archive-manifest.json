@@ -1,0 +1,606 @@
+{
+  "source_commit": "37040733982e5a2b3dacfb48f07ef3ba7a33f05f",
+  "notes": "All original files moved. HTML changes only absolute illustration URLs to assets-relative paths. Added assets come from the local source documentation export; screenshot hashes match retained provenance.",
+  "files": [
+    {
+      "original_path": "contact-1.png",
+      "archived_path": "contact-1.png",
+      "original_sha256": "b818d11af5d48b1793c8e7fdb4c54b8fa2e782a05d8cc21e30f097670ac5c255",
+      "archived_sha256": "b818d11af5d48b1793c8e7fdb4c54b8fa2e782a05d8cc21e30f097670ac5c255"
+    },
+    {
+      "original_path": "contact-2.png",
+      "archived_path": "contact-2.png",
+      "original_sha256": "e1eaad2368acb2255a0ee108aff12e7d7236d776a18c57ce88b502da22addec4",
+      "archived_sha256": "e1eaad2368acb2255a0ee108aff12e7d7236d776a18c57ce88b502da22addec4"
+    },
+    {
+      "original_path": "contact-3.png",
+      "archived_path": "contact-3.png",
+      "original_sha256": "34c508511ce3931c68733ca92f17a69dc3ff3d68f00d768176a2dd488fbe215c",
+      "archived_sha256": "34c508511ce3931c68733ca92f17a69dc3ff3d68f00d768176a2dd488fbe215c"
+    },
+    {
+      "original_path": "current-product-specification.html",
+      "archived_path": "current-product-specification.html",
+      "original_sha256": "6a1e54ce2540ce138756279739a7761b3be8f56b95ec6eea90bbd19042ecbb0b",
+      "archived_sha256": "691c6d4683ffb619e8d22a8c2071645a48babe054bd87464f98c445c405d82e9"
+    },
+    {
+      "original_path": "current-product-specification.pdf",
+      "archived_path": "current-product-specification.pdf",
+      "original_sha256": "d431e1d6e61b351c4fa26532e36eb9944e8b0fa00a5266ba2efc3d703b31108f",
+      "archived_sha256": "d431e1d6e61b351c4fa26532e36eb9944e8b0fa00a5266ba2efc3d703b31108f"
+    },
+    {
+      "original_path": "current-product-specification.txt",
+      "archived_path": "current-product-specification.txt",
+      "original_sha256": "c78725a3cf7a94ee95b8c0396fa93e2da92cdb1c8800dc2b1f7211cae77aec95",
+      "archived_sha256": "c78725a3cf7a94ee95b8c0396fa93e2da92cdb1c8800dc2b1f7211cae77aec95"
+    },
+    {
+      "original_path": "detail-13.png",
+      "archived_path": "detail-13.png",
+      "original_sha256": "1ef5dd2f0cfb9dc400d0dbc650a5dd1b895c1b34d1f3f31428662cbbc36ef3b0",
+      "archived_sha256": "1ef5dd2f0cfb9dc400d0dbc650a5dd1b895c1b34d1f3f31428662cbbc36ef3b0"
+    },
+    {
+      "original_path": "detail-2.png",
+      "archived_path": "detail-2.png",
+      "original_sha256": "de8b5dc56687dac6e60807b5ce575e61633f0fb172b066d74ff15818730ce670",
+      "archived_sha256": "de8b5dc56687dac6e60807b5ce575e61633f0fb172b066d74ff15818730ce670"
+    },
+    {
+      "original_path": "detail-21.png",
+      "archived_path": "detail-21.png",
+      "original_sha256": "ae53ed4ff8b4dcf0091436ee9cb9ac8dfc83ee4195a5d9164bc3df3b574a81b8",
+      "archived_sha256": "ae53ed4ff8b4dcf0091436ee9cb9ac8dfc83ee4195a5d9164bc3df3b574a81b8"
+    },
+    {
+      "original_path": "detail-26.png",
+      "archived_path": "detail-26.png",
+      "original_sha256": "122a362a38a7b1b401c3fbc048e7e239d1e40e5616fe7df2ce82215905d66224",
+      "archived_sha256": "122a362a38a7b1b401c3fbc048e7e239d1e40e5616fe7df2ce82215905d66224"
+    },
+    {
+      "original_path": "detail-33.png",
+      "archived_path": "detail-33.png",
+      "original_sha256": "67a18978c84e763e4579451ad0b3a7f1ceec025c8758214aeaf990bc2c07e837",
+      "archived_sha256": "67a18978c84e763e4579451ad0b3a7f1ceec025c8758214aeaf990bc2c07e837"
+    },
+    {
+      "original_path": "detail-40.png",
+      "archived_path": "detail-40.png",
+      "original_sha256": "5405f7e643ce4bfb863d32f8475ca3cce53ae8c6ff6efca6f6351615ab9a28e0",
+      "archived_sha256": "5405f7e643ce4bfb863d32f8475ca3cce53ae8c6ff6efca6f6351615ab9a28e0"
+    },
+    {
+      "original_path": "detail-5.png",
+      "archived_path": "detail-5.png",
+      "original_sha256": "669c32641735a6d9c13c5a23883c8568792b3b080adeebecfa6e46e48ef1278b",
+      "archived_sha256": "669c32641735a6d9c13c5a23883c8568792b3b080adeebecfa6e46e48ef1278b"
+    },
+    {
+      "original_path": "detail-56.png",
+      "archived_path": "detail-56.png",
+      "original_sha256": "b2330539ad3cdcce29be8983d353c31cd21ab0807649030453571da5623d40e1",
+      "archived_sha256": "b2330539ad3cdcce29be8983d353c31cd21ab0807649030453571da5623d40e1"
+    },
+    {
+      "original_path": "detail-59.png",
+      "archived_path": "detail-59.png",
+      "original_sha256": "a2a7a3008cabf364c1fdaa89b7b0b5f0ae38639c0dd5e4b261927193098d3dff",
+      "archived_sha256": "a2a7a3008cabf364c1fdaa89b7b0b5f0ae38639c0dd5e4b261927193098d3dff"
+    },
+    {
+      "original_path": "detail-6.png",
+      "archived_path": "detail-6.png",
+      "original_sha256": "8146cd2be381596793d66afbe4cb6935426fec4a592c35b84c9f034d20e2962c",
+      "archived_sha256": "8146cd2be381596793d66afbe4cb6935426fec4a592c35b84c9f034d20e2962c"
+    },
+    {
+      "original_path": "detail-60.png",
+      "archived_path": "detail-60.png",
+      "original_sha256": "be1a68c19ac5fdfdb532b8168b9f21c8094a3bac4d0475eb651a455a2b083fb1",
+      "archived_sha256": "be1a68c19ac5fdfdb532b8168b9f21c8094a3bac4d0475eb651a455a2b083fb1"
+    },
+    {
+      "original_path": "detail-61.png",
+      "archived_path": "detail-61.png",
+      "original_sha256": "14a3a141d2e8c976e50438f0dd0a1d77e5a1fee0aa077e239a886cc403276296",
+      "archived_sha256": "14a3a141d2e8c976e50438f0dd0a1d77e5a1fee0aa077e239a886cc403276296"
+    },
+    {
+      "original_path": "detail-8.png",
+      "archived_path": "detail-8.png",
+      "original_sha256": "abe5aee96cf2f4b99c97b5c0863b362560e77527c56f583d83cd836cd09af538",
+      "archived_sha256": "abe5aee96cf2f4b99c97b5c0863b362560e77527c56f583d83cd836cd09af538"
+    },
+    {
+      "original_path": "final-13.png",
+      "archived_path": "final-13.png",
+      "original_sha256": "1ef5dd2f0cfb9dc400d0dbc650a5dd1b895c1b34d1f3f31428662cbbc36ef3b0",
+      "archived_sha256": "1ef5dd2f0cfb9dc400d0dbc650a5dd1b895c1b34d1f3f31428662cbbc36ef3b0"
+    },
+    {
+      "original_path": "final-2.png",
+      "archived_path": "final-2.png",
+      "original_sha256": "de8b5dc56687dac6e60807b5ce575e61633f0fb172b066d74ff15818730ce670",
+      "archived_sha256": "de8b5dc56687dac6e60807b5ce575e61633f0fb172b066d74ff15818730ce670"
+    },
+    {
+      "original_path": "final-21.png",
+      "archived_path": "final-21.png",
+      "original_sha256": "998ffbdf82bc28f358886043395e9f98f48f77d23f380add1a5693de3489502f",
+      "archived_sha256": "998ffbdf82bc28f358886043395e9f98f48f77d23f380add1a5693de3489502f"
+    },
+    {
+      "original_path": "final-26.png",
+      "archived_path": "final-26.png",
+      "original_sha256": "122a362a38a7b1b401c3fbc048e7e239d1e40e5616fe7df2ce82215905d66224",
+      "archived_sha256": "122a362a38a7b1b401c3fbc048e7e239d1e40e5616fe7df2ce82215905d66224"
+    },
+    {
+      "original_path": "final-33.png",
+      "archived_path": "final-33.png",
+      "original_sha256": "2a58dfffea9cded89e6e48e6344c59faa8b2dd256fcc7ca534c6af95b5821749",
+      "archived_sha256": "2a58dfffea9cded89e6e48e6344c59faa8b2dd256fcc7ca534c6af95b5821749"
+    },
+    {
+      "original_path": "final-40.png",
+      "archived_path": "final-40.png",
+      "original_sha256": "4ee56729a33f95798a850ff8768254875e14c7794fcd3be07b36e387b2b3634f",
+      "archived_sha256": "4ee56729a33f95798a850ff8768254875e14c7794fcd3be07b36e387b2b3634f"
+    },
+    {
+      "original_path": "final-48.png",
+      "archived_path": "final-48.png",
+      "original_sha256": "7a1076c2ab66354d8018c54f731fed6d5b3921cdb1663472ab95d8dc17c5987e",
+      "archived_sha256": "7a1076c2ab66354d8018c54f731fed6d5b3921cdb1663472ab95d8dc17c5987e"
+    },
+    {
+      "original_path": "final-49.png",
+      "archived_path": "final-49.png",
+      "original_sha256": "144392fe427018606d74363d88c69e876b03e79d5c9010d2b4f177434e26d0fe",
+      "archived_sha256": "144392fe427018606d74363d88c69e876b03e79d5c9010d2b4f177434e26d0fe"
+    },
+    {
+      "original_path": "final-5.png",
+      "archived_path": "final-5.png",
+      "original_sha256": "0c534633b95ff0b7402c212b9ae50af9780df89365b213abe654dd8b82eb7945",
+      "archived_sha256": "0c534633b95ff0b7402c212b9ae50af9780df89365b213abe654dd8b82eb7945"
+    },
+    {
+      "original_path": "final-53.png",
+      "archived_path": "final-53.png",
+      "original_sha256": "8c7c383b0eb12ab2d434f74b1f8acb34aa3470c37c6e57421a2fa4370864b6dd",
+      "archived_sha256": "8c7c383b0eb12ab2d434f74b1f8acb34aa3470c37c6e57421a2fa4370864b6dd"
+    },
+    {
+      "original_path": "final-54.png",
+      "archived_path": "final-54.png",
+      "original_sha256": "1b0d0458658cc8e17769fd74a3eb3e4c41edda5ef6438e2a28ddbee3a0478b38",
+      "archived_sha256": "1b0d0458658cc8e17769fd74a3eb3e4c41edda5ef6438e2a28ddbee3a0478b38"
+    },
+    {
+      "original_path": "final-59.png",
+      "archived_path": "final-59.png",
+      "original_sha256": "a2a7a3008cabf364c1fdaa89b7b0b5f0ae38639c0dd5e4b261927193098d3dff",
+      "archived_sha256": "a2a7a3008cabf364c1fdaa89b7b0b5f0ae38639c0dd5e4b261927193098d3dff"
+    },
+    {
+      "original_path": "final-6.png",
+      "archived_path": "final-6.png",
+      "original_sha256": "2914c763d9837f4d12de90e4a097a35392ff84986ca611303c213e67a64d489e",
+      "archived_sha256": "2914c763d9837f4d12de90e4a097a35392ff84986ca611303c213e67a64d489e"
+    },
+    {
+      "original_path": "final-60.png",
+      "archived_path": "final-60.png",
+      "original_sha256": "be1a68c19ac5fdfdb532b8168b9f21c8094a3bac4d0475eb651a455a2b083fb1",
+      "archived_sha256": "be1a68c19ac5fdfdb532b8168b9f21c8094a3bac4d0475eb651a455a2b083fb1"
+    },
+    {
+      "original_path": "final-61.png",
+      "archived_path": "final-61.png",
+      "original_sha256": "14a3a141d2e8c976e50438f0dd0a1d77e5a1fee0aa077e239a886cc403276296",
+      "archived_sha256": "14a3a141d2e8c976e50438f0dd0a1d77e5a1fee0aa077e239a886cc403276296"
+    },
+    {
+      "original_path": "final-7.png",
+      "archived_path": "final-7.png",
+      "original_sha256": "34d6c2482691cd19dab8c4995541b04126bd469099394b0bcdbc4211b37b61e7",
+      "archived_sha256": "34d6c2482691cd19dab8c4995541b04126bd469099394b0bcdbc4211b37b61e7"
+    },
+    {
+      "original_path": "final-8.png",
+      "archived_path": "final-8.png",
+      "original_sha256": "abe5aee96cf2f4b99c97b5c0863b362560e77527c56f583d83cd836cd09af538",
+      "archived_sha256": "abe5aee96cf2f4b99c97b5c0863b362560e77527c56f583d83cd836cd09af538"
+    },
+    {
+      "original_path": "layout.xml",
+      "archived_path": "layout.xml",
+      "original_sha256": "21c4fdc8ab52e6cdab23f622dd4ffa7cf118f172189591b755568b7cfb425256",
+      "archived_sha256": "21c4fdc8ab52e6cdab23f622dd4ffa7cf118f172189591b755568b7cfb425256"
+    },
+    {
+      "original_path": "render-checks.json",
+      "archived_path": "render-checks.json",
+      "original_sha256": "01cba2b752152db65a4ab0cac51f2fe8088b73bf0df590561b5bfe4b861c1edb",
+      "archived_sha256": "01cba2b752152db65a4ab0cac51f2fe8088b73bf0df590561b5bfe4b861c1edb"
+    },
+    {
+      "original_path": "review-page-01.png",
+      "archived_path": "review-page-01.png",
+      "original_sha256": "befb9be6e235e3ad4a0c2d265f568cc85168559ae29399ecf2a336d8bc7521ce",
+      "archived_sha256": "befb9be6e235e3ad4a0c2d265f568cc85168559ae29399ecf2a336d8bc7521ce"
+    },
+    {
+      "original_path": "review-page-02.png",
+      "archived_path": "review-page-02.png",
+      "original_sha256": "14bad23c6df392eabd7302c5c5bb02d8a32805ed4919e5943d3661bb56f1505c",
+      "archived_sha256": "14bad23c6df392eabd7302c5c5bb02d8a32805ed4919e5943d3661bb56f1505c"
+    },
+    {
+      "original_path": "review-page-03.png",
+      "archived_path": "review-page-03.png",
+      "original_sha256": "c9558e0b5981617a0a81cc6e9de948f89a8e3afd188b71c4d4a86e62c48f4d16",
+      "archived_sha256": "c9558e0b5981617a0a81cc6e9de948f89a8e3afd188b71c4d4a86e62c48f4d16"
+    },
+    {
+      "original_path": "review-page-04.png",
+      "archived_path": "review-page-04.png",
+      "original_sha256": "b597c3c5dc8d2e43eee54bc4b90618e289aa7dbb2f463c508ea4b929026ce590",
+      "archived_sha256": "b597c3c5dc8d2e43eee54bc4b90618e289aa7dbb2f463c508ea4b929026ce590"
+    },
+    {
+      "original_path": "review-page-05.png",
+      "archived_path": "review-page-05.png",
+      "original_sha256": "7ffc486f4df9cec02c0b881c61874bcc7d96424d8cf00ec986a6d6de557c14af",
+      "archived_sha256": "7ffc486f4df9cec02c0b881c61874bcc7d96424d8cf00ec986a6d6de557c14af"
+    },
+    {
+      "original_path": "review-page-06.png",
+      "archived_path": "review-page-06.png",
+      "original_sha256": "33721b41107747e366042496ea004ba98a6ef7c4082552c8c09c9ef412d94185",
+      "archived_sha256": "33721b41107747e366042496ea004ba98a6ef7c4082552c8c09c9ef412d94185"
+    },
+    {
+      "original_path": "review-page-07.png",
+      "archived_path": "review-page-07.png",
+      "original_sha256": "0c3b67666060b17493fa864dd3e21ef10d11ee71c25b7ac19ef023850759a433",
+      "archived_sha256": "0c3b67666060b17493fa864dd3e21ef10d11ee71c25b7ac19ef023850759a433"
+    },
+    {
+      "original_path": "review-page-08.png",
+      "archived_path": "review-page-08.png",
+      "original_sha256": "2a5d6d785fef236df8fa701d50e4fa296aebe08cfc55340906025f6a7e86b5e4",
+      "archived_sha256": "2a5d6d785fef236df8fa701d50e4fa296aebe08cfc55340906025f6a7e86b5e4"
+    },
+    {
+      "original_path": "review-page-09.png",
+      "archived_path": "review-page-09.png",
+      "original_sha256": "650149bc25ac270129301b5aed237cd3e31f38590a7228029f2c7d9317381378",
+      "archived_sha256": "650149bc25ac270129301b5aed237cd3e31f38590a7228029f2c7d9317381378"
+    },
+    {
+      "original_path": "review-page-10.png",
+      "archived_path": "review-page-10.png",
+      "original_sha256": "cb74a1921def7d2eeb1ba3b8212fc84f0958e41ea174200a84a1fffa65d4461f",
+      "archived_sha256": "cb74a1921def7d2eeb1ba3b8212fc84f0958e41ea174200a84a1fffa65d4461f"
+    },
+    {
+      "original_path": "review-page-11.png",
+      "archived_path": "review-page-11.png",
+      "original_sha256": "18a8c7b2fcd60abc43a76eb4e86decbf88545c11ed14b0df5eac4337007cd6ce",
+      "archived_sha256": "18a8c7b2fcd60abc43a76eb4e86decbf88545c11ed14b0df5eac4337007cd6ce"
+    },
+    {
+      "original_path": "review-page-12.png",
+      "archived_path": "review-page-12.png",
+      "original_sha256": "774e1fbe39ab4e7c6f72c755be7b06473e7f734ec6e6a70ac51a8a456cfff13d",
+      "archived_sha256": "774e1fbe39ab4e7c6f72c755be7b06473e7f734ec6e6a70ac51a8a456cfff13d"
+    },
+    {
+      "original_path": "review-page-13.png",
+      "archived_path": "review-page-13.png",
+      "original_sha256": "50fc6e02a277a3130284a63e30eb65243ab3b29cc7d0b5c5224f13d6e2518537",
+      "archived_sha256": "50fc6e02a277a3130284a63e30eb65243ab3b29cc7d0b5c5224f13d6e2518537"
+    },
+    {
+      "original_path": "review-page-14.png",
+      "archived_path": "review-page-14.png",
+      "original_sha256": "f6cbaf61af7da24b20cccff385d49c62775c3a23793bb4e1056d76343c2d5e8c",
+      "archived_sha256": "f6cbaf61af7da24b20cccff385d49c62775c3a23793bb4e1056d76343c2d5e8c"
+    },
+    {
+      "original_path": "review-page-15.png",
+      "archived_path": "review-page-15.png",
+      "original_sha256": "0631a5cb6cc587d3eacdd4a4e10b89d06571a397d92375363cf6d83f331b226e",
+      "archived_sha256": "0631a5cb6cc587d3eacdd4a4e10b89d06571a397d92375363cf6d83f331b226e"
+    },
+    {
+      "original_path": "review-page-16.png",
+      "archived_path": "review-page-16.png",
+      "original_sha256": "712fd76ddccb30a5c9cbe9b48bbb49eab276918c927fe421dd0988ded9a18368",
+      "archived_sha256": "712fd76ddccb30a5c9cbe9b48bbb49eab276918c927fe421dd0988ded9a18368"
+    },
+    {
+      "original_path": "review-page-17.png",
+      "archived_path": "review-page-17.png",
+      "original_sha256": "8088e0005c988a980923fe1ad33d9da7fcacb11d94b28d996888c7219f161dda",
+      "archived_sha256": "8088e0005c988a980923fe1ad33d9da7fcacb11d94b28d996888c7219f161dda"
+    },
+    {
+      "original_path": "review-page-18.png",
+      "archived_path": "review-page-18.png",
+      "original_sha256": "daaeee3a89c503e682bc0b72677f93fd6aa91c425b2a82b9443be149728e7559",
+      "archived_sha256": "daaeee3a89c503e682bc0b72677f93fd6aa91c425b2a82b9443be149728e7559"
+    },
+    {
+      "original_path": "review-page-19.png",
+      "archived_path": "review-page-19.png",
+      "original_sha256": "663be190a3178d45c4e016eac03293851a60085f2ca54e601576ab41838b67ee",
+      "archived_sha256": "663be190a3178d45c4e016eac03293851a60085f2ca54e601576ab41838b67ee"
+    },
+    {
+      "original_path": "review-page-20.png",
+      "archived_path": "review-page-20.png",
+      "original_sha256": "3c2507e29cf7dd6deec682f7396dc266f19470cbc28dbfe73d436d465224e006",
+      "archived_sha256": "3c2507e29cf7dd6deec682f7396dc266f19470cbc28dbfe73d436d465224e006"
+    },
+    {
+      "original_path": "review-page-21.png",
+      "archived_path": "review-page-21.png",
+      "original_sha256": "5122fabfa865e2792b4e266855f3edeb0b6fb5484d27884221021c5cef0ab170",
+      "archived_sha256": "5122fabfa865e2792b4e266855f3edeb0b6fb5484d27884221021c5cef0ab170"
+    },
+    {
+      "original_path": "review-page-22.png",
+      "archived_path": "review-page-22.png",
+      "original_sha256": "1369031eae00ef9e50d7e185a90084d3649b6776ff54737ce509db452c611d8e",
+      "archived_sha256": "1369031eae00ef9e50d7e185a90084d3649b6776ff54737ce509db452c611d8e"
+    },
+    {
+      "original_path": "review-page-23.png",
+      "archived_path": "review-page-23.png",
+      "original_sha256": "dc01d102e1e949d6b1822f5bcb315322c6eed8427d274d10c31d4cfee9641a6e",
+      "archived_sha256": "dc01d102e1e949d6b1822f5bcb315322c6eed8427d274d10c31d4cfee9641a6e"
+    },
+    {
+      "original_path": "review-page-24.png",
+      "archived_path": "review-page-24.png",
+      "original_sha256": "5ce961572574f5cd5f1f6d3a6a82110d1e06a2200b72e36c36e1f50374a22226",
+      "archived_sha256": "5ce961572574f5cd5f1f6d3a6a82110d1e06a2200b72e36c36e1f50374a22226"
+    },
+    {
+      "original_path": "review-page-25.png",
+      "archived_path": "review-page-25.png",
+      "original_sha256": "3d3df065fddc89386d5f19f9c2a4267e67006bd4d54a6061b29642aee9a7b4ee",
+      "archived_sha256": "3d3df065fddc89386d5f19f9c2a4267e67006bd4d54a6061b29642aee9a7b4ee"
+    },
+    {
+      "original_path": "review-page-26.png",
+      "archived_path": "review-page-26.png",
+      "original_sha256": "353c0eb389a13db747643eabcea80faad2c310068351639ecb7726c5332e6cef",
+      "archived_sha256": "353c0eb389a13db747643eabcea80faad2c310068351639ecb7726c5332e6cef"
+    },
+    {
+      "original_path": "review-page-27.png",
+      "archived_path": "review-page-27.png",
+      "original_sha256": "5e243fd8afa56f5d54cc8d90cdafa64709f009005d10ff085825069a1ac619d6",
+      "archived_sha256": "5e243fd8afa56f5d54cc8d90cdafa64709f009005d10ff085825069a1ac619d6"
+    },
+    {
+      "original_path": "review-page-28.png",
+      "archived_path": "review-page-28.png",
+      "original_sha256": "0bf3675d43702a5360737f44a4b5afa10def20e52e2e4d0974c55996c5e0c0ef",
+      "archived_sha256": "0bf3675d43702a5360737f44a4b5afa10def20e52e2e4d0974c55996c5e0c0ef"
+    },
+    {
+      "original_path": "review-page-29.png",
+      "archived_path": "review-page-29.png",
+      "original_sha256": "af976b070975951fadfe98ee33e37fba5607096df2346ae9a3f4b19f8d657586",
+      "archived_sha256": "af976b070975951fadfe98ee33e37fba5607096df2346ae9a3f4b19f8d657586"
+    },
+    {
+      "original_path": "review-page-30.png",
+      "archived_path": "review-page-30.png",
+      "original_sha256": "379f0e1ec03856017436d3f19254aae55dab5c813b6e2661a06127a13f161de9",
+      "archived_sha256": "379f0e1ec03856017436d3f19254aae55dab5c813b6e2661a06127a13f161de9"
+    },
+    {
+      "original_path": "review-page-31.png",
+      "archived_path": "review-page-31.png",
+      "original_sha256": "fc80f52999c98a56e3f1eddf8017eee3c432d8f06b5d7b8a52c4e31edef9b0ef",
+      "archived_sha256": "fc80f52999c98a56e3f1eddf8017eee3c432d8f06b5d7b8a52c4e31edef9b0ef"
+    },
+    {
+      "original_path": "review-page-32.png",
+      "archived_path": "review-page-32.png",
+      "original_sha256": "5b59c862dc882eed51e1502228cbcd89c770482218195cc4b941f3d58f408e67",
+      "archived_sha256": "5b59c862dc882eed51e1502228cbcd89c770482218195cc4b941f3d58f408e67"
+    },
+    {
+      "original_path": "review-page-33.png",
+      "archived_path": "review-page-33.png",
+      "original_sha256": "506451b83cbd206f5c24e159d21514748f710b847f1717c3743bb5d19d461408",
+      "archived_sha256": "506451b83cbd206f5c24e159d21514748f710b847f1717c3743bb5d19d461408"
+    },
+    {
+      "original_path": "review-page-34.png",
+      "archived_path": "review-page-34.png",
+      "original_sha256": "02518d656914be041d5103ff6f8e8b3d6594ca10e385285489efbc19349c79e3",
+      "archived_sha256": "02518d656914be041d5103ff6f8e8b3d6594ca10e385285489efbc19349c79e3"
+    },
+    {
+      "original_path": "review-page-35.png",
+      "archived_path": "review-page-35.png",
+      "original_sha256": "c5a73e3160eaba258772d654967b156a9d93d4ce6ad067fad2ae824af3dc5700",
+      "archived_sha256": "c5a73e3160eaba258772d654967b156a9d93d4ce6ad067fad2ae824af3dc5700"
+    },
+    {
+      "original_path": "review-page-36.png",
+      "archived_path": "review-page-36.png",
+      "original_sha256": "87c1725d746bafc60670d9b430615cf2477a770265748eb7e7d203be13f27106",
+      "archived_sha256": "87c1725d746bafc60670d9b430615cf2477a770265748eb7e7d203be13f27106"
+    },
+    {
+      "original_path": "review-page-37.png",
+      "archived_path": "review-page-37.png",
+      "original_sha256": "14d9e75e49b81f6c547cfdaa791252410718a675d46c46eab1e1a7c0a05580c5",
+      "archived_sha256": "14d9e75e49b81f6c547cfdaa791252410718a675d46c46eab1e1a7c0a05580c5"
+    },
+    {
+      "original_path": "review-page-38.png",
+      "archived_path": "review-page-38.png",
+      "original_sha256": "cdd8e456306e0c0d8d7530c29d2580ae1e6af6507671a43b4e59e88263dc1647",
+      "archived_sha256": "cdd8e456306e0c0d8d7530c29d2580ae1e6af6507671a43b4e59e88263dc1647"
+    },
+    {
+      "original_path": "review-page-39.png",
+      "archived_path": "review-page-39.png",
+      "original_sha256": "3749749409a5303785903c4af35d72dfc39b9506d45e9774fa5e84b3006535b1",
+      "archived_sha256": "3749749409a5303785903c4af35d72dfc39b9506d45e9774fa5e84b3006535b1"
+    },
+    {
+      "original_path": "review-page-40.png",
+      "archived_path": "review-page-40.png",
+      "original_sha256": "abd1a7ed620da40506b539dc91309a1e801d1b8741749e91a848c8415ff6cb19",
+      "archived_sha256": "abd1a7ed620da40506b539dc91309a1e801d1b8741749e91a848c8415ff6cb19"
+    },
+    {
+      "original_path": "review-page-41.png",
+      "archived_path": "review-page-41.png",
+      "original_sha256": "e9b2bcc686e71c17fc5e8ca71194ed01d72c8d639e450126db3f0749b69f35e5",
+      "archived_sha256": "e9b2bcc686e71c17fc5e8ca71194ed01d72c8d639e450126db3f0749b69f35e5"
+    },
+    {
+      "original_path": "review-page-42.png",
+      "archived_path": "review-page-42.png",
+      "original_sha256": "ee331ef9688c425153f7ede7eb6315c1185202d419186d82c490a6acc89a1753",
+      "archived_sha256": "ee331ef9688c425153f7ede7eb6315c1185202d419186d82c490a6acc89a1753"
+    },
+    {
+      "original_path": "review-page-43.png",
+      "archived_path": "review-page-43.png",
+      "original_sha256": "5dae1c11c186228ae107565c1c39092c4be417f793acb02084bc4b40a4e88a86",
+      "archived_sha256": "5dae1c11c186228ae107565c1c39092c4be417f793acb02084bc4b40a4e88a86"
+    },
+    {
+      "original_path": "review-page-44.png",
+      "archived_path": "review-page-44.png",
+      "original_sha256": "c32ee0543dc889321999a72d7b556af671b1952cc1b1e64fb44a695af137cfce",
+      "archived_sha256": "c32ee0543dc889321999a72d7b556af671b1952cc1b1e64fb44a695af137cfce"
+    },
+    {
+      "original_path": "review-page-45.png",
+      "archived_path": "review-page-45.png",
+      "original_sha256": "34c58c63bf803f981a15c9b3a9f8964d314aa772a0878aa22ade68d38540fd2d",
+      "archived_sha256": "34c58c63bf803f981a15c9b3a9f8964d314aa772a0878aa22ade68d38540fd2d"
+    },
+    {
+      "original_path": "review-page-46.png",
+      "archived_path": "review-page-46.png",
+      "original_sha256": "ad8e24a2b119c24e9f77bb19c30fb7f38a339fc66e0054aa5ab58241bbd0a234",
+      "archived_sha256": "ad8e24a2b119c24e9f77bb19c30fb7f38a339fc66e0054aa5ab58241bbd0a234"
+    },
+    {
+      "original_path": "review-page-47.png",
+      "archived_path": "review-page-47.png",
+      "original_sha256": "e28880d71b9f106dde8f30655a63b3f6c01f6d3484e02a9f81f5708c8ce6b8bb",
+      "archived_sha256": "e28880d71b9f106dde8f30655a63b3f6c01f6d3484e02a9f81f5708c8ce6b8bb"
+    },
+    {
+      "original_path": "review-page-48.png",
+      "archived_path": "review-page-48.png",
+      "original_sha256": "db674b5e1034ddcf271bc8bee10e56fadf6c10bfb74027107cb6df81287c81ed",
+      "archived_sha256": "db674b5e1034ddcf271bc8bee10e56fadf6c10bfb74027107cb6df81287c81ed"
+    },
+    {
+      "original_path": "review-page-49.png",
+      "archived_path": "review-page-49.png",
+      "original_sha256": "5dae63c0c82b6dbb0ef58940d1de899c9efbc69f3ce6fd1438a2b81913bae027",
+      "archived_sha256": "5dae63c0c82b6dbb0ef58940d1de899c9efbc69f3ce6fd1438a2b81913bae027"
+    },
+    {
+      "original_path": "review-page-50.png",
+      "archived_path": "review-page-50.png",
+      "original_sha256": "4ea1de07c4925f5eb2b49094d881b42b9718667d9d8183dc710e0e703cad1bb0",
+      "archived_sha256": "4ea1de07c4925f5eb2b49094d881b42b9718667d9d8183dc710e0e703cad1bb0"
+    },
+    {
+      "original_path": "review-page-51.png",
+      "archived_path": "review-page-51.png",
+      "original_sha256": "cb7db894610ef0dfca7d35b2128a87d1ba84574e5156f19ed29e35778ddb70c6",
+      "archived_sha256": "cb7db894610ef0dfca7d35b2128a87d1ba84574e5156f19ed29e35778ddb70c6"
+    },
+    {
+      "original_path": "review-page-52.png",
+      "archived_path": "review-page-52.png",
+      "original_sha256": "1e8cb0335776c2208850bef15a398405cef4f636b1820effcb0557c7022c0a90",
+      "archived_sha256": "1e8cb0335776c2208850bef15a398405cef4f636b1820effcb0557c7022c0a90"
+    },
+    {
+      "original_path": "review-page-53.png",
+      "archived_path": "review-page-53.png",
+      "original_sha256": "7e8419add8427a5539f472f76ca570f7561ff618ec01e4454892c87fdaab3919",
+      "archived_sha256": "7e8419add8427a5539f472f76ca570f7561ff618ec01e4454892c87fdaab3919"
+    },
+    {
+      "original_path": "review-page-54.png",
+      "archived_path": "review-page-54.png",
+      "original_sha256": "57b6d012499effe18ac271d80484a507725e9c113a99f540ade1ce490e0d8e7d",
+      "archived_sha256": "57b6d012499effe18ac271d80484a507725e9c113a99f540ade1ce490e0d8e7d"
+    },
+    {
+      "original_path": "review-page-55.png",
+      "archived_path": "review-page-55.png",
+      "original_sha256": "66a7553baaa25029f84e7332a18bc06dc82ded0b0ab1080cc4e8f125e9325f55",
+      "archived_sha256": "66a7553baaa25029f84e7332a18bc06dc82ded0b0ab1080cc4e8f125e9325f55"
+    },
+    {
+      "original_path": "review-page-56.png",
+      "archived_path": "review-page-56.png",
+      "original_sha256": "a6e3ef19a8a74684c79002a76edd151baa81aa82258e5253164250ebe9d46df0",
+      "archived_sha256": "a6e3ef19a8a74684c79002a76edd151baa81aa82258e5253164250ebe9d46df0"
+    },
+    {
+      "original_path": "review-page-57.png",
+      "archived_path": "review-page-57.png",
+      "original_sha256": "1d83194d3d772bd2bbcf68124a3db98e60f6959489d1b613ad048e15716f20b6",
+      "archived_sha256": "1d83194d3d772bd2bbcf68124a3db98e60f6959489d1b613ad048e15716f20b6"
+    },
+    {
+      "original_path": "review-page-58.png",
+      "archived_path": "review-page-58.png",
+      "original_sha256": "b4728c36e87c4a928970c6afee0247385bb2be59e89ec1be0fd4badc0e8e3401",
+      "archived_sha256": "b4728c36e87c4a928970c6afee0247385bb2be59e89ec1be0fd4badc0e8e3401"
+    },
+    {
+      "original_path": "review-page-59.png",
+      "archived_path": "review-page-59.png",
+      "original_sha256": "f5fb9b19d068bd6b920e45408d7c4b565c8ff8a86d56d9700cc555a23eb0ac25",
+      "archived_sha256": "f5fb9b19d068bd6b920e45408d7c4b565c8ff8a86d56d9700cc555a23eb0ac25"
+    },
+    {
+      "original_path": "review-page-60.png",
+      "archived_path": "review-page-60.png",
+      "original_sha256": "31cabac961358dfd2dd30ab81c39258e6038b6006e201c3d3f57c45f69ab2291",
+      "archived_sha256": "31cabac961358dfd2dd30ab81c39258e6038b6006e201c3d3f57c45f69ab2291"
+    },
+    {
+      "original_path": "review-page-61.png",
+      "archived_path": "review-page-61.png",
+      "original_sha256": "f23f8fa41ec39cccd50056b4a7290638bf3cf4f2be87a72c2f22b7180993c8b9",
+      "archived_sha256": "f23f8fa41ec39cccd50056b4a7290638bf3cf4f2be87a72c2f22b7180993c8b9"
+    },
+    {
+      "original_path": "review-page-62.png",
+      "archived_path": "review-page-62.png",
+      "original_sha256": "2315b2d572301d5ab5698885f4e786bbaa3ddd7370decc7edd56293714fd47cb",
+      "archived_sha256": "2315b2d572301d5ab5698885f4e786bbaa3ddd7370decc7edd56293714fd47cb"
+    }
+  ]
+}
