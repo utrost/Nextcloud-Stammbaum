@@ -491,6 +491,24 @@ final class Imports
                 );
             }
         }
+        foreach ($plan['people'] as $xref => $p) {
+            foreach ($p['alternativeNames'] ?? [] as $value) {
+                $id = Store::id();
+                $this->store->insert('stb_claims', [
+                    'id' => $id,
+                    'tree_id' => $tree,
+                    'person_id' => $ids['person:' . $xref],
+                    'kind' => 'name',
+                    'value_json' => Store::json($value),
+                    'assessment' => 'unassessed',
+                    'visibility' => $p['data']['visibility'],
+                    'preferred' => 0,
+                    'created_at' => $now,
+                    'actor_id' => $actor,
+                ]);
+                $this->mapping($run['id'], $p['nameLine'], 'claim', $id);
+            }
+        }
         foreach ($plan['sources'] as $xref => $s) {
             $id = Store::id();
             $ids['source:' . $xref] = $id;

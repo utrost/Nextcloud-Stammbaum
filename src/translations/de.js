@@ -1,4 +1,14 @@
 export default {
+  'Imported contact or religious details remain management-only, including after edits.':
+    'Importierte Kontakt- oder Religionsangaben bleiben auch nach Änderungen nur für die Verwaltung sichtbar.',
+  'All diagnostic categories': 'Alle Diagnosekategorien',
+  'Referenced media files have not been supplied. References remain readable; nothing is downloaded.':
+    'Die referenzierten Mediendateien wurden nicht bereitgestellt. Verweise bleiben lesbar; es wird nichts heruntergeladen.',
+  'Event wording is retained as an unassessed statement.':
+    'Der Ereigniswortlaut bleibt als unbewertete Aussage erhalten.',
+  'Names and name components, vital and additional events, occupations, confidential contacts, family links, notes, sources, citations and missing-media references. Unsupported standard fields block activation.':
+    'Namen und Namensbestandteile, Lebensdaten und weitere Ereignisse, Berufe, vertrauliche Kontakte, Familienverknüpfungen, Notizen, Quellen, Belege und Verweise auf fehlende Medien. Nicht unterstützte Standardfelder verhindern die Aktivierung.',
+
   'Choose up to 20 local expansions.': 'Wähle höchstens 20 lokale Erweiterungen.',
   'Choose each local expansion only once.': 'Wähle jede lokale Erweiterung nur einmal.',
   'Local expansions': 'Lokale Erweiterungen',

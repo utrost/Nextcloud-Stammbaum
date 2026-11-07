@@ -78,3 +78,14 @@ The alpha.15 runtime is unchanged. Ten additional fictional Playwright regressio
 The public issue bodies and `backlog.json` retain the original requirements and now link each completed checklist to reproducible evidence. Final executed totals and CI are recorded on PR #61. This closes the named contracts, not their broader parent capabilities: #36 semantic mappings, #26 projection/reference semantics, #28 broader navigation, #2 compatibility and #47/#48 release-wide acceptance remain separate obligations. The parser/workflow can correctly preserve and reject unsupported input without claiming it can import that input successfully.
 
 The existing runtime package and Alice installation are byte-for-byte unchanged by this test/documentation close-out; no schema or application deployment is needed.
+
+
+## Practical GEDCOM compatibility — alpha.16
+
+The new `nc-gedcom-551-alpha3` profile adds repeatable events/occupations, name components and conflicting-name assertions, confidential address/contact/religion details, citation context, and explicit missing-media reference statements. Complete grouped diagnostics keep warnings visible even when the individual message list reaches its 200-entry bound. See the [current support matrix](gedcom-import-profile.md) for exact mappings, native adaptations and remaining exclusions. Alpha1 and alpha2 interpretations remain unchanged, with golden plan hashes and stored-profile activation regression coverage.
+
+The focused fictional browser journey verifies review/confirmation, separate occupations and alternative names, exact original download, private record denial, confidentiality retained after edits, missing-media no-fetch behavior, and desktop/390px/320px layouts. Parser tests cover unsupported nested structures, required FACT types, repeated singletons, original profile hashes and literal attribute wording. The complete Playwright suite remains the release check; its run is recorded on the draft PR and the #36 progress comment.
+
+A user-authorized private compatibility run completed browser review and atomic activation, matched all published object counts to the reviewed plan, verified provenance for every imported record, checked the unchanged original, and verified one tree revision increment. It used an ephemeral ordinary account on the isolated Nextcloud fixture. The temporary tree, imported objects, preserved original and account were removed. No private input, names, screenshots, traces or detailed reports are part of the repository or CI artifacts. Public regression fixtures are fictional.
+
+This advances #36 without closing its cumulative M2a–M2d contract. Corroborated ADOP BOTH, repeated/ambiguous names, source repositories and native media-library MISSING/EXTERNAL objects remain unfinished. Missing references currently live as editable research details; package matching, current-state GEDCOM export and full migration remain separate open work.

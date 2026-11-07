@@ -41,7 +41,7 @@ foreach (['UTF-16LE' => "\xff\xfe", 'UTF-16BE' => "\xfe\xff"] as $encoding => $b
 }
 foreach (
     [
-        str_replace('1 SEX F', '1 OCCU Teacher', $bytes),
+        str_replace('1 SEX F', '1 LDS_UNSUPPORTED Teacher', $bytes),
         str_replace('2 PLAC Example village', '2 PLAC Example village' . "\n" . '3 MAP', $bytes),
         str_replace('@I3@ INDI', '@I1@ INDI', $bytes),
         str_replace('1 CHIL @I3@', '1 CHIL @MISSING@', $bytes),
@@ -50,7 +50,6 @@ foreach (
         str_replace('2 DATE ABT 1840', '4 DATE ABT 1840', $bytes),
         str_replace('1 CHAR UTF-8', '1 CHAR UTF-8' . "\xff", $bytes),
         str_replace('1 NAME Ada /Linden/', '1 NAME Ada /Linden/' . "\n" . '1 NAME Alice /Linden/', $bytes),
-        str_replace('2 GIVN Ada', '2 GIVN Other', $bytes),
         str_replace('1 CHIL @I3@', '1 CHIL @I1@', $bytes),
     ]
     as $i => $invalid
@@ -70,7 +69,7 @@ foreach ($private['plan']['people'] as $p) {
 }
 $noMarriage = preg_replace('/1 MARR\n2 DATE BET 1860 AND 1864\n2 PLAC Example town\n/', '', $bytes);
 check(count($parser->analyze($noMarriage)['plan']['relations']) === 2, 'co-parents do not imply partnership');
-$many = str_replace('1 SEX F', str_repeat("1 OCCU unsupported\n", 220) . '1 SEX F', $bytes);
+$many = str_replace('1 SEX F', str_repeat("1 ADOP unsupported\n", 220) . '1 SEX F', $bytes);
 $report = $parser->analyze($many)['report'];
 check(
     $report['errors'] === 220 && count($report['issues']) === 200,
@@ -239,3 +238,85 @@ check(
     '8 MiB plus one byte rejected',
 );
 echo "Declared encodings, both supported versions and inclusive byte limit passed.\n";
+
+// Captured from the deployed alpha.15 parser before introducing alpha.3.
+foreach (
+    [
+        [$bytes, '6dfaecc9f978ba8c988c45e4efbc0d0935b1a7d4ca7a4e6a59bb917386e234ac'],
+        [$calendarBytes, '22026493c2611547915dd45b2c58704641d39bf68a534c2f939d52772fc23c40'],
+        [$orphanBytes, '2a8796d49ae3ba47b2085e5cc3d9d375299616f2b73f77dd1a9a23022a63ce95'],
+        [
+            str_replace('1 SEX F', "1 OCCU Teacher\n2 DATE 1900", $bytes),
+            '0817b3778488a7462f504c45d77380a15ce87a00228781a7d118e659c839b060',
+        ],
+    ]
+    as [$input, $hash]
+) {
+    check(
+        $parser->analyze($input, 'nc-gedcom-551-alpha2')['planHash'] === $hash,
+        'alpha.2 stored plans remain identical',
+    );
+}
+$extended = file_get_contents(__DIR__ . '/../fixtures/extended-family.ged');
+$r = $parser->analyze($extended);
+check($r['report']['complete'] && $r['report']['errors'] === 0, 'extended profile activates');
+check(
+    $parser->analyze($extended, 'nc-gedcom-551-alpha2')['report']['errors'] > 0,
+    'previous profile stays closed',
+);
+check(
+    count($r['plan']['people']['@I1@']['alternativeNames']) === 1,
+    'different literal name retained as alternative',
+);
+check(
+    $r['plan']['people']['@I1@']['data']['givenName'] === 'Ada',
+    'explicit components drive provisional display',
+);
+check(
+    $r['plan']['people']['@I1@']['alternativeNames'][0]['givenName'] === 'Adelaide',
+    'literal name not lost',
+);
+check(count($r['plan']['relations']) === 1, 'marriage license does not imply partner edge');
+check($r['plan']['people']['@I1@']['data']['deathDate']['value'] === '', 'burial never invents death date');
+$records = $r['plan']['records'];
+check(
+    count(array_filter($records, fn($v) => $v['type'] === 'occupation')) === 2,
+    'repeated occupations separate',
+);
+foreach ($records as $v) {
+    if ($v['type'] === 'residence' || str_contains($v['data']['title'], 'RELI')) {
+        check($v['visibility'] === 'management', 'contacts and religion confidential');
+    }
+}
+check($r['report']['issueCounts']['warning:missing_media'] === 1, 'missing media visibly reported');
+check(array_sum($r['report']['issueCounts']) === $r['report']['warnings'], 'complete grouped diagnostics');
+check(
+    str_contains($r['plan']['citations'][0]['data']['reasoning'], 'GEDCOM ROLE: Witness'),
+    'citation context retained without inference',
+);
+foreach (
+    [
+        str_replace('2 TYPE Residence wording', '2 TYPE Residence wording\n2 TYPE Duplicate', $extended),
+        str_replace('2 PLAC Example cemetery', '2 PLAC Example cemetery\n3 MAP Unsupported', $extended),
+        str_replace('2 FORM jpg', '2 FORM jpg\n3 MEDI unsupported', $extended),
+        str_replace('1 BURI', '1 FACT', $extended),
+    ]
+    as $invalid
+) {
+    check(
+        $parser->analyze(str_replace('\\n', "\n", $invalid))['report']['errors'] > 0,
+        'unsupported children and singleton conflicts block',
+    );
+}
+echo "Extended semantic mappings, privacy and alpha.2 compatibility passed.\n";
+
+$literalAttribute = $parser->analyze(str_replace('1 OCCU Teacher', '1 OCCU Y', $extended));
+check(
+    count(
+        array_filter(
+            $literalAttribute['plan']['records'],
+            fn($r) => $r['type'] === 'occupation' && $r['data']['text'] === 'Y',
+        ),
+    ) === 1,
+    'attribute Y remains literal wording rather than an event marker',
+);
