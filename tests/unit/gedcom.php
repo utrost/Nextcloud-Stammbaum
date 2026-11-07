@@ -199,3 +199,43 @@ check(
     $parser->analyze(str_replace('ABT 1840', 'ABT @#DJULIAN@ 12 FEB 1840', $bytes))['report']['errors'] === 0,
     'calendar escapes inside approximated wording stay literal',
 );
+
+foreach (['5.5', '5.5.1'] as $version) {
+    $ascii = str_replace(['VERS 5.5.1', 'CHAR UTF-8'], ['VERS ' . $version, 'CHAR ASCII'], $simple);
+    $result = $parser->analyze($ascii);
+    check(
+        $result['report']['errors'] === 0 && $result['encoding'] === 'ASCII',
+        'declared ASCII profile ' . $version,
+    );
+}
+foreach (
+    [
+        str_replace('CHAR UTF-8', 'CHAR WINDOWS-1252', $simple),
+        str_replace(['CHAR UTF-8', 'Test'], ['CHAR ASCII', 'Tést'], $simple),
+        "\xff\xfe" . mb_convert_encoding($simple, 'UTF-16LE', 'UTF-8'),
+        str_replace('CHAR UTF-8', 'CHAR UNICODE', $simple),
+        "PK\x03\x04" . $simple,
+    ]
+    as $invalid
+) {
+    check($parser->analyze($invalid)['report']['errors'] > 0, 'invalid encoding declaration or ZIP rejected');
+}
+// Exercise the inclusive byte limit without exceeding line, node or interpretation bounds.
+$remaining = Gedcom::MAX_BYTES - strlen($simple);
+$padding = '';
+while ($remaining > 0) {
+    $length = min(16000, $remaining);
+    if ($remaining > $length && $remaining - $length < 9) {
+        $length -= 9;
+    }
+    $padding .= '0 _META ' . str_repeat('x', $length - 9) . "\n";
+    $remaining -= $length;
+}
+$atLimit = str_replace('0 TRLR', $padding . '0 TRLR', $simple);
+check(strlen($atLimit) === Gedcom::MAX_BYTES, 'exact 8 MiB fixture');
+check($parser->analyze($atLimit)['report']['errors'] === 0, 'exact 8 MiB accepted');
+check(
+    $parser->analyze($atLimit . "\n")['report']['issues'][0]['code'] === 'file_size',
+    '8 MiB plus one byte rejected',
+);
+echo "Declared encodings, both supported versions and inclusive byte limit passed.\n";
