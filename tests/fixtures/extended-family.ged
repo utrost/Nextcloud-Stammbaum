@@ -1,0 +1,57 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Adelaide /Linden/ Jr.
+2 GIVN Ada
+2 SURN Linden
+2 NPFX Dr.
+2 NSFX Jr.
+1 SEX F
+1 RIN fixture-1
+1 OCCU Teacher
+2 DATE 1900
+2 SOUR @S1@
+3 PAGE 1
+3 EVEN OCCU
+4 ROLE Witness
+1 OCCU Writer
+2 DATE 1905
+1 BURI
+2 DATE 1950
+2 PLAC Example cemetery
+1 RESI
+2 TYPE Residence wording
+2 ADDR Example address
+3 CONT Second line
+3 CITY Example city
+2 EMAIL fictional@example.invalid
+2 EMAIL second@example.invalid
+2 PHON +00 fictional
+1 RELI Fictional affiliation
+1 CHR
+2 AGE 1
+1 BAPM
+2 DATE 1850
+1 EVEN N
+2 TYPE Unconfirmed event
+1 OBJE
+2 FILE https://example.invalid/never-fetch.jpg
+2 FORM jpg
+2 TITL Missing fictional photograph
+2 NOTE Reference only
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Child /Linden/
+1 FAMC @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 CHIL @I2@
+1 RIN fixture-family
+1 MARL
+2 DATE 1870
+0 @S1@ SOUR
+1 TITL Fictional register
+0 TRLR
