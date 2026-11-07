@@ -49,3 +49,12 @@ Personal home is separate from the shared tree home. All members can set their o
 Playwright review also exposed and reproduced dense-family Fit clipping and absent two-finger zoom. Both are fixed, including a 100% focus reset and a rendered 200-person phone check. Resizing keeps the viewed center; partner lines no longer inherit the unknown-parent pattern. The German catalog now covers the literal UI and validation messages checked by the source audit; browser checks verify translated errors without translating authored names, places or literal dates.
 
 This work addresses the focused UI follow-ups #66–#68 and personal-home requirements #14, and advances the existing diagram/navigation/localization work #27, #28 and #43. Local expansions, broader device/accessibility certification and the full release-0.15 acceptance matrix remain open. Native screenshot baselines test the app's own design rather than reproducing the standalone illustrations.
+
+
+## Local family exploration — alpha.15
+
+Selected boundary people can expand one additional authorized neighborhood in diagram or text view. Ordered expansions remain bounded at twenty, retain focus/selection/camera and return with Previous branch. Family contexts expand without inventing parentage, including parents omitted from the initial depth-limited group. The original node, edge, neighbor and contextual-group limits remain in force.
+
+Failures clear the drawing, preserve the requested expansion list for Retry, and offer an explicit reset when a reference is no longer available. Late responses are ignored. Read-only members can navigate without gaining genealogy editing rights or advancing tree revisions. Named-view navigation now records the previous mode/depths before applying the new view, so branch return restores the actual prior state.
+
+This advances #26–#28. It does not add expansion persistence to named saved views or copied links, new layouts, reference-connector styling, or release-wide parity certification. The expanded Playwright suite covers ordered/mode-specific neighborhoods, hidden bridges, contexts, limits, repeated ancestry, social loops, revoked visibility, branch history, German read-only phone navigation and failure/retry races. Executed results and deployment evidence are recorded on PR #61 after verification.

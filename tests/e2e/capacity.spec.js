@@ -88,6 +88,12 @@ test('large fictional family remains bounded at 200 people, 400 neighbors and 20
   expect(graph.relations.length).toBeLessThanOrEqual(1000);
   expect(graph.contexts).toHaveLength(20);
   expect(graph.limited).toBe(true);
+  const expanded = await good(page, `/trees/${tr.id}/graph?focus=${root.id}&up=0&down=0&expand[]=${root.id}`);
+  expect(expanded.people).toHaveLength(200);
+  expect(new Set(expanded.people.map((p) => p.id)).size).toBe(200);
+  expect(expanded.contexts).toHaveLength(20);
+  expect(expanded.relations.length).toBeLessThanOrEqual(1000);
+  expect(expanded.limited).toBe(true);
   expect((await good(page, `/trees/${tr.id}/people`)).items).toHaveLength(50);
   test.info().annotations.push({ type: 'bounded-graph-ms', description: String(Date.now() - started) });
   await page.setViewportSize({ width: 320, height: 1000 });
@@ -135,4 +141,32 @@ test('deletion review detects shared dependencies and rejects a changed tree bef
   });
   expect(stale.status).toBe(412);
   expect((await good(page, `/trees/${tr.id}/people/${p.id}`)).id).toBe(p.id);
+});
+
+test('dense expanded family returns at most 1000 unique relationship lines', async ({ page }) => {
+  test.setTimeout(90000);
+  await login(page);
+  const tr = await tree(page),
+    people = [],
+    now = Math.floor(Date.now() / 1000);
+  for (let i = 0; i < 46; i++) people.push(await person(page, tr.id, `Connected ${i}`));
+  const edges = [];
+  for (let i = 0; i < people.length; i++)
+    for (let j = i + 1; j < people.length; j++)
+      edges.push([randomUUID(), tr.id, people[i].id, people[j].id, 'partner', 'unknown', 1, 1, now]);
+  insert(
+    'stb_relations',
+    ['id', 'tree_id', 'source_id', 'target_id', 'kind', 'parent_type', 'revision', 'active', 'created_at'],
+    edges,
+  );
+  const before = await good(page, `/trees/${tr.id}`);
+  const g = await good(
+    page,
+    `/trees/${tr.id}/graph?focus=${people[0].id}&up=0&down=0&expand[]=${people[0].id}`,
+  );
+  expect(g.people).toHaveLength(46);
+  expect(g.relations).toHaveLength(1000);
+  expect(new Set(g.relations.map((r) => r.id)).size).toBe(1000);
+  expect(g.limited).toBe(true);
+  expect((await good(page, `/trees/${tr.id}`)).revision).toBe(before.revision);
 });

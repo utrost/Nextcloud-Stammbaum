@@ -2,10 +2,16 @@
 import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { t, title } from '../i18n.js';
 import { layoutGraph, graphCard, graphZoom, personName, dateText } from '../domain.js';
-const props = defineProps({ graph: Object, selected: String, modelValue: Object, restoreCamera: Boolean });
-const emit = defineEmits(['select', 'update:modelValue']);
+const props = defineProps({
+  graph: Object,
+  selected: String,
+  modelValue: Object,
+  restoreCamera: Boolean,
+  textView: Boolean,
+});
+const emit = defineEmits(['select', 'update:modelValue', 'update:textView']);
 const viewport = ref(null),
-  textView = ref(false);
+  textView = computed({ get: () => props.textView, set: (value) => emit('update:textView', value) });
 const layout = computed(() => layoutGraph(props.graph.people));
 const camera = computed(() => props.modelValue || { x: 20, y: 20, zoom: 1 });
 const name = (p) => personName(p, t('Unnamed person'));

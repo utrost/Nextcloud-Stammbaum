@@ -230,15 +230,41 @@ final class Family
         string $mode = 'family',
         int $up = 3,
         int $down = 2,
+        mixed $expand = [],
     ): array {
         $m = $this->trees->access($tree, $actor);
         $mode = Values::choice($mode, ['family', 'ancestors', 'descendants'], 'mode');
+        if (!is_array($expand) || !array_is_list($expand) || count($expand) > 20) {
+            throw new Problem('expansions', 'Choose up to 20 local expansions.');
+        }
+        $expansions = [];
+        foreach ($expand as $id) {
+            $id = Values::text($id, 'expand', 36, true);
+            if (in_array($id, $expansions, true)) {
+                throw new Problem('expansions', 'Choose each local expansion only once.');
+            }
+            $expansions[] = $id;
+        }
         $up = max(0, min(8, $up));
         $down = max(0, min(8, $down));
         if ($focus === '') {
-            return ['people' => [], 'relations' => [], 'limited' => false, 'focusId' => null];
+            if ($expansions) {
+                throw Problem::missing();
+            }
+            return [
+                'boundaryIds' => [],
+                'expansions' => [],
+                'people' => [],
+                'relations' => [],
+                'limited' => false,
+                'focusId' => null,
+            ];
         }
         $groups = [];
+        $contextCache = [];
+        $contextPageFor = function ($id) use ($tree, $actor, &$contextCache) {
+            return $contextCache[$id] ??= $this->contexts->list($tree, $actor, $id);
+        };
         $first = $this->people->dto($this->people->row($tree, $focus, $m));
         $nodes = [$focus => $first];
         $levels = [$focus => 0];
@@ -297,7 +323,7 @@ final class Family
             }
         }
         if ($mode === 'family') {
-            $contextPage = $this->contexts->list($tree, $actor, $focus);
+            $contextPage = $contextPageFor($focus);
             if ($contextPage['nextPage'] !== null) {
                 $limited = true;
             }
@@ -342,6 +368,79 @@ final class Family
                 }
             }
         }
+        // A request may expand only a person in the projection built so far.
+        // This also validates the order of chained expansions without disclosing
+        // whether an out-of-projection reference exists elsewhere.
+        $neighbor = function ($id, $edge) use ($mode) {
+            if ($edge['kind'] === 'partner') {
+                return $mode === 'family'
+                    ? [$edge['source_id'] === $id ? $edge['target_id'] : $edge['source_id'], 0]
+                    : null;
+            }
+            if ($edge['target_id'] === $id && $mode !== 'descendants') {
+                return [$edge['source_id'], -1];
+            }
+            if ($edge['source_id'] === $id && $mode !== 'ancestors') {
+                return [$edge['target_id'], 1];
+            }
+            return null;
+        };
+        foreach ($expansions as $id) {
+            if (!isset($nodes[$id])) {
+                throw Problem::missing();
+            }
+            foreach ($load($id) as $edge) {
+                $next = $neighbor($id, $edge);
+                if ($next !== null) {
+                    $add($next[0], $levels[$id] + $next[1]);
+                }
+            }
+            if ($mode === 'family') {
+                $page = $contextPageFor($id);
+                if ($page['nextPage'] !== null) {
+                    $limited = true;
+                }
+                foreach ($page['items'] as $context) {
+                    $groupIndex = array_search($context['id'], array_column($groups, 'id'), true);
+                    if ($groupIndex === false && count($groups) >= 20) {
+                        $limited = true;
+                        continue;
+                    }
+                    $anchor = array_values(
+                        array_filter($context['members'], fn($p) => $p['personId'] === $id),
+                    )[0];
+                    $members = [];
+                    foreach ($context['members'] as $member) {
+                        $offset =
+                            $member['role'] === $anchor['role'] ? 0 : ($member['role'] === 'parent' ? -1 : 1);
+                        if ($add($member['personId'], $levels[$id] + $offset)) {
+                            $members[] = array_intersect_key(
+                                $member,
+                                array_flip(['personId', 'role', 'description']),
+                            );
+                        }
+                    }
+                    $group = ['id' => $context['id'], 'label' => $context['label'], 'members' => $members];
+                    if ($groupIndex === false) {
+                        $groups[] = $group;
+                    } else {
+                        $groups[$groupIndex] = $group;
+                    }
+                }
+            }
+        }
+        $boundary = [];
+        foreach (array_keys($nodes) as $id) {
+            foreach ($load($id) as $edge) {
+                $next = $neighbor($id, $edge);
+                if ($next !== null && !isset($nodes[$next[0]])) {
+                    $boundary[$id] = true;
+                }
+            }
+            if ($mode === 'family' && $this->contexts->hasOutsideMember($tree, $m, $id, array_keys($nodes))) {
+                $boundary[$id] = true;
+            }
+        }
         foreach (array_keys($nodes) as $id) {
             foreach ($load($id) as $e) {
                 if (isset($nodes[$e['source_id']], $nodes[$e['target_id']])) {
@@ -363,6 +462,8 @@ final class Family
             'limited' => $limited,
             'focusId' => $focus,
             'contexts' => $groups,
+            'boundaryIds' => array_keys($boundary),
+            'expansions' => $expansions,
         ];
     }
 }

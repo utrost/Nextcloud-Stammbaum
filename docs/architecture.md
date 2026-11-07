@@ -31,13 +31,23 @@ Mutations carry the record revision. A stale write returns HTTP 412; omitted rev
 | `stb_history`, `stb_receipts` | Attributed operations and creation retry identities |
 | `stb_imports`, `stb_import_nodes`, `stb_import_maps` | Durable import runs/leases/review bindings, immutable ordered input structure and source-line ownership mappings |
 
-Language and private saved views use app-scoped Nextcloud user configuration. They do not modify the host's language setting. Saved views are filtered against current access before being returned.
+Language uses app-scoped Nextcloud user configuration without modifying the host's language setting. Personal home and saved views use the app-owned preference table, with legacy user-configuration fallback as described below. Saved views are filtered against current access before being returned.
 
 Original files live in the app's private `IAppData` `originals` folder under random opaque IDs. They are not ordinary user Files objects and have no public-sharing route. Uploads validate type, decoded image dimensions and byte limits before reserving quota. The reservation commits before filesystem writing; interrupted originals remain counted. A hash-verified original becomes visible only after another current-role and membership-generation check. Revocation followed by regrant cannot revive a pending upload. There is no physical-purge interface.
 
 Previews are separately decoded and re-encoded PNG responses. Crops are normalized assignment metadata and never overwrite original bytes. PDFs have no inline preview and download as attachments. JPEG orientation/EXIF-aware presentation and preview caching remain future work.
 
 The diagram keeps focus, selection and camera independent. Resizing preserves the viewed center; expanding research keeps the diagram mounted. Fit supports the full bounded 200-person projection, including narrow viewports; the percentage control restores the focus to a readable 100%. Saved camera zoom is validated between 0.1% and 200%. Two-finger gestures transform the camera around their midpoint without selecting a card or changing genealogy.
+
+### Local family expansion
+
+`GET /trees/{tree}/graph` accepts optional repeated `expand[]=<person-id>` query parameters. The list contains at most 20 distinct IDs, in application order. Each anchor must already belong to the currently authorized base projection or a preceding expansion; unavailable, foreign or unreachable anchors return the same 404. Malformed, duplicate or oversized lists return 422. Existing clients may omit the parameter.
+
+Each anchor adds one neighborhood: parents in ancestor mode, children in descendant mode, and parents/children/partners plus authorized family-context members in family mode. Context membership creates no relationship. Expanding an existing partial context includes its previously depth-excluded members, preserving recorded member order. Identity and relationship maps prevent duplication and terminate repeated ancestry/social loops. The existing 200-person, 1,000-line, 400-neighbor/person and 20-context limits remain global to the response. Limit feedback describes an incomplete view, never a complete absence of relatives.
+
+Responses add `boundaryIds` (only displayed people with authorized, mode-eligible neighbors outside the projection) and `expansions` (the accepted ordered list). Context boundary discovery uses the same visibility predicate as context listing and an existence query, avoiding full context hydration for every displayed person. Boundary indicators reveal neither hidden IDs nor hidden population counts.
+
+The shared expansion controls work in diagram and text views. They preserve focus, selection and camera; the deterministic layout may reflow as people are added. Previous branch stores expansions and text/diagram choice alongside the existing focus, selection, mode, depths and camera. Refocusing, opening a named view, changing mode/depths or switching trees starts a fresh expansion list. Reset is explicit. A failed graph request clears the drawing and retains the intended list for Retry; obsolete responses cannot replace a newer graph. Local expansions are session navigation state, not genealogy mutations, database preferences or copied-link parameters. No schema migration is required.
 
 ## Genealogy semantics
 
