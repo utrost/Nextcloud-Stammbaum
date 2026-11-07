@@ -58,3 +58,23 @@ Selected boundary people can expand one additional authorized neighborhood in di
 Failures clear the drawing, preserve the requested expansion list for Retry, and offer an explicit reset when a reference is no longer available. Late responses are ignored. Read-only members can navigate without gaining genealogy editing rights or advancing tree revisions. Named-view navigation now records the previous mode/depths before applying the new view, so branch return restores the actual prior state.
 
 This advances #26–#28. It does not add expansion persistence to named saved views or copied links, new layouts, reference-connector styling, or release-wide parity certification. The expanded Playwright suite covers ordered/mode-specific neighborhoods, hidden bridges, contexts, limits, repeated ancestry, social loops, revoked visibility, branch history, German read-only phone navigation and failure/retry races. Executed results and deployment evidence are recorded on PR #61 after verification.
+
+
+## Focused acceptance close-out — 7 November 2026
+
+The alpha.15 runtime is unchanged. Ten additional fictional Playwright regressions fill acceptance-evidence gaps; parser checks additionally cover both supported GEDCOM versions, declaration mismatches, ZIP rejection and the exact inclusive 8 MiB limit. The review covers these eight issue contracts:
+
+| Issue | Accepted contract |
+| --- | --- |
+| [#3](https://github.com/utrost/Nextcloud-Stammbaum/issues/3) | Native scaffold, clean installation, authentication and startup recovery |
+| [#9](https://github.com/utrost/Nextcloud-Stammbaum/issues/9) | Private tree creation, duplicate identities, metadata permissions and empty states |
+| [#18](https://github.com/utrost/Nextcloud-Stammbaum/issues/18) | Explicit relationships, atomic relative creation and concurrent ancestry protection |
+| [#19](https://github.com/utrost/Nextcloud-Stammbaum/issues/19) | Ordered contexts with explicit membership and no inferred genealogy |
+| [#23](https://github.com/utrost/Nextcloud-Stammbaum/issues/23) | Safe notes, private biographies and retained provenance |
+| [#27](https://github.com/utrost/Nextcloud-Stammbaum/issues/27) | Native diagram controls and equivalent authorized text navigation |
+| [#35](https://github.com/utrost/Nextcloud-Stammbaum/issues/35) | Versioned bounded parsing and immutable original/structure preservation |
+| [#37](https://github.com/utrost/Nextcloud-Stammbaum/issues/37) | Reviewed, authorized and atomic empty-tree import workflow |
+
+The public issue bodies and `backlog.json` retain the original requirements and now link each completed checklist to reproducible evidence. Final executed totals and CI are recorded on PR #61. This closes the named contracts, not their broader parent capabilities: #36 semantic mappings, #26 projection/reference semantics, #28 broader navigation, #2 compatibility and #47/#48 release-wide acceptance remain separate obligations. The parser/workflow can correctly preserve and reject unsupported input without claiming it can import that input successfully.
+
+The existing runtime package and Alice installation are byte-for-byte unchanged by this test/documentation close-out; no schema or application deployment is needed.

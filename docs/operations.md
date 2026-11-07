@@ -13,6 +13,14 @@ npm run package
 
 `build/stammbaum-<version>.tar.gz` and its `.sha256` sidecar contain deterministic runtime artifacts. Packaging excludes documents, tests, dependencies, fixture credentials and development configuration. The content-hashed asset manifest must match the packaged JS/CSS. Commit only the current generated asset pair; the build removes superseded local bundles.
 
+## Supported scaffold and licenses
+
+The current supported development target is Nextcloud 34 with PHP 8.3+ and MariaDB. CI creates Nextcloud 34.0.4/MariaDB 11 from scratch, checks PHP 8.3 syntax, installs the exact package and executes the native browser suite. Alice also exercises an existing Nextcloud 34 installation with PHP 8.5. PostgreSQL, SQLite and other Nextcloud majors are not certified by this scaffold evidence; the broader compatibility contract remains #2.
+
+Stammbaum is AGPL-3.0-or-later. The bundled Vue runtime is MIT licensed; [THIRD-PARTY-NOTICES](../THIRD-PARTY-NOTICES) contains its notice and license text, and both that file and [LICENSE](../LICENSE) ship in every runtime archive. Exact build-tool dependencies and their declared licenses are recorded in `package-lock.json`; build tools are not distributed as app runtime dependencies. Runtime scripts, styles and icons are packaged locally; the UI inherits the host Nextcloud theme/fonts without loading an app-owned external font service.
+
+There are no app-specific database credentials, standalone login service or initial administrator settings to enter. Nextcloud owns authentication and host configuration; unauthenticated app entry redirects to its login. An unavailable startup API displays an error and explicit Retry. Missing host/database installation prerequisites are operator setup failures, not an empty genealogy dataset. The app-specific installer refuses an unhealthy or unsupported host before deployment. The upgrade and recovery boundaries below remain applicable.
+
 ## Alice deployment
 
 Alice is this workstation. Use the default local Docker context. The shared development container is `nextcloud`; Library and Relate must remain intact. The user explicitly waived backups for Alice development deployment. No SSH or new deployment approval is needed for this authorized scope.

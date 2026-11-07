@@ -611,3 +611,97 @@ test('2,000-person profile boundary activates atomically and keeps reports and s
     description: `2,000-person import, analysis through activation: ${Math.round(performance.now() - started)} ms in disposable MariaDB fixture`,
   });
 });
+
+test('membership and empty navigation preferences allow import; biography selection retains imported mappings and originals', async ({
+  page,
+}) => {
+  await login(page);
+  const tr = await tree(page);
+  await grant(page, tr.id, 'stb_viewer');
+  const views = await good(page, `/trees/${tr.id}/views`);
+  await good(page, `/trees/${tr.id}/views/home`, 'PUT', { revision: views.revision, homeId: null });
+  const ready = await analyzed(page, tr);
+  expect(ready.status).toBe('ready');
+  await confirm(page, tr, ready);
+  work();
+  expect((await good(page, path(tr, ready))).status).toBe('committed');
+  expect((await good(page, `/trees/${tr.id}/members`)).items.some((m) => m.userId === 'stb_viewer')).toBe(
+    true,
+  );
+  const maps = () =>
+    fixtureDatabase(
+      'SELECT ordinal, kind, object_id FROM *PREFIX*stb_import_maps WHERE run_id = ? ORDER BY ordinal, kind, object_id',
+      [ready.id],
+      true,
+    );
+  const before = maps();
+  expect(before.length).toBeGreaterThan(0);
+  const people = (await good(page, `/trees/${tr.id}/people`)).items;
+  let originalNote;
+  for (const p of people) {
+    originalNote = (await good(page, `/trees/${tr.id}/records?person=${p.id}&category=note`)).items.find(
+      (r) => r.category === 'note',
+    );
+    if (originalNote) break;
+  }
+  expect(originalNote).toBeTruthy();
+  const alternative = await good(
+    page,
+    `/trees/${tr.id}/records`,
+    'POST',
+    {
+      originId: originalNote.originId,
+      category: 'note',
+      type: 'note',
+      title: 'Later biography',
+      text: 'Separate research',
+      participants: [{ personId: originalNote.originId, role: 'subject' }],
+      requestId: key(),
+    },
+    201,
+  );
+  await good(page, `/trees/${tr.id}/records/${originalNote.id}/prefer`, 'POST', {
+    revision: originalNote.revision,
+  });
+  await good(page, `/trees/${tr.id}/records/${alternative.id}/prefer`, 'POST', {
+    revision: alternative.revision,
+  });
+  expect((await good(page, `/trees/${tr.id}/records/${originalNote.id}`)).original).toEqual(
+    originalNote.original,
+  );
+  expect(maps()).toEqual(before);
+  const download = await page.request.get(endpoint + path(tr, ready) + '/original');
+  expect(await download.body()).toEqual(sample);
+  expect(
+    (
+      await request(page, path(tr, ready) + '/cancel', 'POST', {
+        revision: (await good(page, path(tr, ready))).revision,
+      })
+    ).status,
+  ).toBe(409);
+});
+
+test('standalone sources and person tombstones both prevent importing into a seemingly empty tree', async ({
+  page,
+}) => {
+  await login(page);
+  const sources = await tree(page);
+  await good(
+    page,
+    `/trees/${sources.id}/sources`,
+    'POST',
+    { title: 'Standalone fictional source', requestId: key() },
+    201,
+  );
+  expect((await upload(page, sources)).status).toBe(409);
+  const tombstones = await tree(page),
+    p = await person(page, tombstones.id, 'Deleted');
+  const impact = await good(page, `/trees/${tombstones.id}/people/${p.id}/deletion-impact`);
+  await good(page, `/trees/${tombstones.id}/people/${p.id}/delete`, 'POST', {
+    revision: p.revision,
+    treeRevision: impact.treeRevision,
+    confirmed: true,
+  });
+  expect((await good(page, `/trees/${tombstones.id}/people`)).items).toEqual([]);
+  expect((await upload(page, tombstones)).status).toBe(409);
+});
