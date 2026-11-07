@@ -252,5 +252,6 @@ Original uploads, shared assignments/crops and reviewed GEDCOM media matching re
 | [E03 · #71](https://github.com/utrost/Nextcloud-Stammbaum/issues/71) | cache private media thumbnails and provide an accessible gallery viewer | #32, #33, #7, #69 |
 | [E04 · #72](https://github.com/utrost/Nextcloud-Stammbaum/issues/72) | add private PDF thumbnails and an inline document viewer | #32, #71 |
 | [E06 · #74](https://github.com/utrost/Nextcloud-Stammbaum/issues/74) | Choose existing Nextcloud images/PDFs and import unchanged private copies | #5, #32, #33 |
+| [E07 · #76](https://github.com/utrost/Nextcloud-Stammbaum/issues/76) | Dates, named people shown/mentioned (with or without tree records), events and places for photos/PDFs | #33, #16, #22 |
 
 Office documents and conversion are out of scope by user decision; #73 (E05) is closed as not planned and retained in the backlog only for history. Media entry points are device upload and explicit selection from Nextcloud Files. Existing files are copied into private Stammbaum storage with source-read authorization, original-byte validation and quota checks; subsequent source edits/deletion do not change an imported copy. Explain the independent copy and tree visibility before confirmation. PDF preview failure must leave original download available. EXIF orientation remains separately tracked in #69.
