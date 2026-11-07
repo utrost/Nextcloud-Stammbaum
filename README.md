@@ -10,6 +10,8 @@ Use **Expand person research** to read evidence alongside retained assertions an
 
 For existing research, create an empty tree and open **Imports**. Upload a supported GEDCOM file, review its diagnostics and preview, then explicitly confirm activation. Nextcloud processes it in the background. The current profile includes additional events, occupations, name components and confidential contact details. Missing media references appear in person Details; the referenced files are not automatically downloaded. The [named import profile](docs/gedcom-import-profile.md) is deliberately bounded; unsupported standard fields block activation.
 
+In **Media**, upload a JPEG, PNG or PDF from your device or use **Choose from Nextcloud Files**. Confirm **Import private copy** to store unchanged bytes under the tree's permissions. The copy counts against Stammbaum's storage quota and remains available if the source later changes or is deleted. The gallery has private cached thumbnails and **Open preview** for larger images and PDF pages, with zoom and page controls. PDF previews require the optional Poppler runtime; unsupported documents keep their original download. Explicit GEDCOM media matching remains separate work.
+
 The app currently targets **Nextcloud 34**, PHP **8.3+**, with MariaDB verified. It uses Nextcloud accounts and private app storage; Library and Relate are development references, not dependencies.
 
 - [GEDCOM iteration and verification](docs/iteration-02.md)

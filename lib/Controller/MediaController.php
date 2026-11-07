@@ -81,6 +81,31 @@ final class MediaController extends Controller
         );
     }
     #[NoAdminRequired]
+    public function selectFile(string $tree, string $path): Response
+    {
+        return $this->respond(fn($a) => $this->media->selectFile($tree, $a, $path));
+    }
+    #[NoAdminRequired]
+    public function importFile(
+        string $tree,
+        int $fileId,
+        string $etag,
+        string $requestId,
+        string $title = '',
+        string $personId = '',
+        string $visibility = 'members',
+    ): Response {
+        return $this->respond(
+            fn($a) => $this->media->importFile($tree, $a, $fileId, $etag, [
+                'requestId' => $requestId,
+                'personId' => $personId,
+                'visibility' => $visibility,
+                ...$title !== '' ? ['title' => $title] : [],
+            ]),
+            201,
+        );
+    }
+    #[NoAdminRequired]
     public function update(string $tree, string $id): Response
     {
         return $this->respond(function ($a) use ($tree, $id) {
@@ -100,8 +125,10 @@ final class MediaController extends Controller
         string $actor,
         bool $preview,
         string $person = '',
+        int $size = 600,
+        int $page = 1,
     ): Response {
-        $d = $this->media->download($tree, $id, $actor, $preview, $person);
+        $d = $this->media->download($tree, $id, $actor, $preview, $person, $size, $page);
         $r = new DataDownloadResponse($d['bytes'], $d['name'], $d['mime']);
         if ($preview) {
             $r->addHeader('Content-Disposition', 'inline; filename="preview.png"');
@@ -117,8 +144,19 @@ final class MediaController extends Controller
     }
     #[NoAdminRequired]
     #[NoCSRFRequired]
-    public function preview(string $tree, string $id, string $person = ''): Response
+    public function previewInfo(string $tree, string $id): Response
     {
-        return $this->respond(fn($a) => $this->binary($tree, $id, $a, true, $person));
+        return $this->respond(fn($a) => $this->media->previewInfo($tree, $id, $a));
+    }
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
+    public function preview(
+        string $tree,
+        string $id,
+        string $person = '',
+        int $size = 600,
+        int $page = 1,
+    ): Response {
+        return $this->respond(fn($a) => $this->binary($tree, $id, $a, true, $person, $size, $page));
     }
 }

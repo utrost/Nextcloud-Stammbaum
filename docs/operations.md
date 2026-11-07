@@ -100,3 +100,7 @@ Alice had a pre-existing `background-job:worker --stop_after=5m` process that ha
 Before relying on new app jobs, gracefully recycle an identified long-lived host worker through its normal process manager, preserving its arguments and scheduling. In the inspected Nextcloud 34 code, SIGTERM/SIGINT are cooperative: the worker checks the interrupted flag between jobs. Check currently running work first; do not force-kill an active job. Then run the app deployment verification again to reconcile its declared jobs. Alice’s identified idle worker was reloaded this way, with no cron schedule or sibling app configuration changes.
 
 The app installer does not automatically signal arbitrary host processes. `occ background-job:list --class='OCA\Stammbaum\BackgroundJob\ProcessImports'` checks the exact class name; this option is not a substring search.
+
+## Optional image/PDF preview cache
+
+See [alpha.18 preview operations and limits](media-previews-iteration.md). Preview cache data in private AppData `media-previews-v1` is disposable and can be regenerated; it is separate from retained `originals`. Never delete originals to clear thumbnails. Cache eviction is bounded and automatic on publication; a missing/corrupt cache value regenerates on demand. PDF viewing needs distribution-maintained Poppler utilities plus `prlimit`; missing or unsupported renderers leave original downloads available. Do not enable public Nextcloud shares to make genealogy previews work.
