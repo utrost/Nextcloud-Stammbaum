@@ -1775,5 +1775,43 @@
       "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/60",
       "body": "<!-- stammbaum-backlog:D12 -->\n\n## Outcome and interfaces\n\nTrack original measurable quality requirements separately from additional-language and certification expansion.\n\n## Source and scope\n\n- [Release 0.15 specification](https://github.com/utrost/Nextcloud-Stammbaum/blob/37040733982e5a2b3dacfb48f07ef3ba7a33f05f/current-product-specification.txt): Ch. 10, 12, pp. 46–47, 54; UX, NF, BETR; mixed baseline obligations.\n- Appendix A: No standalone Appendix A scenario; verify the issue-specific acceptance criteria below.\n- Delivery: **Deferred — preserve each original core/expansion priority; do not count toward parity completion**.\n- Native adaptation: follow the compatibility ADR in F01; Nextcloud identity and services replace standalone infrastructure, while tree ACLs and domain rules remain authoritative. Do not copy the source Java deployment or assume Nextcloud administrator access to trees.\n- [Pinned functional-specification-v1.md](https://github.com/utrost/Stammbaum/blob/d5809c3470fe53604ffd4307428c3a68053e77b5/docs/functional-specification-v1.md)\n\n## Acceptance criteria and verification\n\n- [ ] Map baseline core quality thresholds and unresolved release evidence rather than downgrading all to optional\n- [ ] Define assistive-technology, real-device and large-tree benchmark matrix before claiming certification\n- [ ] Plan additional locales with genealogy-safe fallback and translation completeness tests\n\nUse fictional fixtures only. Record executed tests and remaining gaps; the source screenshots and A01–A30 examples are specifications, not evidence this implementation passed. Complete design/requirement mapping before implementing this deferred capability.\n\n## Explicit exclusions\n\nParity browser evidence is not blanket certification.\n\n## Dependencies\n\n- #44 — Verify responsive keyboard access and consistent error feedback\n- #46 — Verify authorization races, input safety and documented capacity limits\n- #48 — Execute and publish the release 0.15 parity acceptance matrix\n\nRoadmap: #1. Source requirement IDs belong to the original project; they are not issue numbers in this repository.\n"
     }
+  ],
+  "followups": [
+    {
+      "key": "E01",
+      "title": "Deferred: present EXIF-oriented image previews without changing originals",
+      "dependencies": [
+        "M01",
+        "M02"
+      ],
+      "body": "<!-- stammbaum-followup:E01 -->\n\n## Outcome and scope\n\nDisplay JPEG previews in their recorded EXIF orientation while preserving uploaded original bytes and independent assignment crops. This is a post-parity enhancement requested during the alpha.15 gap review; #32 explicitly excludes automatic EXIF orientation/crop interpretation. It does not change the release-0.15 baseline or its priorities.\n\nReference: docs/architecture.md, Storage; #32 (M01, MED; specification chapter 7, A16) and #33 (M02). A16 supplies original-integrity regression coverage, not a claim that EXIF support is an original acceptance requirement.\n\n## Acceptance criteria\n\n- [ ] Define orientation normalization and crop coordinates before implementation, including how existing stored crops retain their intended presentation across upgrade.\n- [ ] Correctly display all eight EXIF orientation values, including mirrored variants, exactly once; absent or invalid orientation has a deterministic safe fallback.\n- [ ] Apply orientation only to derived previews. Upload/download SHA-256 remains identical through crop changes, reset, detachment and regeneration.\n- [ ] Derived previews contain no original EXIF/GPS metadata; recheck current medium and all-target authorization on every request.\n- [ ] Preserve current byte, decoded-dimension and pixel limits; malformed metadata cannot bypass validation or produce unbounded processing.\n- [ ] Add fictional asymmetric image fixtures for orientations 1–8, missing/malformed metadata and stored-crop upgrade behavior. Verify preview/portrait/reset journeys in Playwright and inaccessible shared media responses.\n\n## Native contracts and exclusions\n\nUse private Nextcloud AppData originals and the existing authorized preview routes. Version any preview cache or crop interpretation affected by the change. No original rewriting, metadata-derived genealogy, geolocation, new formats, inline PDF viewer or neutral-diagram-symbol change.\n\nDependencies: #32, #33. Roadmap: #1. Deferred enhancement; excluded from parity milestone completion.\n",
+      "deferred": true,
+      "milestone": "Deferred baseline obligations and expansion",
+      "labels": [
+        "enhancement",
+        "deferred",
+        "area:media-exchange"
+      ],
+      "number": 69,
+      "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/69"
+    },
+    {
+      "key": "E02",
+      "title": "Deferred: recover research drafts across browser sessions safely",
+      "dependencies": [
+        "W05",
+        "A04"
+      ],
+      "body": "<!-- stammbaum-followup:E02 -->\n\n## Outcome and scope\n\nOffer deliberate recovery of supported unsaved research drafts after reload or browser closure without automatic submission or disclosure across accounts. This is a post-parity enhancement requested during the alpha.15 gap review; #29 explicitly makes no promise that drafts survive browser closure. Existing in-session draft protection remains a parity obligation.\n\nReference: #29 (W05, FORM/KOLL; specification chapters 3 and 9, A15/A23) and docs/iteration-01.md. A15/A23 supply conflict/navigation regressions; they do not establish a cross-session persistence requirement.\n\n## Acceptance criteria\n\n- [ ] Specify the supported editors, storage location, consent/default behavior, bounded retention/size, schema version and account/tree/record namespace before implementation. Explain local-device privacy and storage limitations honestly.\n- [ ] Before showing recovered research, reauthenticate through Nextcloud as needed and recheck current account, membership and all record/dependency permissions; switching users, removal/rejoin or recreated identities cannot expose old drafts.\n- [ ] Present explicit Restore/Discard with current server revision and deliberate conflict comparison. Recovery never silently submits or overwrites research.\n- [ ] Handle storage denied, quota exhausted, corrupted/unknown-version drafts and concurrent tabs without losing the current in-memory edit or claiming persistence succeeded.\n- [ ] Define cleanup on successful save, explicit discard, expiry, logout/account change and authority loss. Do not persist credentials, upload bytes or signed download URLs in draft payloads.\n- [ ] Use fictional fixtures and Playwright browser-context restarts to verify recovery, stale versions, offline/failure behavior, revoked access, user switching and keyboard operation in English/German. Verify navigation/recovery alone never changes genealogy or tree revisions.\n\n## Native contracts and exclusions\n\nNextcloud remains the authority for identity and sessions. Coordinate supported draft payloads with record revisions and existing idempotent creates; define upgrade compatibility and safe rejection of obsolete drafts. No automatic merge, automatic save, cross-device synchronization, promise of recovery after storage clearing, or indefinite offline access to private genealogy.\n\nDependencies: #29, #11. Roadmap: #1. Deferred enhancement; excluded from parity milestone completion.\n",
+      "deferred": true,
+      "milestone": "Deferred baseline obligations and expansion",
+      "labels": [
+        "enhancement",
+        "deferred",
+        "area:workspace"
+      ],
+      "number": 70,
+      "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/70"
+    }
   ]
 }
