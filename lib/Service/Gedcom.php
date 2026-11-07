@@ -5,8 +5,8 @@ namespace OCA\Stammbaum\Service;
 /** Deliberately closed semantic whitelist. Never fetches input references. */
 final class Gedcom
 {
-    public const PROFILE = 'nc-gedcom-551-alpha2';
-    public const PROFILES = ['nc-gedcom-551-alpha1', self::PROFILE];
+    public const PROFILE = 'nc-gedcom-551-alpha3';
+    public const PROFILES = ['nc-gedcom-551-alpha1', 'nc-gedcom-551-alpha2', self::PROFILE];
     public const MAX_BYTES = 8388608;
     private array $nodes = [],
         $children = [],
@@ -19,10 +19,14 @@ final class Gedcom
     private string $encoding = '';
     private array $plan = [];
     private int $units = 0;
+    private array $issueCounts = [];
     private bool $legacy = false;
+    private bool $extended = false;
 
     private function issue(string $code, int $line = 0, bool $warning = false): void
     {
+        $key = ($warning ? 'warning:' : 'error:') . $code;
+        $this->issueCounts[$key] = ($this->issueCounts[$key] ?? 0) + 1;
         if ($warning) {
             $this->warningCount++;
             if (count($this->warnings) < 200) {
@@ -45,10 +49,12 @@ final class Gedcom
             $this->fail('profile_unavailable');
         }
         $this->legacy = $profile === 'nc-gedcom-551-alpha1';
+        $this->extended = $profile === self::PROFILE;
         // Fresh instance state also makes repeated use by a long-lived worker deterministic.
         $this->nodes = $this->children = $this->roots = $this->xref = $this->errors = $this->warnings = [];
         $this->errorCount = $this->warningCount = 0;
         $this->units = 0;
+        $this->issueCounts = [];
         $this->encoding = '';
         $this->plan = [
             'people' => [],
@@ -84,6 +90,9 @@ final class Gedcom
                 array_slice(array_values($this->plan['people']), 0, 20),
             ),
         ];
+        if ($this->extended) {
+            $report['issueCounts'] = $this->issueCounts;
+        }
         return [
             'encoding' => $this->encoding,
             'report' => $report,
@@ -366,6 +375,16 @@ final class Gedcom
                 $this->issue('citation_quality', $c);
             }
             $notes = [];
+            if ($this->extended) {
+                $event = $this->single($c, 'EVEN');
+                if ($event !== null) {
+                    $notes[] = 'GEDCOM EVEN: ' . $this->literal($event, 1000);
+                    $role = $this->scalar($event, 'ROLE', 1000);
+                    if ($role !== '') {
+                        $notes[] = 'GEDCOM ROLE: ' . $role;
+                    }
+                }
+            }
             foreach ($this->all($c, 'NOTE') as $n) {
                 [$text, $privacy] = $this->note($n);
                 $notes[] = $text;
@@ -404,6 +423,7 @@ final class Gedcom
     ): void {
         $this->mark($id);
         $text = [];
+        $confidential = $this->extended && $this->nodes[$id]['tag'] === 'RELI';
         if ($note) {
             [$value, $privacy] = $this->note($id);
             $text[] = $value;
@@ -411,8 +431,66 @@ final class Gedcom
                 $visibility = 'management';
             }
         } else {
-            if (!in_array($this->nodes[$id]['value'], ['', 'Y'], true)) {
-                $this->issue('event_value', $id);
+            $literalAttribute =
+                $this->extended &&
+                in_array(
+                    $this->nodes[$id]['tag'],
+                    ['OCCU', 'EDUC', 'RESI', 'NATI', 'RELI', 'DSCR', 'PROP', 'TITL', 'FACT'],
+                    true,
+                );
+            if (
+                !in_array($this->nodes[$id]['value'], ['', 'Y'], true) ||
+                ($literalAttribute && $this->nodes[$id]['value'] === 'Y')
+            ) {
+                if (
+                    $this->extended &&
+                    !in_array($this->nodes[$id]['tag'], ['BIRT', 'DEAT', 'MARR', 'DIV'], true)
+                ) {
+                    $text[] = $this->literal($id, 15000);
+                    $this->issue('literal_event_wording', $id, true);
+                } else {
+                    $this->issue('event_value', $id);
+                }
+            }
+            if ($this->extended) {
+                foreach (['TYPE', 'AGE', 'AGNC', 'CAUS', 'RELI'] as $tag) {
+                    $value = $this->scalar($id, $tag, 1000);
+                    if ($value !== '') {
+                        $text[] = $tag . ': ' . $value;
+                    }
+                    if ($tag === 'RELI' && $value !== '') {
+                        $confidential = true;
+                        $visibility = 'management';
+                    }
+                }
+                if ($this->nodes[$id]['tag'] === 'FACT' && $this->scalar($id, 'TYPE', 1000) === '') {
+                    $this->issue('fact_type_required', $id);
+                }
+                foreach (['HUSB', 'WIFE'] as $role) {
+                    $detail = $this->single($id, $role);
+                    if ($detail !== null) {
+                        $this->mark($detail);
+                        if ($this->nodes[$detail]['value'] !== '') {
+                            $this->issue('event_role_value', $detail);
+                        }
+                        $text[] = $role . ' AGE: ' . $this->scalar($detail, 'AGE', 1000);
+                    }
+                }
+                foreach (['ADDR', 'PHON', 'EMAIL', 'FAX', 'WWW'] as $tag) {
+                    foreach ($this->all($id, $tag) as $detail) {
+                        $text[] = $tag . ': ' . $this->literal($detail, 2000);
+                        if ($tag === 'ADDR') {
+                            foreach (['ADR1', 'ADR2', 'ADR3', 'CITY', 'STAE', 'POST', 'CTRY'] as $part) {
+                                $value = $this->scalar($detail, $part, 1000);
+                                if ($value !== '') {
+                                    $text[] = $part . ': ' . $value;
+                                }
+                            }
+                        }
+                        $confidential = true;
+                        $visibility = 'management';
+                    }
+                }
             }
             foreach ($this->all($id, 'NOTE') as $n) {
                 [$value, $privacy] = $this->note($n);
@@ -440,7 +518,169 @@ final class Gedcom
                 'fields' => [],
             ],
         ];
+        if ($this->extended && !$note) {
+            $index = array_key_last($this->plan['records']);
+            if ($this->nodes[$id]['tag'] === 'RELI') {
+                $this->plan['records'][$index]['category'] = 'attribute';
+                $this->plan['records'][$index]['type'] = 'religion';
+            }
+            if ($confidential) {
+                $this->plan['records'][$index]['data']['confidential'] = true;
+                $this->issue('confidential_record', $id, true);
+            }
+        }
         $this->citations($id, 'record:' . $id, $visibility);
+        if ($this->extended && !$note) {
+            $this->mediaReferences($id, $persons, $visibility);
+        }
+    }
+    private function detailRecord(
+        int $id,
+        array $persons,
+        string $title,
+        string $type,
+        string $visibility,
+        array $fields,
+    ): void {
+        $this->plan['records'][] = [
+            'line' => $id,
+            'people' => $persons,
+            'visibility' => $visibility,
+            'category' => count($persons) > 1 ? 'event' : 'attribute',
+            'type' => count($persons) > 1 ? 'custom' : $type,
+            'data' => [
+                'title' => $title,
+                'text' => '',
+                'date' => $this->date(null),
+                'place' => '',
+                'ongoing' => false,
+                'fields' => $fields,
+            ],
+        ];
+    }
+    private function mediaReferences(int $owner, array $persons, string $visibility): void
+    {
+        foreach ($this->all($owner, 'OBJE') as $ref) {
+            $id = $ref;
+            if (preg_match('/^@[^@]+@$/D', $this->nodes[$ref]['value'])) {
+                $id = $this->xref[$this->pointer($ref, 'OBJE')];
+            } else {
+                $this->mark($ref);
+                if ($this->nodes[$ref]['value'] !== '') {
+                    $this->issue('media_object_value', $ref);
+                }
+            }
+            $this->mark($id);
+            $privacy = $this->restriction($id) === 'management' ? 'management' : $visibility;
+            $fields = [
+                [
+                    'label' => 'Availability',
+                    'value' => 'Missing: referenced file has not been supplied',
+                    'unit' => '',
+                ],
+            ];
+            foreach (['FILE', 'FORM', 'TITL'] as $tag) {
+                foreach ($this->all($id, $tag) as $part) {
+                    $fields[] = ['label' => $tag, 'value' => $this->literal($part, 2000), 'unit' => ''];
+                    if ($tag === 'FILE') {
+                        foreach (['FORM', 'TITL'] as $sub) {
+                            $value = $this->scalar($part, $sub, 1000);
+                            if ($value !== '') {
+                                $fields[] = ['label' => $sub, 'value' => $value, 'unit' => ''];
+                            }
+                        }
+                    }
+                }
+            }
+            foreach ($this->all($id, 'NOTE') as $note) {
+                [$value, $private] = $this->note($note);
+                if ($private === 'management') {
+                    $privacy = 'management';
+                }
+                $fields[] = ['label' => 'NOTE', 'value' => Values::text($value, 'value', 2000), 'unit' => ''];
+            }
+            if (!$this->all($id, 'FILE')) {
+                $this->issue('media_file_required', $ref);
+            }
+            if (count($fields) > 32) {
+                $this->issue('media_field_limit', $ref);
+            }
+            $this->detailRecord($ref, $persons, 'Missing media reference', 'custom', $privacy, $fields);
+            $this->issue('missing_media', $ref, true);
+        }
+    }
+    private function additionalFacts(int $id, array $persons, string $visibility, bool $family = false): void
+    {
+        $tags = $family
+            ? ['ENGA', 'MARB', 'MARC', 'MARL', 'MARS', 'ANUL', 'DIVF', 'CENS', 'RESI', 'EVEN']
+            : [
+                'CHR',
+                'BAPM',
+                'BURI',
+                'CREM',
+                'BARM',
+                'BASM',
+                'BLES',
+                'CHRA',
+                'CONF',
+                'FCOM',
+                'ORDN',
+                'NATU',
+                'EMIG',
+                'IMMI',
+                'CENS',
+                'PROB',
+                'WILL',
+                'GRAD',
+                'RETI',
+                'EVEN',
+                'OCCU',
+                'EDUC',
+                'RESI',
+                'NATI',
+                'RELI',
+                'DSCR',
+                'PROP',
+                'TITL',
+                'FACT',
+            ];
+        $types = [
+            'CHR' => 'baptism',
+            'BAPM' => 'baptism',
+            'BURI' => 'burial',
+            'OCCU' => 'occupation',
+            'EDUC' => 'education',
+            'RESI' => 'residence',
+            'EMIG' => 'migration',
+            'IMMI' => 'migration',
+            'CENS' => 'census',
+            'PROB' => 'probate',
+            'WILL' => 'will',
+        ];
+        foreach ($tags as $tag) {
+            foreach ($this->all($id, $tag) as $event) {
+                $this->record(
+                    $event,
+                    $persons,
+                    'GEDCOM ' .
+                        $tag .
+                        ($this->nodes[$event]['value'] === 'N' ? ' (negated)' : ' (imported assertion)'),
+                    $types[$tag] ?? 'custom',
+                    $tag === 'RELI' ? 'management' : $visibility,
+                );
+            }
+        }
+        $this->mediaReferences($id, $persons, $visibility);
+        foreach (['RIN', 'REFN'] as $tag) {
+            foreach ($this->all($id, $tag) as $metadata) {
+                $this->literal($metadata, 1000);
+                $this->nodes[$metadata]['classification'] = 'STRUCTURAL';
+                $this->nodes[$metadata]['reason'] = 'administrative_identifier';
+                if ($tag === 'REFN') {
+                    $this->scalar($metadata, 'TYPE', 1000);
+                }
+            }
+        }
     }
     private function interpret(): void
     {
@@ -596,9 +836,13 @@ final class Gedcom
         $name = $this->single($id, 'NAME');
         $given = '';
         $family = '';
+        $alternativeName = null;
         if ($name !== null) {
             $v = $this->literal($name, 500);
-            if (preg_match('/^(.*?)\/([^\/]*)\/(.*?)$/Du', $v, $m) && trim($m[3]) === '') {
+            if (
+                preg_match('/^(.*?)\/([^\/]*)\/(.*?)$/Du', $v, $m) &&
+                ($this->extended || trim($m[3]) === '')
+            ) {
                 $given = trim($m[1]);
                 $family = trim($m[2]);
             } elseif (!str_contains($v, '/')) {
@@ -606,10 +850,14 @@ final class Gedcom
             } else {
                 $this->issue('name_structure', $name);
             }
+            $literalName = ['givenName' => $given, 'familyName' => $family];
             foreach (['GIVN' => 'given', 'SURN' => 'family'] as $tag => $key) {
                 $value = $this->scalar($name, $tag, 200);
                 if ($value !== '' && $$key !== '' && $value !== $$key) {
-                    $this->issue('conflicting_name_components', $name);
+                    $this->issue('conflicting_name_components', $name, $this->extended);
+                    if ($this->extended) {
+                        $alternativeName = $literalName;
+                    }
                 }
                 if ($value !== '') {
                     $$key = $value;
@@ -618,6 +866,30 @@ final class Gedcom
             $type = $this->scalar($name, 'TYPE');
             if ($type !== '' && strtolower($type) !== 'birth') {
                 $this->issue('unsupported_name_type', $name);
+            }
+            if ($this->extended) {
+                $fields = [['label' => 'NAME', 'value' => $v, 'unit' => '']];
+                foreach (['NPFX', 'NSFX', 'SPFX', 'NICK'] as $tag) {
+                    $value = $this->scalar($name, $tag, 200);
+                    if ($value !== '') {
+                        $fields[] = ['label' => $tag, 'value' => $value, 'unit' => ''];
+                    }
+                }
+                if ($alternativeName !== null) {
+                    foreach (['GIVN' => $given, 'SURN' => $family] as $tag => $value) {
+                        $fields[] = ['label' => $tag, 'value' => $value, 'unit' => ''];
+                    }
+                }
+                if (count($fields) > 1 || (isset($m[3]) && trim($m[3]) !== '')) {
+                    $this->detailRecord(
+                        $name,
+                        [$n['xref']],
+                        'Imported name components',
+                        'name_components',
+                        $privacy,
+                        $fields,
+                    );
+                }
             }
             $this->citations($name, 'claim:' . $n['xref'] . ':name', $privacy);
             if ($given === '' && $family === '' && $this->all($name, 'SOUR')) {
@@ -667,10 +939,16 @@ final class Gedcom
             'claimLines' => $claimLines,
             'data' => Values::person($p),
         ];
+        if ($this->extended && $alternativeName !== null) {
+            $this->plan['people'][$n['xref']]['alternativeNames'] = [$alternativeName];
+        }
         foreach ($this->all($id, 'NOTE') as $note) {
             $this->record($note, [$n['xref']], 'Imported note', 'note', $p['visibility'], true);
         }
         $this->citations($id, 'person:' . $n['xref'], $p['visibility']);
+        if ($this->extended) {
+            $this->additionalFacts($id, [$n['xref']], $p['visibility']);
+        }
     }
     private function source(int $id): void
     {
@@ -809,5 +1087,13 @@ final class Gedcom
             'relations' => array_values(array_unique($relations)),
         ];
         $this->citations($id, 'context:' . $id, $privacy);
+        if ($this->extended) {
+            $this->additionalFacts(
+                $id,
+                array_values(array_unique([...$parents, ...$children])),
+                $privacy,
+                true,
+            );
+        }
     }
 }

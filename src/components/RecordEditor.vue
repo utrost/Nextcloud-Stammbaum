@@ -61,7 +61,9 @@ const draft = reactive(
 );
 const original = JSON.stringify(draft),
   dirty = computed(() => JSON.stringify(draft) !== original),
-  privateOnly = computed(() => draft.category === 'contact' || draft.type === 'religion');
+  privateOnly = computed(
+    () => draft.category === 'contact' || draft.type === 'religion' || draft.confidential === true,
+  );
 const baseParticipants = ref(props.record?.participants || []);
 const affected = computed(() => [
   ...new Map([...baseParticipants.value, ...draft.participants].map((p) => [p.personId, p])).values(),

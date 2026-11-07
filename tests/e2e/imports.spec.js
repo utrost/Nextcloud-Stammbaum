@@ -52,7 +52,7 @@ const binding = (run) => ({
   acknowledgeReview: true,
 });
 
-test('stored alpha.1 runs keep their interpretation while new uploads use the corrected alpha.2 profile', async ({
+test('stored alpha.1 and alpha.2 runs keep their interpretation while new uploads use the extended alpha.3 profile', async ({
   page,
 }) => {
   await login(page);
@@ -71,13 +71,26 @@ test('stored alpha.1 runs keep their interpretation while new uploads use the co
   await confirm(page, legacyTree, legacy);
   work();
   expect((await good(page, path(legacyTree, legacy))).status).toBe('committed');
+  const alpha2Tree = await tree(page),
+    alpha2Upload = await upload(page, alpha2Tree);
+  expect(alpha2Upload.status).toBe(201);
+  fixtureDatabase('UPDATE *PREFIX*stb_imports SET profile = ? WHERE id = ?', [
+    'nc-gedcom-551-alpha2',
+    alpha2Upload.body.id,
+  ]);
+  work();
+  const alpha2 = await good(page, path(alpha2Tree, alpha2Upload.body));
+  expect(alpha2.planHash).toBe('6dfaecc9f978ba8c988c45e4efbc0d0935b1a7d4ca7a4e6a59bb917386e234ac');
+  await confirm(page, alpha2Tree, alpha2);
+  work();
+  expect((await good(page, path(alpha2Tree, alpha2))).status).toBe('committed');
   const currentTree = await tree(page),
     calendar = await analyzed(
       page,
       currentTree,
       Buffer.from(sample.toString().replace('ABT 1840', '@#DJULIAN@ 12 FEB 1840')),
     );
-  expect(calendar.profile).toBe('nc-gedcom-551-alpha2');
+  expect(calendar.profile).toBe('nc-gedcom-551-alpha3');
   expect(calendar.status).toBe('ready');
   expect(calendar.report.warnings).toBeGreaterThan(0);
   await confirm(page, currentTree, calendar);
@@ -197,7 +210,7 @@ test('unsupported standard fields block activation; cancellation is durable and 
 }) => {
   await login(page);
   const tr = await tree(page),
-    bytes = Buffer.from(sample.toString().replace('1 SEX F', '1 OCCU Unsupported occupation'));
+    bytes = Buffer.from(sample.toString().replace('1 SEX F', '1 ADOP Unsupported adoption'));
   const run = await analyzed(page, tr, bytes);
   expect(run.status).toBe('blocked');
   expect(run.report.errors).toBe(1);
@@ -704,4 +717,94 @@ test('standalone sources and person tombstones both prevent importing into a see
   });
   expect((await good(page, `/trees/${tombstones.id}/people`)).items).toEqual([]);
   expect((await upload(page, tombstones)).status).toBe(409);
+});
+
+test('extended GEDCOM review publishes repeatable facts and private contacts without fetching missing media', async ({
+  page,
+  browser,
+}, testInfo) => {
+  await login(page);
+  const tr = await tree(page),
+    bytes = readFileSync('tests/fixtures/extended-family.ged');
+  let externalRequests = 0;
+  page.on('request', (r) => {
+    if (r.url().includes('example.invalid')) externalRequests++;
+  });
+  const ready = await analyzed(page, tr, bytes);
+  expect(ready.status).toBe('ready');
+  expect(ready.report.issueCounts['warning:missing_media']).toBe(1);
+  await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&view=imports`);
+  await page.getByRole('button', { name: /fictional-family.ged/ }).click();
+  await page.getByText('All diagnostic categories', { exact: true }).click();
+  await expect(page.locator('.import-diagnostic-groups')).toContainText('missing_media');
+  await page.getByRole('checkbox', { name: /I reviewed this file/ }).check();
+  await page.getByRole('button', { name: 'Confirm import', exact: true }).click();
+  work();
+  await expect(page.getByRole('region', { name: 'Import review' })).toContainText('Import completed');
+  const people = (await good(page, `/trees/${tr.id}/people`)).items;
+  expect(people).toHaveLength(2);
+  const ada = people.find((p) => p.givenName === 'Ada');
+  const claims = (await good(page, `/trees/${tr.id}/people/${ada.id}/claims`)).items;
+  expect(
+    claims
+      .filter((c) => c.kind === 'name')
+      .map((c) => c.value.givenName)
+      .sort(),
+  ).toEqual(['Ada', 'Adelaide']);
+  const records = (await good(page, `/trees/${tr.id}/records?person=${ada.id}`)).items;
+  expect(records.filter((r) => r.type === 'occupation')).toHaveLength(2);
+  const confidential = records.filter((r) => r.type === 'residence' || r.title.includes('RELI'));
+  expect(confidential).toHaveLength(2);
+  expect(confidential.every((r) => r.visibility === 'management')).toBe(true);
+  expect(records.find((r) => r.title === 'Missing media reference').fields).toEqual(
+    expect.arrayContaining([{ label: 'FILE', value: 'https://example.invalid/never-fetch.jpg', unit: '' }]),
+  );
+  expect(rows('relations', tr.id).filter((r) => r.kind === 'partner')).toHaveLength(0);
+  expect((await good(page, `/trees/${tr.id}`)).revision).toBe(ready.treeRevision + 1);
+  await grant(page, tr.id, 'stb_viewer');
+  const context = await browser.newContext(),
+    viewer = await context.newPage();
+  try {
+    await login(viewer, 'stb_viewer');
+    const visible = (await good(viewer, `/trees/${tr.id}/records?person=${ada.id}`)).items;
+    for (const privateRecord of confidential) {
+      expect(visible.some((r) => r.id === privateRecord.id)).toBe(false);
+      expect((await request(viewer, `/trees/${tr.id}/records/${privateRecord.id}`)).status).toBe(404);
+    }
+  } finally {
+    await context.close();
+  }
+  const original = await page.request.get(endpoint + path(tr, ready) + '/original');
+  expect(await original.body()).toEqual(bytes);
+  const residence = confidential.find((r) => r.type === 'residence');
+  const edited = await good(page, `/trees/${tr.id}/records/${residence.id}`, 'PUT', {
+    ...Object.fromEntries(
+      [
+        'originId',
+        'category',
+        'type',
+        'title',
+        'text',
+        'date',
+        'place',
+        'ongoing',
+        'fields',
+        'participants',
+        'revision',
+      ].map((k) => [k, residence[k]]),
+    ),
+    visibility: 'members',
+    confirmRelease: true,
+    confirmedParticipants: residence.participants.map((p) => p.personId),
+  });
+  expect(edited.visibility).toBe('management');
+  expect(edited.confidential).toBe(true);
+
+  await page.screenshot({ path: testInfo.outputPath('extended-import-review.png'), fullPage: true });
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+    await page.screenshot({ path: testInfo.outputPath(`extended-import-${width}.png`), fullPage: true });
+  }
+  expect(externalRequests).toBe(0);
 });

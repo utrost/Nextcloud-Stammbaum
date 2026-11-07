@@ -147,7 +147,8 @@ final class Records
                 ['members', 'management'],
                 'visibility',
             );
-            if ($category === 'contact' || $type === 'religion') {
+            $confidential = $old && (json_decode($old['data_json'], true)['confidential'] ?? false) === true;
+            if ($category === 'contact' || $type === 'religion' || $confidential) {
                 if (!Trees::management($m)) {
                     throw new Problem(
                         'forbidden',
@@ -241,6 +242,9 @@ final class Records
                 'ongoing' => $ongoing,
                 'fields' => $structured,
             ];
+            if ($confidential) {
+                $d['confidential'] = true;
+            }
             if ($id) {
                 $this->store->execute(
                     'UPDATE *PREFIX*stb_records SET record_type = ?, visibility = ?, data_json = ?, revision = revision + 1, updated_at = ? WHERE id = ?',

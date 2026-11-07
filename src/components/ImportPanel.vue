@@ -32,6 +32,10 @@ const labels = {
   failed: 'Import failed',
 };
 const issueText = {
+  confidential_record: 'Imported contact or religious details remain management-only, including after edits.',
+  missing_media:
+    'Referenced media files have not been supplied. References remain readable; nothing is downloaded.',
+  literal_event_wording: 'Event wording is retained as an unassessed statement.',
   unsupported_standard_field: 'This standard field is not supported by this import profile.',
   vendor_extension: 'Vendor information is preserved in the original structure but is not interpreted.',
   orphan_note: 'An unreferenced note remains in the original structure.',
@@ -227,7 +231,7 @@ onBeforeUnmount(() => {
       <p>
         {{
           t(
-            'Basic names, vital dates and places, explicit family links, notes, sources and citations. Unsupported standard fields block activation. Vendor extensions remain preserved with warnings.',
+            'Names and name components, vital and additional events, occupations, confidential contacts, family links, notes, sources, citations and missing-media references. Unsupported standard fields block activation.',
           )
         }}
       </p>
@@ -327,6 +331,28 @@ onBeforeUnmount(() => {
           <p class="import-diagnostic-summary">
             {{ selected.report.errors }} {{ t('errors') }} · {{ selected.report.warnings }}
             {{ t('warnings') }}
+          </p>
+          <details v-if="selected.report.issueCounts" class="import-diagnostic-groups">
+            <summary>{{ t('All diagnostic categories') }}</summary>
+            <ul>
+              <li v-for="(count, code) in selected.report.issueCounts" :key="code">
+                <strong>{{ count }}</strong> ·
+                {{
+                  t(
+                    issueText[code.split(':')[1]] ||
+                      'This input structure needs attention before it can be imported.',
+                  )
+                }}
+                <small>({{ code }})</small>
+              </li>
+            </ul>
+          </details>
+          <p v-if="selected.report.issueCounts?.['warning:missing_media']" class="muted">
+            {{
+              t(
+                'Referenced media files have not been supplied. References remain readable; nothing is downloaded.',
+              )
+            }}
           </p>
           <ul v-if="selected.report.issues.length" class="import-issues">
             <li v-for="(issue, i) in selected.report.issues" :key="i">
