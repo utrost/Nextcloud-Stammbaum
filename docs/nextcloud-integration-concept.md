@@ -111,4 +111,13 @@ New requirements are NCINT-01 adapters/review, NCINT-02 lifecycle, NCINT-03 Task
 
 ## Published implementation work
 
-Issue links are added after publication. The integration tracker and six implementation issues are separate from parity milestone completion.
+Tracker: [#80](https://github.com/utrost/Nextcloud-Stammbaum/issues/80). Milestone: **Nextcloud integration enhancements**. These six implementation issues are separate from parity milestone completion.
+
+| Requirement / issue | Outcome | Dependencies |
+| --- | --- | --- |
+| [NCINT-01 · #81](https://github.com/utrost/Nextcloud-Stammbaum/issues/81) | Establish supported Nextcloud integration adapters and reviewed write contracts | #2, #6, #10, #11 |
+| [NCINT-02 · #82](https://github.com/utrost/Nextcloud-Stammbaum/issues/82) | Track private integration connections and reconcile revocation, conflicts and partial success | #81, #7, #8, #45 |
+| [NCINT-03 · #83](https://github.com/utrost/Nextcloud-Stammbaum/issues/83) | Create and follow research tasks from genealogy context in Nextcloud Tasks | #81, #82 |
+| [NCINT-04 · #84](https://github.com/utrost/Nextcloud-Stammbaum/issues/84) | Publish reviewed appointments and precise family anniversaries to Nextcloud Calendar | #81, #82, #16, #22 |
+| [NCINT-05 · #85](https://github.com/utrost/Nextcloud-Stammbaum/issues/85) | Link genealogy people to Nextcloud Contacts with deliberate confidential field copies | #81, #82, #24 |
+| [NCINT-06 · #86](https://github.com/utrost/Nextcloud-Stammbaum/issues/86) | Verify cross-app privacy, compatibility and complete Nextcloud integration journeys | #81, #82, #83, #84, #85, #44, #46 |
