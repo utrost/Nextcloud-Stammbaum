@@ -160,6 +160,22 @@ test('metadata filters apply before pagination and browsing does not change tree
   expect((await good(page, `/trees/${tr.id}/media?missing=1`)).nextPage).toBe(1);
   expect((await good(page, `/trees/${tr.id}/media?missing=1&page=1`)).items).toHaveLength(1);
   expect((await good(page, `/trees/${tr.id}/media?type=image`)).items).toEqual([]);
+  await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&view=media`);
+  await expect(page.locator('.media-card')).toHaveCount(25);
+  await page.getByRole('checkbox', { name: 'Missing details' }).check();
+  await page.getByRole('button', { name: 'Apply filters', exact: true }).click();
+  await expect(page.locator('.media-card')).toHaveCount(25);
+  await page.getByRole('button', { name: 'Load more', exact: true }).click();
+  await expect(page.locator('.media-card')).toHaveCount(26);
+  await page.getByLabel('Named person', { exact: true }).fill('Else');
+  await page.getByRole('button', { name: 'Apply filters', exact: true }).click();
+  await expect(page.locator('.media-card')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Reset filters', exact: true }).click();
+  await page.getByLabel('Named person', { exact: true }).fill('Else');
+  await page.getByLabel('Place filter', { exact: true }).fill('100% Village');
+  await page.getByRole('button', { name: 'Apply filters', exact: true }).click();
+  await expect(page.locator('.media-card')).toHaveCount(1);
+  await expect(page.locator('.media-card')).toContainText('Oldest match');
   expect((await good(page, `/trees/${tr.id}`)).revision).toBe(before.revision);
 });
 
