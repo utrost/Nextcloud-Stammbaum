@@ -1,0 +1,35 @@
+# Descriptive media and contextual galleries — alpha.19
+
+Work for [#76](https://github.com/utrost/Nextcloud-Stammbaum/issues/76) and [#77](https://github.com/utrost/Nextcloud-Stammbaum/issues/77). JPEG/PNG photos and PDFs retain unchanged private originals while a separate descriptive layer records their subject, people, historical date, event, place and provenance. Office documents remain excluded.
+
+## Contract
+
+`GET /trees/{tree}/media/{id}` includes `metadata`: description (4,000 characters), historical `date` using the existing exact/partial/about/before/after/between/period/calculated/estimated/literal representation, up to 32 ordered `people` entries, optional `eventId`, event wording (250), historical place wording (500), source description (2,000), and credit/rights (500). A named entry has `name` (250, empty means unidentified), optional `personId`, `association` (`shown` or `mentioned`), and optional page reference wording (100). Linked people/events are resolved through current tree authorization; a recorded name or event caption remains distinct from the current linked record's label. Each linked person/association pair occurs at most once.
+
+`PUT` accepts `metadata` alongside the existing title/revision/visibility/assignment contract. Omitting metadata or assignments preserves that part of the record. A stale revision returns 412, requiring deliberate comparison; an uncertain successful retry also returns a conflict rather than writing twice. The metadata editor keeps its draft on failure and provides Save/Discard. Changes bump medium/tree revisions and record previous/current metadata in management-only history; no file, crop or source Files object is rewritten.
+
+Migration `000108Date20261107190000` adds nullable metadata/search columns and the indexed `stb_media_refs` table. Existing records read as empty metadata, not fabricated dates/names. Reference rows support authorization/filtering before pagination. Full installation backups must include these columns/table alongside the existing database and private originals. There is no separate metadata file to back up.
+
+## Discovery and presentation
+
+The media list supports `type=image|pdf`, `person` (authorized person ID, matching existing assignments or descriptive links), `personQuery` (recorded caption), `event` (authorized event ID), `eventQuery` (recorded event wording), `place` and `missing=1`. Text filters are case-insensitive literal substring searches, capped at 200 characters with SQL wildcards escaped. Filters combine with AND and run before 25-item pagination. Missing details means the subject date, named people or place is absent; it is a browsing aid, not a research-quality judgment. It does not require unknown facts to be invented. Named filters search recorded wording; the linked-person picker follows current tree identity.
+
+`GET /trees/{tree}/media-events?query=...&page=...` supplies a bounded, authorized event picker; search covers existing event wording. Events with any inaccessible participant are excluded before pagination. The viewer shows metadata beside the preview on desktop and below it on phones. Linked people open person details. Linked events open a contextual gallery; timeline events also expose their media. Preview/page navigation/download continue to use the existing private raster/original routes.
+
+All linked people, events and event participants must be accessible for the whole medium, its metadata, thumbnails and originals. Free-text names/places inherit medium visibility. Removing a descriptive link requires access to the original dependencies. Deleting a directly linked person permanently clears that metadata link, keeps the recorded caption, restricts the medium to management and bumps its revision. Restoring the person does not recreate the link. Existing portrait/attachment assignments retain their previous lifecycle rules; this increment does not redefine broad trash/restore scope in #33/#56.
+
+## Exchange boundaries
+
+Metadata remains in the native database. The app does not yet provide current-state GEDCOM export (#38/#39), so this increment makes no export-round-trip claim. When those exports are implemented, linked people/events can supply reviewed OBJE associations; descriptive dates/place/source/credit and unlinked depicted/mentioned names require explicit profile mappings or completeness diagnostics. Preserve their exact wording in any future portable archive (#50); never silently discard them. Imported GEDCOM media-reference wording remains in its existing preservation ledger (#36), separate from manually authored metadata; there is no automatic caption/date/person extraction or matching.
+
+## Verification
+
+Seven new metadata Playwright tests passed against the final isolated package, covering uncertain dates, linking existing people/events without losing captions, unchanged originals/crops, pre-pagination filters, hidden dependencies, deletion/restoration, responsive editing/viewing, stale-write reconciliation, viewer-only roles, revocation and failed-request retry. Existing media tests also passed in the preceding affected run. Desktop/390px/320px viewer screenshots were inspected. The full local application Playwright suite passed all **124 tests in 18.9 minutes** on the exact final package. An additional Playwright test passed for the timeline event gallery, PDF navigation, cross-tree event isolation and ignoring an obsolete filtered response (11.7 seconds). All **125 browser tests** therefore passed across the full run and this focused follow-up. No new GitHub CI run is claimed; these source changes have not yet been committed or merged.
+
+JavaScript unit/catalog, PHP 8.3 syntax, PHP date/cache tests, formatting, build/routes and archived-document validation passed. The initial isolated migration rejected empty-string non-null defaults under Nextcloud's schema checks; nullable defaults fixed it. The isolated upgrade was completed with the app-scoped upgrader. Testing also found and fixed filter variables not captured by a PHP arrow callback and added an explicit accessible name to the date selector.
+
+Package SHA-256: `439f0331c7d864bcc2cb16ae859b15abae368a66ee9c0757dd9a086ea8599acb`. This exact alpha.19 package was deployed to Alice. A temporary fictional ordinary-account Playwright smoke passed native Files selection, metadata editing, name filtering, metadata viewing, PDF pages, keyboard close, unchanged original bytes and source deletion independence, with zero browser errors. All smoke account/tree/source/original/cache data was cleaned. Nextcloud remained healthy; Library and Relate versions/enablement were unchanged. No backup was required on the authorized development system.
+
+Fictional fixtures only; no real genealogy or private connection details belong in test artifacts or issues.
+
+Publication follow-up: alpha.19 source is included in the alpha.20 delivery. Current export, recoverable trash and final delivery evidence are recorded in [export-media-lifecycle-iteration.md](export-media-lifecycle-iteration.md); the observations above describe the earlier alpha.19 package.

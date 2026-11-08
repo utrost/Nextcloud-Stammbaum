@@ -104,3 +104,11 @@ The app installer does not automatically signal arbitrary host processes. `occ b
 ## Optional image/PDF preview cache
 
 See [alpha.18 preview operations and limits](media-previews-iteration.md). Preview cache data in private AppData `media-previews-v1` is disposable and can be regenerated; it is separate from retained `originals`. Never delete originals to clear thumbnails. Cache eviction is bounded and automatic on publication; a missing/corrupt cache value regenerates on demand. PDF viewing needs distribution-maintained Poppler utilities plus `prlimit`; missing or unsupported renderers leave original downloads available. Do not enable public Nextcloud shares to make genealogy previews work.
+
+Alpha.19 adds media metadata columns and `stb_media_refs` through an additive app migration. Include them in the existing full database backup/recovery scope; there is no original-file conversion. See [metadata contract](media-metadata-iteration.md).
+
+## Export jobs and media trash (alpha.20)
+
+Nextcloud background execution runs `OCA\Stammbaum\BackgroundJob\ProcessExports`. Verify the host cron runner is active for automatic completion; the application does not process exports inside browser GET requests. Queued/running capacity is twenty installation-wide; creation is limited to ten per account/hour. Jobs left running for ten minutes become failed, requiring fresh review.
+
+Generated results in private AppData `exports-v1` are disposable after invalidation/expiry; the worker removes terminal artifacts in bounded batches. Originals in `originals` and retained import data are separate recovery material. Trashed media retains its original bytes and quota allocation. Do not delete originals to reclaim trash capacity. Include `stb_exports` in consistent database recovery; `stammbaum:invalidate-authority` makes restored exports unusable by advancing tree/membership revisions. See [export/lifecycle limits](export-media-lifecycle-iteration.md).

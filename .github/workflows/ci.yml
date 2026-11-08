@@ -32,6 +32,8 @@ jobs:
         run: docker run --rm --network none -v "$PWD:/app:ro" nextcloud:34.0.4-apache php /app/tests/unit/preview-cache.php
       - name: PDF renderer unavailable fallback
         run: docker run --rm --network none -v "$PWD:/app:ro" nextcloud:34.0.4-apache php /app/tests/unit/pdf-preview-unavailable.php
+      - name: GEDCOM export projection tests
+        run: docker run --rm --network none -v "$PWD:/app:ro" nextcloud:34.0.4-apache php /app/tests/unit/gedcom-export.php
       - name: GEDCOM parser and preservation tests
         run: docker run --rm -v "$PWD:/app:ro" nextcloud:34.0.4-apache php /app/tests/unit/gedcom.php
       - name: Native screenshot font

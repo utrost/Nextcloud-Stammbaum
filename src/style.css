@@ -1762,3 +1762,143 @@
     text-align: center;
   }
 }
+
+.media-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: var(--border-radius-large, 12px);
+  background: var(--color-background-dark);
+}
+.media-filters .muted,
+.media-filters .button-row {
+  grid-column: 1 / -1;
+}
+.media-filters label,
+.media-metadata-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.media-filters label.check {
+  flex-direction: row;
+  align-items: center;
+}
+.media-metadata-fields {
+  display: grid;
+  gap: 16px;
+  margin: 20px 0;
+}
+.named-person {
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+}
+.media-link-picker {
+  padding: 12px;
+  background: var(--color-background-dark);
+  border-radius: 8px;
+}
+.viewer-content {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(250px, 1fr);
+  gap: 20px;
+  min-height: 0;
+}
+.viewer-details {
+  overflow: auto;
+  padding: 4px 12px;
+  max-height: 65vh;
+  overflow-wrap: anywhere;
+}
+.media-description dt {
+  font-weight: 600;
+  margin-top: 14px;
+  color: var(--color-text-maxcontrast);
+}
+.media-description dd {
+  margin: 4px 0 12px;
+}
+.media-description ul {
+  padding-left: 20px;
+}
+.media-description h4 {
+  margin: 16px 0 6px;
+}
+.media-description .text-link {
+  color: var(--color-primary-element);
+  text-decoration: underline;
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  min-height: 44px;
+  text-align: left;
+}
+@media (max-width: 700px) {
+  .viewer-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .viewer-details {
+    max-height: none;
+    overflow: visible;
+    padding: 12px 4px;
+  }
+  .media-viewer .viewer-stage {
+    min-height: 200px;
+    max-height: 48vh;
+  }
+  .media-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.media-conflict section {
+  padding: 12px;
+  margin-block: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-large);
+  overflow-wrap: anywhere;
+}
+.media-conflict .conflict-changed {
+  border-inline-start: 4px solid var(--color-primary-element);
+}
+.export-panel fieldset {
+  min-width: 0;
+}
+.export-panel .button-row a {
+  padding: 10px;
+  overflow-wrap: anywhere;
+}
+
+.export-panel > section {
+  margin-block: 24px;
+  padding-block: 16px;
+  border-block: 1px solid var(--color-border);
+}
+.export-panel dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 24px;
+  max-width: 480px;
+  margin-block: 16px;
+}
+.export-panel dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.export-panel ul {
+  list-style: disc;
+  padding-inline-start: 20px;
+  margin-block: 20px;
+}
+.export-panel li {
+  margin-block: 8px;
+}
+.export-panel > h3 {
+  margin-top: 24px;
+}
