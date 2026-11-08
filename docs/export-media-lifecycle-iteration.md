@@ -1,5 +1,7 @@
 # Current-state export and recoverable media — alpha.20
 
+Alpha.21 extends the native export/import boundary; see [export-reliability-iteration.md](export-reliability-iteration.md). This page retains the alpha.20 profile and verification record.
+
 This iteration builds on alpha.19 metadata. It adds a reviewed GEDCOM export workspace, private export jobs, media trash, and readable media conflict comparisons. Existing issues #33, #38, #39, #29, #44 and #76–#77 remain the acceptance references; these changes do not imply complete release-0.15 parity.
 
 ## Media workflows
