@@ -261,3 +261,5 @@ Office documents and conversion are out of scope by user decision; #73 (E05) is 
 ### Alpha.20 export and recoverable media
 
 The [iteration contract](export-media-lifecycle-iteration.md) records reviewed current-state GEDCOM jobs (#38–#39), media trash/restoration (#33), and readable media conflict/attachment workflows (#29/#44/#76/#77). Remaining profile differences are explicit; issue closure requires checking all original criteria. Publication status and executed evidence belong in the iteration record, not inferred from this roadmap entry.
+
+The [alpha.21 reliability review](export-reliability-iteration.md) records the native export/reimport partnership marker, versioned import compatibility, additional capacity checks and media issue disposition. It does not expand the release-0.15 parity scope.

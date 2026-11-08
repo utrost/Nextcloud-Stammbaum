@@ -4,10 +4,10 @@ namespace OCA\Stammbaum\Service;
 /** Current-state projection. Original import nodes are never replayed. */
 final class GedcomExport
 {
-    public const PROFILE = 'nc-gedcom-551-export-alpha1';
+    public const PROFILE = 'nc-gedcom-551-export-alpha2';
     public const WARNINGS = [
         'GEDCOM is not a backup: history, access rules and application settings are omitted.',
-        'Complex families are represented as separate family links; social roles and citation effects may lose meaning.',
+        'Complex families are represented as separate family links; native partnership markers and citation effects may not survive other software.',
         'Media metadata is preserved as descriptive notes; crops and preferred portraits are not portable.',
         'Living status, other sex, structured details and competing assertions have limited portable equivalents.',
         'Only unchanged scalar root vendor extensions can be included with full privacy options; other extensions are omitted.',
@@ -406,7 +406,9 @@ final class GedcomExport
                 $family .= "1 HUSB @{$pid[$a]}@\r\n1 WIFE @{$pid[$b]}@\r\n";
                 $links[$a][] = "1 FAMS @$fid@\r\n";
                 $links[$b][] = "1 FAMS @$fid@\r\n";
-                $family .= self::line(1, 'NOTE', 'Partner roles do not imply sex or marriage.');
+                // Standard spouse slots do not prove a partnership. This narrow
+                // marker preserves the explicit edge in the native alpha.4 importer.
+                $family .= "1 _STB_PARTNER Y\r\n";
             }
             $families[$id] = $family;
         }
@@ -571,7 +573,7 @@ final class GedcomExport
         foreach ($x['sources'] as $id => $s) {
             $ged .= "0 @{$sid[$id]}@ SOUR\r\n";
             foreach (
-                ['title' => 'TITL', 'author' => 'AUTH', 'publication' => 'PUBL', 'description' => 'NOTE']
+                ['title' => 'TITL', 'author' => 'AUTH', 'publication' => 'PUBL', 'description' => 'TEXT']
                 as $key => $tag
             ) {
                 if (!empty($s[$key])) {
