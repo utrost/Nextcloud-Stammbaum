@@ -9,6 +9,7 @@ import FamilyGraph from './components/FamilyGraph.vue';
 import EvidencePanel from './components/EvidencePanel.vue';
 import RecordPanel from './components/RecordPanel.vue';
 import MediaPanel from './components/MediaPanel.vue';
+import ExportPanel from './components/ExportPanel.vue';
 import ImportPanel from './components/ImportPanel.vue';
 import ContextPanel from './components/ContextPanel.vue';
 import TabList from './components/TabList.vue';
@@ -92,6 +93,7 @@ const editTreeName = ref(''),
   editTreeDescription = ref(''),
   inviteToken = ref(''),
   invitation = ref(null);
+let startupSequence = 0;
 let searchTimer,
   peopleSequence = 0,
   detailSequence = 0,
@@ -115,6 +117,7 @@ const mainTabs = computed(() => [
   'people',
   'sources',
   'media',
+  ...(tree.value?.canExport ? ['exports'] : []),
   ...(management.value ? ['imports', 'manage'] : []),
 ]);
 const detailTabs = [
@@ -316,7 +319,9 @@ async function chooseTree(id, initial = {}, authorized = false) {
     tree.value = r;
     editTreeName.value = r.name;
     editTreeDescription.value = r.description;
-    tab.value = ['family', 'people', 'sources', 'media', 'imports', 'manage'].includes(initial.view)
+    tab.value = ['family', 'people', 'sources', 'media', 'imports', 'exports', 'manage'].includes(
+      initial.view,
+    )
       ? initial.view
       : 'family';
     if (['manage', 'imports'].includes(tab.value) && !management.value) tab.value = 'family';
@@ -404,6 +409,11 @@ async function resetExpansions() {
 function changeProjection() {
   expansions.value = [];
   return loadGraph();
+}
+async function openMediaPerson(id) {
+  if (!navigate()) return;
+  tab.value = 'people';
+  await inspect(id);
 }
 async function selectPerson(id) {
   if (selected.value?.id === id || !navigate()) return;
@@ -847,29 +857,33 @@ function deleteNamedView() {
   });
 }
 async function startup(authorized = false) {
+  const startupRequest = ++startupSequence;
+  // Invalidate older tree loads before waiting for the account/tree list.
+  treeSequence++;
   loading.value = true;
   error.value = '';
   try {
     if (localeRevision.value === null) {
       const pref = await api('/preferences');
+      if (startupRequest !== startupSequence) return;
       localeRevision.value = pref.revision;
     }
-    await refreshTrees();
+    const available = await api('/trees');
+    if (startupRequest !== startupSequence) return;
+    trees.value = available.items;
     const hash = new URLSearchParams(location.hash.slice(1));
     if (hash.has('invite')) {
       inviteToken.value = hash.get('invite');
       window.history.replaceState(null, '', location.pathname);
-      invitation.value = await api('/invitations/review', {
-        method: 'POST',
-        body: { token: inviteToken.value },
-      });
+      const result = await api('/invitations/review', { method: 'POST', body: { token: inviteToken.value } });
+      if (startupRequest === startupSequence) invitation.value = result;
     } else if (hash.has('tree')) {
       await chooseTree(hash.get('tree'), Object.fromEntries(hash), authorized);
     }
   } catch (e) {
-    error.value = t(e.message);
+    if (startupRequest === startupSequence) error.value = t(e.message);
   } finally {
-    loading.value = false;
+    if (startupRequest === startupSequence) loading.value = false;
   }
 }
 async function routeChanged() {
@@ -889,6 +903,7 @@ onMounted(() => {
   window.addEventListener('beforeunload', treeUnload);
 });
 onBeforeUnmount(() => {
+  startupSequence++;
   window.removeEventListener('hashchange', routeChanged);
   window.removeEventListener('beforeunload', treeUnload);
   clearTimeout(searchTimer);
@@ -1149,6 +1164,11 @@ onBeforeUnmount(() => {
               </div>
             </section>
           </section>
+          <ExportPanel
+            v-else-if="tab === 'exports' && tree.canExport"
+            :tree-id="tree.id"
+            :management="management"
+          />
           <ImportPanel
             v-else-if="tab === 'imports' && management"
             :key="tree.id"
@@ -1165,6 +1185,7 @@ onBeforeUnmount(() => {
           />
           <MediaPanel
             v-else-if="tab === 'media'"
+            @person="openMediaPerson"
             :key="tree.id"
             :tree-id="tree.id"
             :management="management"
@@ -1518,6 +1539,7 @@ onBeforeUnmount(() => {
                       :can-edit="canEdit"
                       :management="management"
                       @changed="mediaChanged"
+                      @person="selectPerson"
                     />
                     <RecordPanel
                       v-if="['timeline', 'notes', 'details'].includes(detailTab)"
@@ -1527,6 +1549,7 @@ onBeforeUnmount(() => {
                       :management="management"
                       :section="detailTab"
                       @evidence="changeDetailTab('evidence')"
+                      @person="selectPerson"
                     />
                     <EvidencePanel
                       v-if="detailTab === 'evidence'"
@@ -1616,7 +1639,7 @@ onBeforeUnmount(() => {
         <p class="iteration-note">
           {{
             t(
-              'This early version supports manual research and a bounded, reviewed GEDCOM import. Current-state export and external integrations are still planned.',
+              'This early version supports manual research, reviewed GEDCOM import and current-state export. Review the exchange limitations before transferring research. External integrations remain planned.',
             )
           }}
         </p>

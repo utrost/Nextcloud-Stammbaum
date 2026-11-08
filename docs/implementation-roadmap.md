@@ -254,4 +254,10 @@ Original uploads, shared assignments/crops and reviewed GEDCOM media matching re
 | [E06 · #74](https://github.com/utrost/Nextcloud-Stammbaum/issues/74) | Choose existing Nextcloud images/PDFs and import unchanged private copies | #5, #32, #33 |
 | [E07 · #76](https://github.com/utrost/Nextcloud-Stammbaum/issues/76) | Dates, named people shown/mentioned (with or without tree records), events and places for photos/PDFs | #33, #16, #22 |
 
+[E08 · #77](https://github.com/utrost/Nextcloud-Stammbaum/issues/77) covers metadata gallery filters, responsive detail presentation and person/event contexts, alongside the metadata model/editor in #76.
+
 Office documents and conversion are out of scope by user decision; #73 (E05) is closed as not planned and retained in the backlog only for history. Media entry points are device upload and explicit selection from Nextcloud Files. Existing files are copied into private Stammbaum storage with source-read authorization, original-byte validation and quota checks; subsequent source edits/deletion do not change an imported copy. Explain the independent copy and tree visibility before confirmation. PDF preview failure must leave original download available. EXIF orientation remains separately tracked in #69.
+
+### Alpha.20 export and recoverable media
+
+The [iteration contract](export-media-lifecycle-iteration.md) records reviewed current-state GEDCOM jobs (#38–#39), media trash/restoration (#33), and readable media conflict/attachment workflows (#29/#44/#76/#77). Remaining profile differences are explicit; issue closure requires checking all original criteria. Publication status and executed evidence belong in the iteration record, not inferred from this roadmap entry.

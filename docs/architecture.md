@@ -8,7 +8,7 @@ The initial supported target is Nextcloud 34. PHP 8.3 syntax and PHP 8.5 runtime
 
 ## Authorization and writes
 
-`Trees` resolves an enabled Nextcloud account and an active tree membership for every request. Viewer, editor, manager and owner are independent per tree. Managers and owners can export; other roles hold a separate export grant, although export generation is not implemented yet. Nextcloud administrator membership is never a genealogy bypass.
+`Trees` resolves an enabled Nextcloud account and an active tree membership for every request. Viewer, editor, manager and owner are independent per tree. Managers and owners can export; other roles hold a separate export grant, with reviewed export generation and requester-only downloads implemented in alpha.20. Nextcloud administrator membership is never a genealogy bypass.
 
 Person, assertion, source, citation, record, context and media visibility is either `members` or `management`. Shared citations require access to their source and every target. Shared records require access to every participant. Media and contexts require access to every assigned person. List queries apply these conditions before pagination. Missing and inaccessible object IDs produce the same unavailable response. Responses and authorized original/preview downloads use `private, no-store`.
 
@@ -27,7 +27,7 @@ Mutations carry the record revision. A stale write returns HTTP 412; omitted rev
 | `stb_records`, `stb_participants` | Shared events, notes, contacts, structured details and ordered participants |
 | `stb_contexts`, `stb_context_people` | Ordered family groupings and references to existing connections |
 | `stb_preferences` | Per-account/per-tree saved views, personal home and opening view, with transactional revisions |
-| `stb_media`, `stb_media_people` | Original integrity/quota reservations, publication state, assignments and reversible crop/portrait metadata |
+| `stb_media`, `stb_media_people`, `stb_media_refs` | Original integrity/quota reservations, publication state, assignments/crops, descriptive metadata and indexed person/event dependencies |
 | `stb_history`, `stb_receipts` | Attributed operations and creation retry identities |
 | `stb_imports`, `stb_import_nodes`, `stb_import_maps` | Durable import runs/leases/review bindings, immutable ordered input structure and source-line ownership mappings |
 
@@ -85,7 +85,7 @@ All writes retain Nextcloud CSRF protection. Read-only routes explicitly permit 
 
 Native disable and password-change events invalidate outstanding invitation authority by advancing membership generations. Native deletion and creation revoke old memberships, preventing a recreated account ID from inheriting access. Nextcloud owns sessions, provisioning and password recovery. A host administrator can still forcibly disable the last owner; the app does not block host administration or silently appoint an administrator as owner. Operator-assisted ownership recovery is unfinished.
 
-`occ stammbaum:invalidate-authority` revokes invitations and advances membership generations after a consistent restore. It leaves host sessions and valid genealogy memberships intact. This command is not a complete backup/recovery system, and it does not claim to invalidate external credentials or exports that have not yet been implemented.
+`occ stammbaum:invalidate-authority` revokes invitations and advances membership generations after a consistent restore. It leaves host sessions and valid genealogy memberships intact and invalidates generated exports through tree and membership revisions. This command is not a complete backup/recovery system, and it does not claim to invalidate external credentials that have not yet been implemented.
 
 ## Import jobs
 
@@ -94,3 +94,11 @@ Native disable and password-change events invalidate outstanding invitation auth
 A successful activation uses the existing global write guard and one database transaction for people, assertions, relations, contexts, evidence, mappings, history, the destination revision and terminal status. Readers cannot observe partial research. Lease fencing prevents a cancelled or replaced worker from publishing. The source-line maps remain independent of subsequent edited values.
 
 Read [the profile contract](gedcom-import-profile.md) for exact mappings, native privacy adaptations, state transitions, limits, retention and remaining parity obligations. This is the first durable import worker, not a completed general job system for exports or integrations.
+
+## Descriptive media
+
+Alpha.19 adds versioned descriptive metadata and normalized person/event dependencies without modifying originals. See [metadata contract and gallery behavior](media-metadata-iteration.md) for fields, limits, server-side filters, privacy, deletion and exchange boundaries.
+
+## Export jobs and recoverable media (alpha.20)
+
+See [the current export/lifecycle contract](export-media-lifecycle-iteration.md) for `stb_exports`, `ProcessExports`, private generated artifacts, all-target export filtering, expiry/invalidation, media trash and restoration. Media originals remain retained and quota-accounted; derivative/result cleanup never purges evidence.

@@ -15,6 +15,7 @@ final class Media
         private IRootFolder $rootFolder,
         private PreviewCache $previews,
         private PdfPreview $pdf,
+        private MediaMetadata $metadata,
     ) {}
     private function folder(): ISimpleFolder
     {
@@ -47,6 +48,7 @@ final class Media
             'SELECT * FROM *PREFIX*stb_media_people WHERE media_id = ? ORDER BY person_id',
             [$id],
         ));
+        $r['metadata'] = $this->metadata->read($tree, $r, $m);
         return $r;
     }
     private function dto(array $r): array
@@ -63,6 +65,7 @@ final class Media
             'visibility' => $r['visibility'],
             'revision' => (int) $r['revision'],
             'assignments' => $r['assignments'],
+            'metadata' => $r['metadata'],
             'createdAt' => (int) $r['created_at'],
         ];
     }
@@ -70,15 +73,21 @@ final class Media
     {
         return $this->dto($this->row($tree, $id, $this->trees->access($tree, $actor)));
     }
-    public function list(string $tree, string $actor, string $person = '', int $page = 0): array
-    {
+    public function list(
+        string $tree,
+        string $actor,
+        string $person = '',
+        int $page = 0,
+        array $filters = [],
+    ): array {
         $m = $this->trees->access($tree, $actor);
         $params = [$tree];
         $where = "v.tree_id = ? AND v.status = 'ready'";
         if ($person !== '') {
             $this->people->row($tree, $person, $m);
             $where .=
-                ' AND EXISTS (SELECT 1 FROM *PREFIX*stb_media_people a WHERE a.media_id = v.id AND a.person_id = ?)';
+                " AND (EXISTS (SELECT 1 FROM *PREFIX*stb_media_people a WHERE a.media_id = v.id AND a.person_id = ?) OR EXISTS (SELECT 1 FROM *PREFIX*stb_media_refs x WHERE x.media_id = v.id AND x.kind = 'person' AND x.target_id = ?))";
+            $params[] = $person;
             $params[] = $person;
         }
         if (!Trees::management($m)) {
@@ -88,6 +97,34 @@ final class Media
             ' AND NOT EXISTS (SELECT 1 FROM *PREFIX*stb_media_people a LEFT JOIN *PREFIX*stb_people p ON p.id = a.person_id WHERE a.media_id = v.id AND (p.id IS NULL OR p.deleted = 1' .
             (!Trees::management($m) ? " OR p.visibility <> 'members'" : '') .
             '))';
+        $where .= MediaMetadata::visibleSql($m);
+        $type = Values::choice($filters['type'] ?? '', ['', 'image', 'pdf'], 'type');
+        if ($type !== '') {
+            $where .=
+                $type === 'pdf' ? " AND v.mime = 'application/pdf'" : " AND v.mime <> 'application/pdf'";
+        }
+        foreach (
+            ['personQuery' => 'search_people', 'eventQuery' => 'search_event', 'place' => 'search_place']
+            as $key => $column
+        ) {
+            $value = Values::text($filters[$key] ?? '', $key, 200);
+            if ($value !== '') {
+                $where .= " AND v.$column LIKE ? ESCAPE '!'";
+                $params[] =
+                    '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($value)) . '%';
+            }
+        }
+        if (($filters['missing'] ?? false) === true) {
+            $where .= ' AND v.metadata_complete = 0';
+        }
+        $event = Values::text($filters['event'] ?? '', 'event', 36);
+        if ($event !== '') {
+            // Authorize the context even when it contains no media.
+            $this->metadata->clean($tree, ['eventId' => $event], $m);
+            $where .=
+                " AND EXISTS (SELECT 1 FROM *PREFIX*stb_media_refs x WHERE x.media_id = v.id AND x.kind = 'event' AND x.target_id = ?)";
+            $params[] = $event;
+        }
         $rows = $this->store->rows(
             'SELECT v.id FROM *PREFIX*stb_media v WHERE ' .
                 $where .
@@ -99,6 +136,90 @@ final class Media
             'items' => array_map(fn($r) => $this->get($tree, $r['id'], $actor), array_slice($rows, 0, 25)),
             'nextPage' => count($rows) > 25 ? $page + 1 : null,
         ];
+    }
+    public function trash(string $tree, string $actor, int $page = 0): array
+    {
+        $this->trees->access($tree, $actor, 'manager');
+        $rows = $this->store->rows(
+            "SELECT id, title, mime, size, revision, updated_at FROM *PREFIX*stb_media WHERE tree_id = ? AND status = 'trashed' ORDER BY updated_at DESC, id DESC LIMIT 26 OFFSET " .
+                max(0, min(10000, $page)) * 25,
+            [$tree],
+        );
+        return [
+            'items' => array_map(
+                fn($r) => [
+                    'id' => $r['id'],
+                    'title' => $r['title'],
+                    'mime' => $r['mime'],
+                    'size' => (int) $r['size'],
+                    'revision' => (int) $r['revision'],
+                    'deletedAt' => (int) $r['updated_at'],
+                ],
+                array_slice($rows, 0, 25),
+            ),
+            'nextPage' => count($rows) > 25 ? $page + 1 : null,
+        ];
+    }
+    public function impact(string $tree, string $id, string $actor): array
+    {
+        return $this->store->write(function () use ($tree, $id, $actor) {
+            $m = $this->trees->access($tree, $actor, 'manager');
+            $r = $this->row($tree, $id, $m);
+            return [
+                'revision' => (int) $r['revision'],
+                'treeRevision' => $this->trees->get($tree, $actor)['revision'],
+                'assignments' => count($r['assignments']),
+                'people' => count($r['metadata']['people']),
+                'event' => !empty($r['metadata']['eventId']),
+                'size' => (int) $r['size'],
+            ];
+        });
+    }
+    public function lifecycle(
+        string $tree,
+        string $id,
+        string $actor,
+        mixed $revision,
+        mixed $treeRevision,
+        bool $restore,
+    ): array {
+        return $this->store->write(function () use ($tree, $id, $actor, $revision, $treeRevision, $restore) {
+            $m = $this->trees->access($tree, $actor, 'manager');
+            $raw = $this->store->one('SELECT * FROM *PREFIX*stb_media WHERE tree_id = ? AND id = ?', [
+                $tree,
+                $id,
+            ]);
+            if (!$raw || $raw['status'] !== ($restore ? 'trashed' : 'ready')) {
+                throw Problem::missing();
+            }
+            $this->store->version($raw, $revision);
+            if (!$restore) {
+                $this->store->version($this->trees->get($tree, $actor), $treeRevision);
+            }
+            // Validate retained dependencies before making the original available again.
+            $r = $this->row($tree, $id, $m, $restore);
+            $this->store->execute('UPDATE *PREFIX*stb_media_people SET preferred = 0 WHERE media_id = ?', [
+                $id,
+            ]);
+            $this->store->execute(
+                'UPDATE *PREFIX*stb_media SET status = ?, revision = revision + 1, updated_at = ? WHERE id = ?',
+                [$restore ? 'ready' : 'trashed', time(), $id],
+            );
+            $this->store->bump($tree);
+            $this->store->audit(
+                $tree,
+                $actor,
+                $restore ? 'media_restored' : 'media_trashed',
+                null,
+                ['mediaId' => $id],
+                'management',
+            );
+            return ['id' => $id, 'revision' => (int) $r['revision'] + 1];
+        });
+    }
+    public function events(string $tree, string $actor, string $query = '', int $page = 0): array
+    {
+        return $this->metadata->events($tree, $actor, $query, $page, $this->trees);
     }
     private function validateUpload(array $f): array
     {
@@ -249,6 +370,9 @@ final class Media
         });
         $membership = $this->trees->access($tree, $actor, 'editor');
         $r = $this->row($tree, $id, $membership, true);
+        if (!in_array($r['status'], ['pending', 'ready'], true)) {
+            throw Problem::missing();
+        }
         if ($r['status'] !== 'ready' && (int) $r['actor_revision'] !== (int) $membership['revision']) {
             throw new Problem(
                 'upload_authority_changed',
@@ -278,6 +402,9 @@ final class Media
             }
             $m = $this->trees->access($tree, $actor, 'editor');
             $r = $this->row($tree, $id, $m, true);
+            if (!in_array($r['status'], ['pending', 'ready'], true)) {
+                throw Problem::missing();
+            }
             if ($r['status'] !== 'ready' && (int) $r['actor_revision'] !== (int) $m['revision']) {
                 throw new Problem(
                     'upload_authority_changed',
@@ -400,7 +527,8 @@ final class Media
             ) {
                 throw new Problem('release_confirmation', 'Confirm release of this media to tree members.');
             }
-            $items = $b['assignments'] ?? [];
+            $metadata = $this->metadata->clean($tree, $b['metadata'] ?? $r['metadata'], $m);
+            $items = $b['assignments'] ?? $r['assignments'];
             if (!is_array($items) || !array_is_list($items) || count($items) > 32) {
                 throw new Problem('assignments', 'Choose up to 32 person assignments.');
             }
@@ -489,8 +617,16 @@ final class Media
                 'UPDATE *PREFIX*stb_media SET title = ?, visibility = ?, revision = revision + 1, updated_at = ? WHERE id = ?',
                 [$title, $visibility, time(), $id],
             );
+            $this->metadata->write($id, $metadata);
             $this->store->bump($tree);
-            $this->store->audit($tree, $actor, 'media_updated', null, ['mediaId' => $id], 'management');
+            $this->store->audit(
+                $tree,
+                $actor,
+                'media_updated',
+                null,
+                ['mediaId' => $id, 'previous' => $r['metadata'], 'current' => $metadata],
+                'management',
+            );
             return $this->get($tree, $id, $actor);
         });
     }

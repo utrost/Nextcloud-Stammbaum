@@ -1,6 +1,13 @@
 <?php
 return [
     'routes' => [
+        ['name' => 'export#preview', 'url' => '/api/v1/trees/{tree}/exports/preview', 'verb' => 'POST'],
+        ['name' => 'export#create', 'url' => '/api/v1/trees/{tree}/exports', 'verb' => 'POST'],
+        ['name' => 'export#index', 'url' => '/api/v1/trees/{tree}/exports', 'verb' => 'GET'],
+        ['name' => 'export#show', 'url' => '/api/v1/trees/{tree}/exports/{id}', 'verb' => 'GET'],
+        ['name' => 'export#cancel', 'url' => '/api/v1/trees/{tree}/exports/{id}/cancel', 'verb' => 'POST'],
+        ['name' => 'export#download', 'url' => '/api/v1/trees/{tree}/exports/{id}/{part}', 'verb' => 'GET'],
+
         ['name' => 'import#index', 'url' => '/api/v1/trees/{tree}/imports', 'verb' => 'GET'],
         ['name' => 'import#upload', 'url' => '/api/v1/trees/{tree}/imports', 'verb' => 'POST'],
         ['name' => 'import#show', 'url' => '/api/v1/trees/{tree}/imports/{id}', 'verb' => 'GET'],
@@ -27,9 +34,14 @@ return [
         ['name' => 'api#context', 'url' => '/api/v1/trees/{tree}/contexts/{id}', 'verb' => 'GET'],
         ['name' => 'api#createContext', 'url' => '/api/v1/trees/{tree}/contexts', 'verb' => 'POST'],
         ['name' => 'api#updateContext', 'url' => '/api/v1/trees/{tree}/contexts/{id}', 'verb' => 'PUT'],
+        ['name' => 'media#events', 'url' => '/api/v1/trees/{tree}/media-events', 'verb' => 'GET'],
         ['name' => 'media#index', 'url' => '/api/v1/trees/{tree}/media', 'verb' => 'GET'],
         ['name' => 'media#selectFile', 'url' => '/api/v1/trees/{tree}/media/select-file', 'verb' => 'POST'],
         ['name' => 'media#importFile', 'url' => '/api/v1/trees/{tree}/media/import-file', 'verb' => 'POST'],
+        ['name' => 'media#trash', 'url' => '/api/v1/trees/{tree}/media-trash', 'verb' => 'GET'],
+        ['name' => 'media#impact', 'url' => '/api/v1/trees/{tree}/media/{id}/impact', 'verb' => 'GET'],
+        ['name' => 'media#delete', 'url' => '/api/v1/trees/{tree}/media/{id}/delete', 'verb' => 'POST'],
+        ['name' => 'media#restore', 'url' => '/api/v1/trees/{tree}/media/{id}/restore', 'verb' => 'POST'],
         ['name' => 'media#show', 'url' => '/api/v1/trees/{tree}/media/{id}', 'verb' => 'GET'],
         ['name' => 'media#upload', 'url' => '/api/v1/trees/{tree}/media', 'verb' => 'POST'],
         ['name' => 'media#update', 'url' => '/api/v1/trees/{tree}/media/{id}', 'verb' => 'PUT'],

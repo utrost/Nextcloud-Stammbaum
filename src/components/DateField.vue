@@ -29,6 +29,7 @@ function set(value, key, input) {
         >{{ t('Date form')
         }}<select
           :id="prefix + '-kind'"
+          :aria-label="t('Date form')"
           :value="modelValue.kind"
           @change="set(modelValue, 'kind', $event.target.value)"
         >
