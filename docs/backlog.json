@@ -1907,6 +1907,23 @@
       ],
       "number": 76,
       "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/76"
+    },
+    {
+      "key": "E08",
+      "title": "Browse and filter media metadata in tree, person and event views",
+      "dependencies": [
+        "M02",
+        "G08"
+      ],
+      "body": "<!-- stammbaum-followup:E08 -->\n\n## Outcome\n\nPresent images, PDFs and their descriptive metadata in a pleasant Nextcloud gallery and detail viewer, with tree-wide, person and event contexts. Complements #76 (metadata contract/editor); reuses #71/#72 previews and #33 assignments.\n\n## Acceptance criteria\n\n- [ ] Cards show thumbnail, photo/PDF type, title, historical date and a concise people summary. Keep technical integrity details secondary.\n- [ ] Add server-side, authorization-aware filters for type, linked person or named person, event, place and missing descriptive metadata; apply filters before pagination. Reset and load-more preserve the selected filters. Handle empty results, failed requests/retry and obsolete responses honestly.\n- [ ] A desktop viewer places readable metadata beside the preview; phone layouts place it below. Distinguish depicted and mentioned people, linked tree people and unlinked names, event/place and source/credit. Retain PDF pages, zoom, download, keyboard close and focus return.\n- [ ] Offer Edit details with Save/Discard and stale-write reconciliation. Person names open their authorized details. Linked events can be inspected and show their associated media; the person Media tab includes both existing assignments and descriptive links with their association types.\n- [ ] Hide all media/labels when a linked dependency is inaccessible, including filters, pagination and stale viewers. Prevent discarded navigation state and delayed responses from showing another context.\n- [ ] Verify fictional image/PDF workflows, filters across pages, contextual links, hidden shared dependencies, failures/retries, unchanged original hashes and tree revisions during browsing, desktop/390px/320px keyboard layouts with Playwright; inspect screenshots.\n\n## Dependencies, contracts and boundaries\n\nDepends on #76, #33, #71/#72 and #22. Preserve JPEG/PNG/PDF limits, historical-date precision, private originals and source Files independence. No Office, OCR, face recognition, maps, new layouts or automatic people creation. Gallery work does not complete unrelated shared-assignment or exchange obligations.\n\nUser-requested enhancement, 7 November 2026, extending specification chapter 7 MED/SICHT. A13/A16 remain relevant privacy/original-integrity regression examples; this is not a new original parity requirement. Roadmap #1.\n",
+      "deferred": true,
+      "milestone": "Deferred baseline obligations and expansion",
+      "labels": [
+        "enhancement",
+        "area:media-exchange"
+      ],
+      "number": 77,
+      "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/77"
     }
   ]
 }

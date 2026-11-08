@@ -1,0 +1,47 @@
+# Current-state export and recoverable media — alpha.20
+
+This iteration builds on alpha.19 metadata. It adds a reviewed GEDCOM export workspace, private export jobs, media trash, and readable media conflict comparisons. Existing issues #33, #38, #39, #29, #44 and #76–#77 remain the acceptance references; these changes do not imply complete release-0.15 parity.
+
+## Media workflows
+
+Description, people/event information and portraits/attachments have separate explanations. A linked person can explicitly receive an attachment; merely identifying someone never selects a portrait. Conflict comparison presents labeled current/draft values instead of raw JSON. Captions, visibility, links, assignments and crop percentages participate in the comparison.
+
+Managers/owners review impact before moving a medium to trash. The POST requires the reviewed medium and tree revisions. The paginated trash lists retained titles and sizes; originals remain in private storage and continue to count toward the 1 GiB allowance. Trashed media is denied by ordinary detail, preview, original and export routes. Upload retries cannot revive it. Restoration checks current dependencies and medium revision, retains valid assignments/crops/metadata, and never restores preferred portrait status. Person deletion severs person assignments as well as descriptive links and restricts affected media to management; later person restoration does not recreate those links.
+
+Permanent purge, automatic original cleanup and whole-tree deletion are excluded. Failed/pending upload reservations remain retained. Media trash is not a storage-reclamation tool.
+
+## Export profile and contract
+
+Profile `nc-gedcom-551-export-alpha1` produces GEDCOM 5.5.1 from current authorized records, never by replaying the original GEDCOM. The baseline reference is the pinned M2d profile described in the roadmap; native limitations below remain explicit.
+
+- Default output excludes living/unknown people and management records. Including living/unknown people requires export permission; including management records additionally requires manager/owner. Every shared participant/assignment must be eligible. Excluded populations are not counted in the preview.
+- Current preferred names, eligible alternatives never previously preferred, sex, partial/historical dates, active relationships and current records are projected. Other sex becomes U. Deceased status emits DEAT. Imported birth/death provenance identifies vital statements; the newer statement or person aggregate supplies the date/place once, with aggregate winning timestamp ties.
+- Active edges are emitted as separate family links with birth/adopted/foster pedigree where supported. This conservatively avoids inventing missing edges; full family-context grouping is not claimed. Partner slots do not imply sex or a marriage event. Complex/social meanings are identified as portability limitations.
+- Authorized citations and their sources are included when every supported target survives the projection. Source/citation descriptive fields are preserved as standard fields or labeled notes; application target/effect semantics are not a portable equivalent. Authorized standalone sources are included. Context-target citations require all context members to be eligible; their label and effect are retained as notes on the included participants rather than as an application-equivalent shared context object.
+- Media descriptions, uncertain subject dates, named people, events, locations, provenance and credit become notes. Original binaries are optional. Application crops and preferred-portrait flags are not transferred.
+- Only scalar leaf underscore extensions directly under unchanged imported person/source roots may survive, and only with living and management inclusion enabled. Pointer values, nested extensions, changed owners and other raw original material are omitted. No URLs are fetched.
+- General history, access rules, application settings and full competing-assertion semantics are excluded. Export is not a lossless archive or operational backup; native import remains a narrower profile, so unrestricted round-trip compatibility is not claimed.
+
+Routes beneath `/api/v1/trees/{tree}/exports`: POST `preview`, POST collection creation, GET collection with `page`, GET `{id}`, POST `{id}/cancel`, GET `{id}/{gedcom|report|package}`. Creation binds acknowledged options to tree and membership revisions and an idempotency key. Preview and job actions do not change genealogy revisions.
+
+`stb_exports` records requesting identity, originating membership generation, tree revision, options, timestamps, state and fidelity report. `ProcessExports` is registered as a Nextcloud timed job. Running jobs abandoned beyond ten minutes fail and require fresh review. Generation checks authority before reading and publication; downloads recheck it under the application mutation guard. Results are requester-only, expire after 24 hours from creation, and become permanently unavailable after tree/access/recovery changes. Restored permission cannot revive them. The UI revisits jobs and supports cancellation before publication.
+
+Bounds: 2,000 included people; 50,000 projected objects; 64 MiB packaged original media; ten new jobs per account/hour; twenty queued/running jobs installation-wide. Limit failures are explicit. The ordinary ZIP contains `tree.ged`, `report.json`, opaque relative `media/` paths and SHA-256 `checksums.json`; it is not GEDZIP. No-media GEDCOM references do not imply binaries are included. Poppler is unrelated to export: original PDFs are copied unchanged.
+
+Generated files live in private AppData `exports-v1`. Terminal-job artifact cleanup is bounded and separate from retained originals; terminal job rows remain for status and quota history. Consistent backups include `stb_exports`; the existing authority-invalidation command advances both tree and membership revisions, rendering restored outputs unusable.
+
+## Verification
+
+The focused seven-test Playwright run passed: export privacy, package creation, current edits and stale results, cancellation, requester isolation, grant revocation/regrant, expiry, media removal/recovery and narrow-screen keyboard navigation, plus diagram navigation regressions. An independent ordinary-account smoke on the isolated Nextcloud instance passed native Files import, metadata edit/filter/viewer, PDF pages, export review/job/download, stale-export denial and media trash/restore, with zero browser errors and guarded fixture cleanup.
+
+A fidelity review also identified that a previously preferred name could remain assessed as supported. Export now distinguishes historical preferred names from active alternatives using the existing attributed person history, so changing the preferred name does not revive the old value. A dedicated regression covers an unassessed active alternative alongside a supported superseded name.
+
+The focused UI test exposed a startup-request race that could remount the workspace after the removal review opened. Startup/tree requests now reject obsolete responses; the previously failing media review and diagram tests pass after the correction.
+
+Build/catalog checks, formatting, PHP 8.3 syntax, export date/escaping/vital-precedence unit checks, and all 100 archived file hashes/local resources passed. Desktop/390px/320px screenshots were inspected; a subsequent CSS-only refinement aligns export counts and separates review sections more clearly. The full local suite passed **130 tests in 19.5 minutes** after the startup correction. After the final export fidelity, cancellation-cleanup and CSS refinements, all **eight focused tests passed in 1.1 minutes**, including the new name-history/context-citation regression (131 distinct browser tests across the runs). The final unit, build/routes, formatting, PHP syntax and archive checks passed again.
+
+The extended isolated ordinary-account smoke passed unchanged-original package SHA-256 verification and the ten-new-jobs/hour boundary as well as the complete metadata/export/trash journey. The exact runtime archive was then deployed to Alice and the ordinary-account journey passed again, including native Files import, PDF page navigation, metadata editor/filter/viewer, reviewed export and ZIP hashes, stale-output denial, trash/restore and unchanged originals. Both smoke runs recorded zero browser errors and cleaned their fictional account/tree/media fixtures. Final desktop/390px/320px screenshots were inspected. Alice remained healthy; Library and Relate versions and enablement were unchanged.
+
+Deployed alpha.20 archive SHA-256: `b54def2af2ce0d7a51b9e35de4e0670baab97c84a309e0e16109f2413c1e8a0a`. Local evidence is retained in ignored `build/export-full-results.json`, `build/export-focused-results.json`, `build/isolated-export-lifecycle-result.json`, `build/alice-export-lifecycle-result.json` and deployment manifests. CI/publication results are attached to the pull request; local evidence alone does not imply CI success.
+
+Remaining acceptance work stays on the existing issues: broader consumer round trips, full family-context equivalence, all capacity boundaries under load, and adversarial worker cancellation/publication timing are not certified by these runs. The worker removes unpublished output after its final write as well as during periodic terminal-job cleanup. Permanent purge, lossless archives, EXIF orientation and cross-session draft recovery remain separate work.

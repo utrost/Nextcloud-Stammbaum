@@ -3,8 +3,9 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { api, apiBase } from '../api.js';
 import { t } from '../i18n.js';
 import MediaPreview from './MediaPreview.vue';
-const props = defineProps({ treeId: String, record: Object, personId: String });
-const emit = defineEmits(['close', 'unavailable']);
+import MediaDetails from './MediaDetails.vue';
+const props = defineProps({ treeId: String, record: Object, personId: String, canEdit: Boolean });
+const emit = defineEmits(['close', 'unavailable', 'edit', 'person', 'event']);
 const dialog = ref(null),
   page = ref(1),
   pages = ref(1),
@@ -17,7 +18,8 @@ const url = computed(
     `${base}/preview?size=1600&page=${page.value}${props.personId ? '&person=' + encodeURIComponent(props.personId) : ''}`,
 );
 let opener,
-  live = true;
+  live = true,
+  timer;
 function close() {
   emit('close');
 }
@@ -49,14 +51,25 @@ async function info() {
     error.value = t(e.message);
   }
 }
+async function authorize() {
+  try {
+    await api(`/trees/${props.treeId}/media/${props.record.id}`);
+  } catch (e) {
+    if (live && [401, 403, 404].includes(e.status)) unavailable();
+  }
+}
 onMounted(() => {
   opener = document.activeElement;
   dialog.value.showModal();
   window.addEventListener('keydown', escape, true);
   info();
+  timer = setInterval(authorize, 30000);
+  window.addEventListener('focus', authorize);
 });
 onBeforeUnmount(() => {
   live = false;
+  clearInterval(timer);
+  window.removeEventListener('focus', authorize);
   window.removeEventListener('keydown', escape, true);
   dialog.value?.close();
   if (opener?.isConnected) opener.focus();
@@ -92,20 +105,29 @@ onBeforeUnmount(() => {
       >
       <a class="download-original" :href="base + '/original'">{{ t('Download original') }}</a>
     </div>
-    <div class="viewer-stage" tabindex="0" :aria-label="t('Media preview')">
-      <MediaPreview
-        v-if="ready"
-        :key="page"
-        :url="url"
-        :label="record.mime === 'application/pdf' ? `${t('Page')} ${page} / ${pages}` : record.title"
-        :style="{ width: zoom + '%' }"
-        @unavailable="unavailable"
-      />
-      <div v-else-if="error" class="preview-fallback">
-        <p role="alert">{{ error }}</p>
-        <button @click="info">{{ t('Retry preview') }}</button>
+    <div class="viewer-content">
+      <div class="viewer-stage" tabindex="0" :aria-label="t('Media preview')">
+        <MediaPreview
+          v-if="ready"
+          :key="page"
+          :url="url"
+          :label="record.mime === 'application/pdf' ? `${t('Page')} ${page} / ${pages}` : record.title"
+          :style="{ width: zoom + '%' }"
+          @unavailable="unavailable"
+        />
+        <div v-else-if="error" class="preview-fallback">
+          <p role="alert">{{ error }}</p>
+          <button @click="info">{{ t('Retry preview') }}</button>
+        </div>
+        <p v-else role="status">{{ t('Preparing preview…') }}</p>
       </div>
-      <p v-else role="status">{{ t('Preparing preview…') }}</p>
+      <aside class="viewer-details">
+        <MediaDetails
+          :metadata="record.metadata"
+          @person="emit('person', $event)"
+          @event="emit('event', $event)"
+        /><button v-if="canEdit" @click="emit('edit')">{{ t('Edit details') }}</button>
+      </aside>
     </div>
     <p v-if="record.mime === 'application/pdf'" class="muted viewer-note">
       {{

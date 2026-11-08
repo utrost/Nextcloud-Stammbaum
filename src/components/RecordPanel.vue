@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { api } from '../api.js';
 import { t, title } from '../i18n.js';
 import { dateText, personName } from '../domain.js';
+import MediaPanel from './MediaPanel.vue';
 import RecordEditor from './RecordEditor.vue';
 import SafeText from './SafeText.js';
 const props = defineProps({
@@ -12,12 +13,13 @@ const props = defineProps({
   management: Boolean,
   section: String,
 });
-const emit = defineEmits(['evidence']);
+const emit = defineEmits(['evidence', 'person']);
 const records = ref([]),
   page = ref(null),
   loading = ref(false),
   error = ref(''),
   editor = ref(null),
+  mediaEvent = ref(null),
   busy = ref(false);
 let sequence = 0;
 const label = (v) => t(title(v.replaceAll('_', ' '))),
@@ -78,6 +80,7 @@ watch(
   () => [props.person.id, props.section],
   () => {
     records.value = [];
+    mediaEvent.value = null;
     load();
   },
 );
@@ -155,12 +158,23 @@ onBeforeUnmount(() => sequence++);
         </dl>
       </details>
       <div class="button-row">
+        <button v-if="r.category === 'event'" @click="mediaEvent = mediaEvent === r.id ? null : r.id">
+          {{ t('Event media') }}
+        </button>
         <button v-if="canEdit" @click="editor = { record: r, category: r.category }">
           {{ t('Edit record') }}</button
         ><button v-if="canEdit && r.category === 'note' && !r.preferred" :disabled="busy" @click="prefer(r)">
           {{ t('Use as biography') }}</button
         ><button @click="emit('evidence')">{{ t('Sources and citations') }}</button>
       </div>
+      <MediaPanel
+        v-if="mediaEvent === r.id"
+        :tree-id="treeId"
+        :event="r"
+        :can-edit="canEdit"
+        :management="management"
+        @person="emit('person', $event)"
+      />
     </article>
     <button v-if="page !== null" :disabled="loading" @click="load(page)">{{ t('Load more') }}</button
     ><RecordEditor

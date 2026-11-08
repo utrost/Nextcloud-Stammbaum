@@ -384,6 +384,10 @@ final class People
                     [$id],
                 )['n'];
             }
+            $counts['media'] = (int) $this->store->one(
+                "SELECT COUNT(DISTINCT v.id) AS n FROM *PREFIX*stb_media v WHERE v.tree_id = ? AND (EXISTS (SELECT 1 FROM *PREFIX*stb_media_people a WHERE a.media_id = v.id AND a.person_id = ?) OR EXISTS (SELECT 1 FROM *PREFIX*stb_media_refs x WHERE x.media_id = v.id AND x.kind = 'person' AND x.target_id = ?))",
+                [$tree, $id, $id],
+            )['n'];
             $counts['connections'] = (int) $this->store->one(
                 'SELECT COUNT(*) AS n FROM *PREFIX*stb_relations WHERE tree_id = ? AND active = 1 AND (source_id = ? OR target_id = ?)',
                 [$tree, $id, $id],
@@ -411,6 +415,51 @@ final class People
                 [$restore ? 0 : 1, time(), $id],
             );
             if (!$restore) {
+                foreach (
+                    $this->store->rows('SELECT media_id FROM *PREFIX*stb_media_people WHERE person_id = ?', [
+                        $id,
+                    ])
+                    as $assignment
+                ) {
+                    $this->store->execute(
+                        "UPDATE *PREFIX*stb_media SET visibility = 'management', revision = revision + 1, updated_at = ? WHERE id = ?",
+                        [time(), $assignment['media_id']],
+                    );
+                }
+                $this->store->execute('DELETE FROM *PREFIX*stb_media_people WHERE person_id = ?', [$id]);
+                // Preserve captions but sever descriptive person links permanently. Restrict the
+                // medium so deletion cannot release previously hidden names to ordinary members.
+                foreach (
+                    $this->store->rows(
+                        "SELECT v.* FROM *PREFIX*stb_media v JOIN *PREFIX*stb_media_refs x ON x.media_id = v.id WHERE v.tree_id = ? AND x.kind = 'person' AND x.target_id = ?",
+                        [$tree, $id],
+                    )
+                    as $media
+                ) {
+                    $data = json_decode($media['metadata_json'], true);
+                    foreach ($data['people'] as &$named) {
+                        if ($named['personId'] === $id) {
+                            $named['personId'] = '';
+                        }
+                    }
+                    unset($named);
+                    $this->store->execute(
+                        "DELETE FROM *PREFIX*stb_media_refs WHERE media_id = ? AND kind = 'person' AND target_id = ?",
+                        [$media['id'], $id],
+                    );
+                    $this->store->execute(
+                        "UPDATE *PREFIX*stb_media SET metadata_json = ?, visibility = 'management', revision = revision + 1, updated_at = ? WHERE id = ?",
+                        [Store::json($data), time(), $media['id']],
+                    );
+                    $this->store->audit(
+                        $tree,
+                        $actor,
+                        'media_person_unlinked',
+                        null,
+                        ['mediaId' => $media['id'], 'personId' => $id],
+                        'management',
+                    );
+                }
                 $this->store->execute(
                     'UPDATE *PREFIX*stb_relations SET active = 0, revision = revision + 1 WHERE tree_id = ? AND (source_id = ? OR target_id = ?)',
                     [$tree, $id, $id],

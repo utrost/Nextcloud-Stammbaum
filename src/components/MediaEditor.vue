@@ -3,6 +3,8 @@ import { useDraftGuard } from '../draftGuard.js';
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
 import { api, apiBase } from '../api.js';
 import { t } from '../i18n.js';
+import MediaComparison from './MediaComparison.vue';
+import MediaMetadataFields from './MediaMetadataFields.vue';
 import { personName } from '../domain.js';
 const props = defineProps({ treeId: String, record: Object, management: Boolean }),
   emit = defineEmits(['close', 'saved']);
@@ -18,7 +20,8 @@ const dialog = ref(null),
 const original = JSON.stringify(draft),
   dirty = computed(() => JSON.stringify(draft) !== original),
   name = (p) => personName(p, t('Unnamed person'));
-let sequence = 0;
+let sequence = 0,
+  opener;
 const preview = computed(
   () => `${apiBase}/trees/${props.treeId}/media/${props.record.id}/preview?revision=${props.record.revision}`,
 );
@@ -34,12 +37,15 @@ function unload(e) {
   }
 }
 onMounted(() => {
+  opener = document.activeElement;
   dialog.value.showModal();
   window.addEventListener('beforeunload', unload);
 });
 onBeforeUnmount(() => {
   sequence++;
   window.removeEventListener('beforeunload', unload);
+  dialog.value?.close();
+  if (opener?.isConnected) opener.focus();
 });
 async function search() {
   const seq = ++sequence;
@@ -49,7 +55,10 @@ async function search() {
     const r = await api(`/trees/${props.treeId}/people?query=${encodeURIComponent(query.value)}`);
     if (seq === sequence) results.value = r.items;
   } catch (e) {
-    error.value = t(e.message);
+    if (seq === sequence) {
+      results.value = [];
+      error.value = t(e.message);
+    }
   } finally {
     if (seq === sequence) searching.value = false;
   }
@@ -85,6 +94,7 @@ async function save() {
       method: 'PUT',
       body: {
         title: draft.title,
+        metadata: draft.metadata,
         visibility: draft.visibility,
         revision: draft.revision,
         confirmRelease: draft.confirmRelease === true,
@@ -137,17 +147,37 @@ useDraftGuard(dirty, busy);
             t('Release these current values to all tree members. Private history stays restricted.')
           }}</label
         >
-        <h3>{{ t('Person assignments') }}</h3>
+        <MediaMetadataFields :metadata="draft.metadata" :tree-id="treeId" :mime="record.mime" />
+        <h3>{{ t('Portraits and attachments') }}</h3>
+        <p class="muted">
+          {{
+            t(
+              'Identifying someone describes the content. Attachments and portraits control where it appears.',
+            )
+          }}
+        </p>
         <p class="muted">{{ t('Detaching keeps the original in the media library.') }}</p>
+        <div class="button-row">
+          <button
+            v-for="p in draft.metadata.people.filter(
+              (p) => p.person && !draft.assignments.some((a) => a.personId === p.personId),
+            )"
+            :key="p.personId + p.association"
+            type="button"
+            @click="add(p.person)"
+          >
+            {{ t('Attach to') }} {{ name(p.person) }}
+          </button>
+        </div>
         <section v-for="(a, index) in draft.assignments" :key="a.personId" class="media-assignment">
           <div class="button-row">
             <h3>{{ name(a.person) }}</h3>
             <button
               type="button"
-              :aria-label="t('Detach') + ' ' + name(a.person)"
+              :aria-label="t('Remove attachment') + ' ' + name(a.person)"
               @click="draft.assignments.splice(index, 1)"
             >
-              {{ t('Detach') }}
+              {{ t('Remove attachment') }}
             </button>
           </div>
           <label
@@ -210,7 +240,7 @@ useDraftGuard(dirty, busy);
           <h3>{{ t('Your draft is still here') }}</h3>
           <button type="button" @click="loadCurrent">{{ t('Load current version') }}</button
           ><template v-if="current">
-            <pre class="evidence-comparison">{{ JSON.stringify(current, null, 2) }}</pre>
+            <MediaComparison :draft="draft" :current="current" />
             <button type="button" @click="reconcile">
               {{ t('I compared both versions; keep my draft') }}
             </button></template
