@@ -52,9 +52,25 @@ final class MediaController extends Controller
     }
     #[NoAdminRequired]
     #[NoCSRFRequired]
-    public function index(string $tree, string $person = '', int $page = 0): Response
+    public function index(
+        string $tree,
+        string $person = '',
+        int $page = 0,
+        string $type = '',
+        string $personQuery = '',
+        string $eventQuery = '',
+        string $place = '',
+        bool $missing = false,
+        string $event = '',
+    ): Response {
+        $filters = compact('type', 'personQuery', 'eventQuery', 'place', 'missing', 'event');
+        return $this->respond(fn($a) => $this->media->list($tree, $a, $person, $page, $filters));
+    }
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
+    public function events(string $tree, string $query = '', int $page = 0): Response
     {
-        return $this->respond(fn($a) => $this->media->list($tree, $a, $person, $page));
+        return $this->respond(fn($a) => $this->media->events($tree, $a, $query, $page));
     }
     #[NoAdminRequired]
     #[NoCSRFRequired]
@@ -110,7 +126,10 @@ final class MediaController extends Controller
     {
         return $this->respond(function ($a) use ($tree, $id) {
             $body = [];
-            foreach (['title', 'visibility', 'revision', 'assignments', 'confirmRelease'] as $key) {
+            foreach (
+                ['title', 'visibility', 'revision', 'assignments', 'confirmRelease', 'metadata']
+                as $key
+            ) {
                 $value = $this->request->getParam($key);
                 if ($value !== null) {
                     $body[$key] = $value;
@@ -118,6 +137,46 @@ final class MediaController extends Controller
             }
             return $this->media->save($tree, $id, $a, $body);
         });
+    }
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
+    public function trash(string $tree, int $page = 0): Response
+    {
+        return $this->respond(fn($a) => $this->media->trash($tree, $a, $page));
+    }
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
+    public function impact(string $tree, string $id): Response
+    {
+        return $this->respond(fn($a) => $this->media->impact($tree, $id, $a));
+    }
+    #[NoAdminRequired]
+    public function delete(string $tree, string $id): Response
+    {
+        return $this->respond(
+            fn($a) => $this->media->lifecycle(
+                $tree,
+                $id,
+                $a,
+                $this->request->getParam('revision'),
+                $this->request->getParam('treeRevision'),
+                false,
+            ),
+        );
+    }
+    #[NoAdminRequired]
+    public function restore(string $tree, string $id): Response
+    {
+        return $this->respond(
+            fn($a) => $this->media->lifecycle(
+                $tree,
+                $id,
+                $a,
+                $this->request->getParam('revision'),
+                null,
+                true,
+            ),
+        );
     }
     private function binary(
         string $tree,

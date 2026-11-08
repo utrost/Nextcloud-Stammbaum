@@ -1,6 +1,6 @@
 # Nextcloud Stammbaum
 
-A native Nextcloud app for private, collaborative family-history research. The development alpha implements trees, people, relationships, evidence, shared events, notes, private media and reviewed GEDCOM import. It is an early alpha, not yet release-0.15 parity.
+A native Nextcloud app for private, collaborative family-history research. The development alpha implements trees, people, relationships, evidence, shared events, notes, private media, reviewed GEDCOM import and current-state export. It is an early alpha, not yet release-0.15 parity.
 
 ## Try the development alpha
 
@@ -11,6 +11,8 @@ Use **Expand person research** to read evidence alongside retained assertions an
 For existing research, create an empty tree and open **Imports**. Upload a supported GEDCOM file, review its diagnostics and preview, then explicitly confirm activation. Nextcloud processes it in the background. The current profile includes additional events, occupations, name components and confidential contact details. Missing media references appear in person Details; the referenced files are not automatically downloaded. The [named import profile](docs/gedcom-import-profile.md) is deliberately bounded; unsupported standard fields block activation.
 
 In **Media**, upload a JPEG, PNG or PDF from your device or use **Choose from Nextcloud Files**. Confirm **Import private copy** to store unchanged bytes under the tree's permissions. The copy counts against Stammbaum's storage quota and remains available if the source later changes or is deleted. The gallery has private cached thumbnails and **Open preview** for larger images and PDF pages, with zoom and page controls. PDF previews require the optional Poppler runtime; unsupported documents keep their original download. Explicit GEDCOM media matching remains separate work.
+
+Use **Exports** to review the included research, privacy options and format limitations before generating GEDCOM or an optional package of original media. Results are private to the requester, expire after 24 hours and become invalid after tree/access changes. Managers can review **Move medium to trash** and restore retained media through **Media trash**; originals continue to occupy storage. See the [export and media lifecycle contract](docs/export-media-lifecycle-iteration.md).
 
 The app currently targets **Nextcloud 34**, PHP **8.3+**, with MariaDB verified. It uses Nextcloud accounts and private app storage; Library and Relate are development references, not dependencies.
 
@@ -46,3 +48,5 @@ The parity baseline is documented release 0.15, adapted to Nextcloud identity an
 - [Archive and backlog verification](docs/backlog-verification.md)
 
 `intial-spec` intentionally preserves the requested spelling. All original documents and render artifacts are retained. Development fixtures are fictional; private family information does not belong in this repository.
+
+Photos and PDFs support descriptive dates, named people shown or mentioned (including people outside the tree), events, places and source/credit. Read the [metadata and gallery contract](docs/media-metadata-iteration.md).
