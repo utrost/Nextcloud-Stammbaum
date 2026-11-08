@@ -52,7 +52,7 @@ const binding = (run) => ({
   acknowledgeReview: true,
 });
 
-test('stored alpha.1 and alpha.2 runs keep their interpretation while new uploads use the extended alpha.3 profile', async ({
+test('stored alpha.1 and alpha.2 runs keep their interpretation while new uploads use the extended alpha.4 profile', async ({
   page,
 }) => {
   await login(page);
@@ -90,7 +90,7 @@ test('stored alpha.1 and alpha.2 runs keep their interpretation while new upload
       currentTree,
       Buffer.from(sample.toString().replace('ABT 1840', '@#DJULIAN@ 12 FEB 1840')),
     );
-  expect(calendar.profile).toBe('nc-gedcom-551-alpha3');
+  expect(calendar.profile).toBe('nc-gedcom-551-alpha4');
   expect(calendar.status).toBe('ready');
   expect(calendar.report.warnings).toBeGreaterThan(0);
   await confirm(page, currentTree, calendar);

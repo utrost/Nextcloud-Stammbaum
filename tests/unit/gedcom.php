@@ -69,6 +69,25 @@ foreach ($private['plan']['people'] as $p) {
 }
 $noMarriage = preg_replace('/1 MARR\n2 DATE BET 1860 AND 1864\n2 PLAC Example town\n/', '', $bytes);
 check(count($parser->analyze($noMarriage)['plan']['relations']) === 2, 'co-parents do not imply partnership');
+$nativePartner = str_replace('1 CHIL @I3@', "1 _STB_PARTNER Y\n1 CHIL @I3@", $noMarriage);
+check(
+    count($parser->analyze($nativePartner)['plan']['relations']) === 3,
+    'alpha.4 explicit native partner marker retains a partnership without marriage',
+);
+check(
+    $parser->analyze($nativePartner, 'nc-gedcom-551-alpha3')['report']['errors'] === 0 &&
+        count($parser->analyze($nativePartner, 'nc-gedcom-551-alpha3')['plan']['relations']) === 2,
+    'alpha.3 does not reinterpret native markers',
+);
+check(
+    $parser->analyze(str_replace('_STB_PARTNER Y', '_STB_PARTNER X', $nativePartner))['report']['errors'] > 0,
+    'invalid native marker blocks activation',
+);
+check(
+    $parser->analyze($bytes, 'nc-gedcom-551-alpha3')['planHash'] ===
+        'a6be3db5aa89eb64a6d0778940f8f891e86ba74b71186b43d5a24c85e1bf1f80',
+    'alpha.3 stored plans remain byte-for-byte reproducible',
+);
 $many = str_replace('1 SEX F', str_repeat("1 ADOP unsupported\n", 220) . '1 SEX F', $bytes);
 $report = $parser->analyze($many)['report'];
 check(

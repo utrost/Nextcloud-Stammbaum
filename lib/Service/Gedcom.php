@@ -5,8 +5,13 @@ namespace OCA\Stammbaum\Service;
 /** Deliberately closed semantic whitelist. Never fetches input references. */
 final class Gedcom
 {
-    public const PROFILE = 'nc-gedcom-551-alpha3';
-    public const PROFILES = ['nc-gedcom-551-alpha1', 'nc-gedcom-551-alpha2', self::PROFILE];
+    public const PROFILE = 'nc-gedcom-551-alpha4';
+    public const PROFILES = [
+        'nc-gedcom-551-alpha1',
+        'nc-gedcom-551-alpha2',
+        'nc-gedcom-551-alpha3',
+        self::PROFILE,
+    ];
     public const MAX_BYTES = 8388608;
     private array $nodes = [],
         $children = [],
@@ -22,6 +27,7 @@ final class Gedcom
     private array $issueCounts = [];
     private bool $legacy = false;
     private bool $extended = false;
+    private bool $nativePartner = false;
 
     private function issue(string $code, int $line = 0, bool $warning = false): void
     {
@@ -49,7 +55,8 @@ final class Gedcom
             $this->fail('profile_unavailable');
         }
         $this->legacy = $profile === 'nc-gedcom-551-alpha1';
-        $this->extended = $profile === self::PROFILE;
+        $this->extended = in_array($profile, ['nc-gedcom-551-alpha3', self::PROFILE], true);
+        $this->nativePartner = $profile === self::PROFILE;
         // Fresh instance state also makes repeated use by a long-lived worker deterministic.
         $this->nodes = $this->children = $this->roots = $this->xref = $this->errors = $this->warnings = [];
         $this->errorCount = $this->warningCount = 0;
@@ -1043,6 +1050,31 @@ final class Gedcom
                     'parentType' => $type,
                 ];
                 $relations[] = $key;
+            }
+        }
+        if ($this->nativePartner) {
+            $marker = $this->single($id, '_STB_PARTNER');
+            if ($marker !== null) {
+                if (
+                    $this->literal($marker, 1) !== 'Y' ||
+                    count($parents) !== 2 ||
+                    $this->all($id, 'MARR') ||
+                    $this->all($id, 'DIV')
+                ) {
+                    $this->issue('native_partner_marker', $marker);
+                } else {
+                    $pair = $parents;
+                    sort($pair);
+                    $key = implode('|', $pair) . '|partner|' . $id;
+                    $this->plan['relations'][$key] = [
+                        'line' => $marker,
+                        'source' => $pair[0],
+                        'target' => $pair[1],
+                        'kind' => 'partner',
+                        'parentType' => 'unknown',
+                    ];
+                    $relations[] = $key;
+                }
             }
         }
         foreach (['MARR' => 'marriage', 'DIV' => 'divorce'] as $tag => $type) {
