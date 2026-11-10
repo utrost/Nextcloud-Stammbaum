@@ -24,6 +24,13 @@ final class AccountLifecycle implements IEventListener
         $this->store->write(function () use ($uid, $remove) {
             if ($remove) {
                 $this->store->execute('DELETE FROM *PREFIX*stb_preferences WHERE user_id = ?', [$uid]);
+                $this->store->execute('DELETE FROM *PREFIX*stb_task_links WHERE actor_id = ?', [$uid]);
+            } else {
+                // A pending DAV write cannot survive account or credential invalidation.
+                $this->store->execute(
+                    "UPDATE *PREFIX*stb_task_links SET status = 'authority-invalidated', payload_json = '{}' WHERE actor_id = ? AND status = 'pending'",
+                    [$uid],
+                );
             }
             $rows = $this->store->rows('SELECT tree_id FROM *PREFIX*stb_members WHERE user_id = ?', [$uid]);
             $this->store->execute(
