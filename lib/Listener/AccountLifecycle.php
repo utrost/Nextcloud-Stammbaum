@@ -25,6 +25,7 @@ final class AccountLifecycle implements IEventListener
             if ($remove) {
                 $this->store->execute('DELETE FROM *PREFIX*stb_preferences WHERE user_id = ?', [$uid]);
                 $this->store->execute('DELETE FROM *PREFIX*stb_task_links WHERE actor_id = ?', [$uid]);
+                $this->store->execute('DELETE FROM *PREFIX*stb_contact_links WHERE actor_id = ?', [$uid]);
             } else {
                 // A pending DAV write cannot survive account or credential invalidation.
                 $this->store->execute(

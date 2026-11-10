@@ -503,6 +503,100 @@
   margin: -8px 0 20px;
   min-width: 0;
 }
+.contact-links {
+  margin: -8px 0 20px;
+  min-width: 0;
+}
+.contact-links > button {
+  border-color: var(--stb-accent) !important;
+  color: var(--stb-accent) !important;
+}
+.contact-link-workspace {
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px solid var(--stb-border);
+  border-radius: 12px;
+  background: var(--stb-tint);
+  overflow-wrap: anywhere;
+}
+.contact-link-workspace > p:first-child {
+  margin-top: 0;
+  color: var(--color-text-maxcontrast);
+}
+.contact-search {
+  display: grid;
+  gap: 10px;
+}
+.contact-search label,
+.contact-copy-review label {
+  display: grid;
+  gap: 5px;
+  font-weight: 600;
+}
+.contact-search input,
+.contact-search select,
+.contact-copy-review select {
+  width: 100% !important;
+  min-width: 0;
+}
+.contact-candidates,
+.contact-linked ul {
+  padding-left: 20px;
+}
+.contact-candidates li {
+  margin: 8px 0;
+}
+.contact-candidates small,
+.contact-linked-card small {
+  display: block;
+  color: var(--color-text-maxcontrast);
+}
+.contact-linked,
+.contact-copy-review {
+  border-top: 1px solid var(--stb-border);
+  margin-top: 18px;
+  padding-top: 12px;
+}
+.contact-linked > .button-row {
+  align-items: center;
+  justify-content: space-between;
+}
+.contact-linked h3,
+.contact-copy-review h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+.contact-linked-card {
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid var(--stb-border);
+  border-radius: 8px;
+  background: var(--color-main-background);
+}
+.contact-field-row {
+  display: block;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.contact-field-row button {
+  margin-top: 6px;
+}
+.contact-copy-review {
+  display: grid;
+  gap: 10px;
+}
+.contact-copy-confirm {
+  padding: 12px;
+  border: 1px solid var(--stb-border);
+  border-radius: 8px;
+  background: var(--color-main-background);
+}
+.contact-copy-confirm label.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-weight: 400;
+}
 .research-tasks > button {
   border-color: var(--stb-accent) !important;
   color: var(--stb-accent) !important;
