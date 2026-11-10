@@ -23,6 +23,7 @@ The app currently targets **Nextcloud 34**, PHP **8.3+**, with MariaDB verified.
 - [Build, install, test and recovery instructions](docs/operations.md)
 - [Development environment and lessons from Library/Relate](docs/development.md)
 - [Implementation roadmap](docs/implementation-roadmap.md)
+- [Nextcloud Tasks, Calendar and Contacts integration concept](docs/nextcloud-integration-concept.md)
 - [GitHub roadmap and implementation backlog](https://github.com/utrost/Nextcloud-Stammbaum/issues/1)
 
 ## Build
