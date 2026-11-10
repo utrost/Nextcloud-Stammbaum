@@ -13,6 +13,7 @@ import ExportPanel from './components/ExportPanel.vue';
 import ImportPanel from './components/ImportPanel.vue';
 import ContextPanel from './components/ContextPanel.vue';
 import TabList from './components/TabList.vue';
+import ResearchTaskPanel from './components/ResearchTaskPanel.vue';
 const savedViews = ref({ revision: 1, items: [], home: null, openingView: null }),
   preferenceDraft = ref(null),
   preferenceCurrent = ref(null),
@@ -1443,6 +1444,7 @@ onBeforeUnmount(() => {
                     {{ t('Add relative') }}
                   </button>
                 </div>
+                <ResearchTaskPanel :tree-id="tree.id" :person="selected" :can-export="tree.canExport" />
                 <TabList
                   id="person"
                   class="small-tabs"
