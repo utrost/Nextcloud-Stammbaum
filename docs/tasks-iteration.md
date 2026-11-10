@@ -1,4 +1,4 @@
-# Alpha.22: first Nextcloud Tasks journey
+# Alpha.23: first Nextcloud Tasks journey
 
 This iteration implements a small part of [the optional Nextcloud integration concept](nextcloud-integration-concept.md) and issues #81–#83. It does not close those issues or change the release-0.15 parity baseline. The exact verified development target is Nextcloud 34.0.4, Tasks 0.18.1 and the built-in DAV backend 1.40.0. CI installs the official Tasks 0.18.1 release only into its disposable fictional fixture and checks the pinned SHA-256; Alice already has Tasks 0.18.1.
 

@@ -60,7 +60,7 @@ test('reviewed person research task creates one CalDAV VTODO without editing the
   expect(dav.status).toBe(200);
   expect(dav.bytes).toContain('BEGIN:VTODO');
   expect(dav.bytes).toContain(`UID:stb-${links[0].id}@stammbaum.nextcloud`);
-  expect(dav.bytes).toContain(`#tree=${tr.id}&view=people&person=${p.id}`);
+  expect(dav.bytes.replace(/\r\n[ \t]/g, '')).toContain(`#tree=${tr.id}&view=people&person=${p.id}`);
   expect(dav.duplicate).toBe(412);
   expect((await good(page, `/trees/${tr.id}`)).revision).toBe(revision);
   await expect(page.getByRole('link', { name: 'Open Tasks' })).toBeVisible();
