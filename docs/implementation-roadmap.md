@@ -263,3 +263,7 @@ Office documents and conversion are out of scope by user decision; #73 (E05) is 
 The [iteration contract](export-media-lifecycle-iteration.md) records reviewed current-state GEDCOM jobs (#38–#39), media trash/restoration (#33), and readable media conflict/attachment workflows (#29/#44/#76/#77). Remaining profile differences are explicit; issue closure requires checking all original criteria. Publication status and executed evidence belong in the iteration record, not inferred from this roadmap entry.
 
 The [alpha.21 reliability review](export-reliability-iteration.md) records the native export/reimport partnership marker, versioned import compatibility, additional capacity checks and media issue disposition. It does not expand the release-0.15 parity scope.
+
+## Optional Nextcloud integrations — 8 November 2026
+
+The [integration concept](nextcloud-integration-concept.md) defines private account connections, reviewed Tasks/Calendar creation, deliberate Contacts linking/copying and cross-app lifecycle checks. [Tracker #80](https://github.com/utrost/Nextcloud-Stammbaum/issues/80) groups the six NCINT implementation issues under **Nextcloud integration enhancements**. This user-requested enhancement does not expand release-0.15 parity acceptance. Files stays #74; external API/credentials/webhooks stay #40–#42; confidential contact records stay #24. Published issue bodies and dependencies are mirrored in `backlog.json` followups.

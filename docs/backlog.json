@@ -1924,6 +1924,142 @@
       ],
       "number": 77,
       "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/77"
+    },
+    {
+      "key": "NCINT",
+      "title": "Roadmap: optional Nextcloud Tasks, Calendar and Contacts integration",
+      "dependencies": [
+        "NCINT-01",
+        "NCINT-02",
+        "NCINT-03",
+        "NCINT-04",
+        "NCINT-05",
+        "NCINT-06"
+      ],
+      "body": "<!-- stammbaum-followup:NCINT -->\n\n## Outcome and concept\n\nDeliver optional, user-controlled Tasks, Calendar and Contacts workflows described in the [published integration concept](https://github.com/utrost/Nextcloud-Stammbaum/blob/f6c6bc373a5966283a7c48441757870d08b91862/docs/nextcloud-integration-concept.md). This new user-requested enhancement is not an original release-0.15 parity blocker. No functionality is claimed implemented by this tracker.\n\n## Scope and boundaries\n\nPrivate per-account links; reviewed disclosure with export authority; explicit task and calendar creation; contact linking plus confidential field-reviewed copies; durable reconciliation and tested privacy. Start with Tasks, then Calendar, then Contacts. Follow the concept's independent ownership and sharing rules. No automatic two-way synchronization, external servers, new credentials/OAuth, attendee invitations or public feeds.\n\nExisting Files work stays #74, missing GEDCOM media matching #34/#36, generic external integration #40–#42, confidential genealogy contacts #24 and broader collaboration #58. Preserve their existing acceptance criteria and priority. Do not duplicate them.\n\n## Delivery work\n\n- [ ] #81 — Establish supported Nextcloud integration adapters and reviewed write contracts\n- [ ] #82 — Track private integration connections and reconcile revocation, conflicts and partial success\n- [ ] #83 — Create and follow research tasks from genealogy context in Nextcloud Tasks\n- [ ] #84 — Publish reviewed appointments and precise family anniversaries to Nextcloud Calendar\n- [ ] #85 — Link genealogy people to Nextcloud Contacts with deliberate confidential field copies\n- [ ] #86 — Verify cross-app privacy, compatibility and complete Nextcloud integration journeys\n\n## Completion\n\nRequire executed service/protocol/Playwright evidence for all six NCINT requirements, including revocation, uncertain outcomes, duplicates, privacy and EN/DE keyboard layouts. Publishing documents or issues is not acceptance evidence. Existing A03/A13/A26/A30 are relevant regression examples, not new original requirements. Roadmap #1.\n",
+      "deferred": true,
+      "milestone": "Nextcloud integration enhancements",
+      "labels": [
+        "enhancement",
+        "tracking",
+        "area:integrations-delivery"
+      ],
+      "number": 80,
+      "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/80"
+    },
+    {
+      "key": "NCINT-01",
+      "title": "Establish supported Nextcloud integration adapters and reviewed write contracts",
+      "dependencies": [
+        "F01",
+        "F05",
+        "A03",
+        "A04"
+      ],
+      "body": "<!-- stammbaum-followup:NCINT-01 -->\n\n## Outcome and interfaces\n\nImplement optional capability discovery and safe one-object review/confirmation contracts for same-instance Calendar, Tasks and Contacts. No external app is required to use Stammbaum.\n\nNormative design: [Nextcloud integration concept](https://github.com/utrost/Nextcloud-Stammbaum/blob/f6c6bc373a5966283a7c48441757870d08b91862/docs/nextcloud-integration-concept.md), sections **Adapter and API design; Ownership and privacy contract**. Apply its shared privacy, review, lifecycle and ownership contracts; unsupported capability must fail closed.\n\n## Acceptance criteria and required tests\n\n- [ ] Pin and document tested Nextcloud 34 / Calendar / Tasks / Contacts versions and supported public API or same-origin DAV mechanisms. Prove source authorization, destination ACL checks, conditional writes and server-authorized payload construction; unsupported actions remain unavailable. Do not use private app tables/classes, admin impersonation, passwords, arbitrary remote URLs or new tool credentials.\n- [ ] Expose account-scoped capability and collection discovery with bounded pagination and explicit unavailable/read-only/unknown-sharing states. Do not leak foreign collection names, paths or counts. Do not change destination sharing.\n- [ ] Provide CSRF-protected preview/confirmation for one object, five-minute review expiry, current tree/source/dependency revisions, membership generation, destination identity/ETag and an actor-bound idempotency key. Recheck before/after the external write; document the non-atomic cross-app revocation window and cleanup outcome.\n- [ ] Require existing export authority for outbound genealogy labels/backlinks. Apply existing defaults excluding living, unknown-status and management-only content; explicit inclusion is role/visibility-gated and reviewed. Enforce all-target privacy without hidden population counts. Record that later destination sharing and device copies are independent.\n- [ ] Define DTOs, payload/result/page bounds, error codes, safe logs and no-store behavior in the route-policy contract coordinated with #41. Use deterministic per-operation random DAV UIDs, conditional create and ETag preconditions; preserve proposed edits on conflicts and distinguish uncertain outcomes from failures.\n- [ ] Contract tests cover all roles/export grants, admin without membership, foreign IDs, absent apps, shared/read-only collections, expired/changed reviews, CSRF, malformed payloads, stale ETags and source/destination permission changes. Browsing and reviewing must not change genealogy revisions.\n\n## Explicit exclusions\n\nNo delivered task/calendar/contact workflow in this foundation issue; no external servers, automatic synchronization, credentials/OAuth or private-table integration.\n\n## Requirements and delivery\n\nNew requirement **NCINT-01**, requested 8 November 2026; not a requirement from the archived release snapshot. Preserve existing RECHT/SICHT rules (#10/#11), localization (#43), and relevant A03/A13/A26/A30 regression boundaries. No original requirement priority is downgraded. Fictional fixtures only; record actual executed evidence and remaining limits. These are implementation acceptance criteria, not passed tests.\n\nMilestone: **Nextcloud integration enhancements**. Tracker #80; original roadmap #1. Existing linked issues supply contracts; their entire broader parity scope need not be closed before reusing an already verified prerequisite.\n\n## Dependencies\n\n- #2 — Decide and document native Nextcloud compatibility and adaptations\n- #6 — Implement versioned mutations and idempotent create requests\n- #10 — Enforce per-tree roles and separate export grants\n- #11 — Enforce record visibility and all-target shared-record privacy\n",
+      "deferred": true,
+      "milestone": "Nextcloud integration enhancements",
+      "labels": [
+        "enhancement",
+        "area:platform"
+      ],
+      "number": 81,
+      "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/81"
+    },
+    {
+      "key": "NCINT-02",
+      "title": "Track private integration connections and reconcile revocation, conflicts and partial success",
+      "dependencies": [
+        "NCINT-01",
+        "F06",
+        "A01",
+        "I06"
+      ],
+      "body": "<!-- stammbaum-followup:NCINT-02 -->\n\n## Outcome and interfaces\n\nImplement the owner-only connection registry, personal Connections view and safe reconciliation needed before any cross-app workflow ships.\n\nNormative design: [Nextcloud integration concept](https://github.com/utrost/Nextcloud-Stammbaum/blob/f6c6bc373a5966283a7c48441757870d08b91862/docs/nextcloud-integration-concept.md), sections **Connection lifecycle; Adapter and API design**. Apply its shared privacy, review, lifecycle and ownership contracts; unsupported capability must fail closed.\n\n## Acceptance criteria and required tests\n\n- [ ] Migrate a private registry containing actor/account incarnation, typed authorized source, destination identity, UID, creation ownership, revision/dependency digest, authority generation, ETag, operation receipt and status. Store no credentials or persistent DAV text. Filter before pagination; never expose one member's connections to another.\n- [ ] Represent pending, linked, source-changed, destination-changed, unavailable, authority-invalidated, outcome-unknown and unlinked with English/German states and recovery actions. Persist minimal receipts so retry after timeout or remote success/local failure cannot duplicate an item.\n- [ ] On source edits mark review required; on deletion, media trash, hidden dependencies or access loss immediately suppress source details and disable updates. Revoke/regrant, account disable/delete/recreation and recovery invalidate pending operations permanently. Restoration never resumes them automatically.\n- [ ] Provide owner-only refresh and local unlink without editing genealogy. Permit opaque cleanup after tree access loss without revealing former source labels. Unlink leaves external data intact; separately review deletion only of an app-created item with current destination access and matching ETag. Never delete a pre-existing contact or silently delete an externally modified item.\n- [ ] Publish bounded retention/pruning rules for reviews and idempotency receipts, including restart recovery and uncertain outcomes; account deletion clears private links and prevents recreated-UID inheritance. Do not remove unrelated external items or originals. No background DAV writes or impersonation.\n- [ ] Test lost responses, repeated confirmation, partial success, moved/deleted destination, app disable, stale ETag, deleted/hidden source, revoke/regrant, account recreation and restored installation. Playwright covers refresh, conflict, uncertain outcome, unlink/removal distinction and keyboard focus; pure connection operations leave genealogy revisions unchanged.\n\n## Explicit exclusions\n\nNo automatic two-way sync or cross-system transaction guarantee; no bulk external cleanup, shared connection registry, public links or purge of genealogy originals.\n\n## Requirements and delivery\n\nNew requirement **NCINT-02**, requested 8 November 2026; not a requirement from the archived release snapshot. Preserve existing RECHT/SICHT rules (#10/#11), localization (#43), and relevant A03/A13/A26/A30 regression boundaries. No original requirement priority is downgraded. Fictional fixtures only; record actual executed evidence and remaining limits. These are implementation acceptance criteria, not passed tests.\n\nMilestone: **Nextcloud integration enhancements**. Tracker #80; original roadmap #1. Existing linked issues supply contracts; their entire broader parity scope need not be closed before reusing an already verified prerequisite.\n\n## Dependencies\n\n- #81 — Establish supported Nextcloud integration adapters and reviewed write contracts\n- #7 — Implement durable jobs with initiating-authority rechecks\n- #8 — Integrate Nextcloud account lifecycle without implicit tree access\n- #45 — Document and test consistent Nextcloud backup and app recovery\n",
+      "deferred": true,
+      "milestone": "Nextcloud integration enhancements",
+      "labels": [
+        "enhancement",
+        "area:access"
+      ],
+      "number": 82,
+      "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/82"
+    },
+    {
+      "key": "NCINT-03",
+      "title": "Create and follow research tasks from genealogy context in Nextcloud Tasks",
+      "dependencies": [
+        "NCINT-01",
+        "NCINT-02"
+      ],
+      "body": "<!-- stammbaum-followup:NCINT-03 -->\n\n## Outcome and interfaces\n\nOffer Create research task from an authorized person, source, shared event or medium and display the linked task's current status.\n\nNormative design: [Nextcloud integration concept](https://github.com/utrost/Nextcloud-Stammbaum/blob/f6c6bc373a5966283a7c48441757870d08b91862/docs/nextcloud-integration-concept.md), sections **Tasks workflow; Product direction**. Apply its shared privacy, review, lifecycle and ownership contracts; unsupported capability must fail closed.\n\n## Acceptance criteria and required tests\n\n- [ ] Review a minimal generic/user-edited title, optional eligible source label, short instructions, authorized backlink, task list, due date and priority. Require outbound export authorization and explicit inclusion choices from NCINT-01; never copy biography/evidence/media automatically.\n- [ ] Discover compatible writable VTODO collections for the current account. Prefer an owned unshared list; explicitly acknowledge another/unknown audience. Create one task with conditional idempotency and no attendee, assignment, invitation or notification side effects initiated by Stammbaum.\n- [ ] Open via a supported task link or fall back to the task list. Refresh current completion/status under destination ACLs. Distinguish unreadable/deleted/temporarily unavailable from completed; do not build a second editable task database.\n- [ ] Tasks owns title, scheduling and completion. Source edits request review rather than overwrite a completed/edited task. Task creation, refresh and completion never create genealogy assertions or change tree revisions.\n- [ ] EN/DE UI preserves form inputs on errors and conflicts and provides cancellation and clear success/uncertain states. Playwright covers all four source types, task creation/open/completion/refresh/unlink, duplicate clicks, timeout, missing app, readonly/shared lists, hidden source and revoked export authority at 1440/390/320 with keyboard use and inspected screenshots.\n\n## Explicit exclusions\n\nNo recurring research task engine, assignment/delegation, automatic findings (#55), attachments, task-to-fact inference or silent push of task edits.\n\n## Requirements and delivery\n\nNew requirement **NCINT-03**, requested 8 November 2026; not a requirement from the archived release snapshot. Preserve existing RECHT/SICHT rules (#10/#11), localization (#43), and relevant A03/A13/A26/A30 regression boundaries. No original requirement priority is downgraded. Fictional fixtures only; record actual executed evidence and remaining limits. These are implementation acceptance criteria, not passed tests.\n\nMilestone: **Nextcloud integration enhancements**. Tracker #80; original roadmap #1. Existing linked issues supply contracts; their entire broader parity scope need not be closed before reusing an already verified prerequisite.\n\n## Dependencies\n\n- #81 — Establish supported Nextcloud integration adapters and reviewed write contracts\n- #82 — Track private integration connections and reconcile revocation, conflicts and partial success\n",
+      "deferred": true,
+      "milestone": "Nextcloud integration enhancements",
+      "labels": [
+        "enhancement",
+        "area:workspace"
+      ],
+      "number": 83,
+      "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/83"
+    },
+    {
+      "key": "NCINT-04",
+      "title": "Publish reviewed appointments and precise family anniversaries to Nextcloud Calendar",
+      "dependencies": [
+        "NCINT-01",
+        "NCINT-02",
+        "G02",
+        "G08"
+      ],
+      "body": "<!-- stammbaum-followup:NCINT-04 -->\n\n## Outcome and interfaces\n\nOffer explicit Add to calendar for a person or event, with one-time appointments and carefully mapped optional yearly anniversaries.\n\nNormative design: [Nextcloud integration concept](https://github.com/utrost/Nextcloud-Stammbaum/blob/f6c6bc373a5966283a7c48441757870d08b91862/docs/nextcloud-integration-concept.md), sections **Calendar workflow; Ownership and privacy contract**. Apply its shared privacy, review, lifecycle and ownership contracts; unsupported capability must fail closed.\n\n## Acceptance criteria and required tests\n\n- [ ] Review title, optional eligible location, backlink, calendar, one-time/all-day/timezone choice and recurrence before creation. Use VEVENT with conditional idempotency and current export/all-target checks. Do not infer attendees from participants, set invitations or copy confidential notes automatically.\n- [ ] Only exact supported month/day dates may propose an anniversary. Approximate/range/year-only/non-Gregorian or unsupported dates require an independently chosen appointment date; never normalize research silently. Unknown year yields no age/year-count claim. Initial 29 February recurrence occurs only in leap years and is explained.\n- [ ] Test date-only values, DST/timezone boundaries, annual recurrence and invalid/partial dates. Scheduling never changes the historical assertion. Corrections trigger review; ETag conflict preserves destination edits.\n- [ ] Exclude the read-only generated birthday calendar from writable choices. Warn about an authorized linked-contact birthday duplicate when verifiable; otherwise state that duplicate detection is incomplete. Do not scan unreadable contacts/calendars or assume an undetected duplicate is absent. Integrate the optional contact signal once NCINT-05 is available.\n- [ ] EN/DE Playwright journeys cover appointment/anniversary creation, preview/cancel/open, repeated clicks, stale review, edited/deleted event, source revocation, shared/read-only/absent calendars and keyboard layouts at 1440/390/320. Verify no invitation emails and unchanged genealogy revisions.\n\n## Explicit exclusions\n\nNo public/subscription genealogy feeds, automatic bulk anniversary calendar, attendee/email workflow, automatic calendar edits or unsupported historical date conversion.\n\n## Requirements and delivery\n\nNew requirement **NCINT-04**, requested 8 November 2026; not a requirement from the archived release snapshot. Preserve existing RECHT/SICHT rules (#10/#11), localization (#43), and relevant A03/A13/A26/A30 regression boundaries. No original requirement priority is downgraded. Fictional fixtures only; record actual executed evidence and remaining limits. These are implementation acceptance criteria, not passed tests.\n\nMilestone: **Nextcloud integration enhancements**. Tracker #80; original roadmap #1. Existing linked issues supply contracts; their entire broader parity scope need not be closed before reusing an already verified prerequisite.\n\n## Dependencies\n\n- #81 — Establish supported Nextcloud integration adapters and reviewed write contracts\n- #82 — Track private integration connections and reconcile revocation, conflicts and partial success\n- #16 — Model and validate historical dates, places and basic contradictions\n- #22 — Edit repeated shared events and display participant timelines\n",
+      "deferred": true,
+      "milestone": "Nextcloud integration enhancements",
+      "labels": [
+        "enhancement",
+        "area:genealogy"
+      ],
+      "number": 84,
+      "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/84"
+    },
+    {
+      "key": "NCINT-05",
+      "title": "Link genealogy people to Nextcloud Contacts with deliberate confidential field copies",
+      "dependencies": [
+        "NCINT-01",
+        "NCINT-02",
+        "G10"
+      ],
+      "body": "<!-- stammbaum-followup:NCINT-05 -->\n\n## Outcome and interfaces\n\nLet a user explicitly link readable address-book cards to an authorized person and optionally copy reviewed current contact fields into confidential genealogy records.\n\nNormative design: [Nextcloud integration concept](https://github.com/utrost/Nextcloud-Stammbaum/blob/f6c6bc373a5966283a7c48441757870d08b91862/docs/nextcloud-integration-concept.md), sections **Contacts workflow; Ownership and privacy contract**. Apply its shared privacy, review, lifecycle and ownership contracts; unsupported capability must fail closed.\n\n## Acceptance criteria and required tests\n\n- [ ] Search readable address books with bounded pagination and select a specific card explicitly. Differentiate authorized candidates, allow multiple explicit card links, and never infer person/account identity from name or email. The link and card identifiers remain private to the actor.\n- [ ] Allow local linking for a member who can read both objects; no export permission is required for a link that copies no genealogy data outward. Require editor authority for copying email, phone or postal address into genealogy and use #24's normal revision/history pipeline.\n- [ ] Show current card and saved genealogy field values with deliberate append/replace choices. Default copied records to management-only visibility as required by the concept; preserve provenance without leaking private card identity to other members. Warn that the retained genealogy copy has independent access/retention. Never auto-copy birthdays/photos or overwrite research.\n- [ ] Current card data remains authoritative in Contacts, and later changes require a new review. Missing/deleted/revoked cards show unavailable; no automatic substitute search. Unlink never deletes a card or removes a previously reviewed genealogy contact record.\n- [ ] Provide a minimal authorized birthday-duplication signal for Calendar when available without exposing card data to other tree members. This is a read-only signal, not automatic birthday synchronization.\n- [ ] Test shared/read-only/system address books, foreign card IDs, same names, card changes/deletion/revocation during review, editor versus viewer roles, stale genealogy revisions and hidden people. EN/DE Playwright covers link/search/compare/copy/unlink/failure at 1440/390/320 with inspected screenshots. Only explicit contact-record copies change genealogy revisions.\n\n## Explicit exclusions\n\nNo outbound vCard creation/editing/deletion, automatic two-way sync, bulk import, account creation, membership grants, genealogy-person deduplication or automatic photo/birthday copying.\n\n## Requirements and delivery\n\nNew requirement **NCINT-05**, requested 8 November 2026; not a requirement from the archived release snapshot. Preserve existing RECHT/SICHT rules (#10/#11), localization (#43), and relevant A03/A13/A26/A30 regression boundaries. No original requirement priority is downgraded. Fictional fixtures only; record actual executed evidence and remaining limits. These are implementation acceptance criteria, not passed tests.\n\nMilestone: **Nextcloud integration enhancements**. Tracker #80; original roadmap #1. Existing linked issues supply contracts; their entire broader parity scope need not be closed before reusing an already verified prerequisite.\n\n## Dependencies\n\n- #81 — Establish supported Nextcloud integration adapters and reviewed write contracts\n- #82 — Track private integration connections and reconcile revocation, conflicts and partial success\n- #24 — Preserve confidential contacts and ordered structured details\n",
+      "deferred": true,
+      "milestone": "Nextcloud integration enhancements",
+      "labels": [
+        "enhancement",
+        "area:genealogy"
+      ],
+      "number": 85,
+      "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/85"
+    },
+    {
+      "key": "NCINT-06",
+      "title": "Verify cross-app privacy, compatibility and complete Nextcloud integration journeys",
+      "dependencies": [
+        "NCINT-01",
+        "NCINT-02",
+        "NCINT-03",
+        "NCINT-04",
+        "NCINT-05",
+        "I05",
+        "I07"
+      ],
+      "body": "<!-- stammbaum-followup:NCINT-06 -->\n\n## Outcome and interfaces\n\nPublish reproducible acceptance evidence for the complete optional integrations using fictional fixtures and the exact supported app matrix.\n\nNormative design: [Nextcloud integration concept](https://github.com/utrost/Nextcloud-Stammbaum/blob/f6c6bc373a5966283a7c48441757870d08b91862/docs/nextcloud-integration-concept.md), sections **Verification and release gate; Sources and requirement mapping**. Apply its shared privacy, review, lifecycle and ownership contracts; unsupported capability must fail closed.\n\n## Acceptance criteria and required tests\n\n- [ ] Provision isolated fictional Nextcloud 34 + pinned Calendar/Tasks/Contacts versions. Verify capability degradation with apps absent/disabled and the core genealogy workflow with none installed. Do not modify Library/Relate or shared host app configuration for destructive tests.\n- [ ] Exercise all roles/export grants, admin without membership, living/unknown/management defaults and explicit inclusion, hidden shared dependencies, foreign account IDs, shared/read-only collections and later destination sharing. Prove no unintended labels/counts/card data in logs, caches or cross-user connection responses.\n- [ ] Inject stale revisions/ETags, lost responses, duplicate retries, remote-success/local-failure, deletion, revocation before/during/after writes, revoke/regrant, account recreation and restore. Confirm no duplicate creation, no revived confirmations, no silent overwrite and honest irreversible-copy/cleanup reporting.\n- [ ] Run Tasks, Calendar and Contacts Playwright journeys plus personal Connections in EN/DE at 1440/390/320 with keyboard/focus and screenshot inspection. Verify no invitations, source mutations, original-byte changes or tree revision changes except explicitly approved genealogy contact writes.\n- [ ] Record protocol and application tests, versions, upgrade/recovery results, supported deep-link fallbacks and remaining limitations. Update operator/user docs and route-policy references. Smoke an exact verified package on Alice with scoped fixtures while preserving sibling apps; no Alice backup is required.\n- [ ] Do not mark the tracker complete until each workflow and lifecycle criterion has executed evidence. Keep original parity and deferred obligations separate; no certification from documentation checks alone.\n\n## Explicit exclusions\n\nNo wider Nextcloud version certification, broad performance/accessibility certification, original parity issue closure, automatic deployment of unrelated apps or production migration.\n\n## Requirements and delivery\n\nNew requirement **NCINT-06**, requested 8 November 2026; not a requirement from the archived release snapshot. Preserve existing RECHT/SICHT rules (#10/#11), localization (#43), and relevant A03/A13/A26/A30 regression boundaries. No original requirement priority is downgraded. Fictional fixtures only; record actual executed evidence and remaining limits. These are implementation acceptance criteria, not passed tests.\n\nMilestone: **Nextcloud integration enhancements**. Tracker #80; original roadmap #1. Existing linked issues supply contracts; their entire broader parity scope need not be closed before reusing an already verified prerequisite.\n\n## Dependencies\n\n- #81 — Establish supported Nextcloud integration adapters and reviewed write contracts\n- #82 — Track private integration connections and reconcile revocation, conflicts and partial success\n- #83 — Create and follow research tasks from genealogy context in Nextcloud Tasks\n- #84 — Publish reviewed appointments and precise family anniversaries to Nextcloud Calendar\n- #85 — Link genealogy people to Nextcloud Contacts with deliberate confidential field copies\n- #44 — Verify responsive keyboard access and consistent error feedback\n- #46 — Verify authorization races, input safety and documented capacity limits\n",
+      "deferred": true,
+      "milestone": "Nextcloud integration enhancements",
+      "labels": [
+        "enhancement",
+        "area:integrations-delivery"
+      ],
+      "number": 86,
+      "url": "https://github.com/utrost/Nextcloud-Stammbaum/issues/86"
     }
   ]
 }
