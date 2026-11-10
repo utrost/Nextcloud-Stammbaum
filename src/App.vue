@@ -14,6 +14,8 @@ import ImportPanel from './components/ImportPanel.vue';
 import ContextPanel from './components/ContextPanel.vue';
 import TabList from './components/TabList.vue';
 import ResearchTaskPanel from './components/ResearchTaskPanel.vue';
+import ContactLinkPanel from './components/ContactLinkPanel.vue';
+const contactCopyCounter = ref(0);
 const savedViews = ref({ revision: 1, items: [], home: null, openingView: null }),
   preferenceDraft = ref(null),
   preferenceCurrent = ref(null),
@@ -1445,6 +1447,15 @@ onBeforeUnmount(() => {
                   </button>
                 </div>
                 <ResearchTaskPanel :tree-id="tree.id" :person="selected" :can-export="tree.canExport" />
+                <ContactLinkPanel
+                  :tree-id="tree.id"
+                  :person="selected"
+                  :management="management"
+                  @copied="
+                    detailTab = 'details';
+                    contactCopyCounter++;
+                  "
+                />
                 <TabList
                   id="person"
                   class="small-tabs"
@@ -1545,6 +1556,7 @@ onBeforeUnmount(() => {
                     />
                     <RecordPanel
                       v-if="['timeline', 'notes', 'details'].includes(detailTab)"
+                      :key="`${selected.id}:${detailTab}:${contactCopyCounter}`"
                       :tree-id="tree.id"
                       :person="selected"
                       :can-edit="canEdit"

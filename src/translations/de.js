@@ -1,4 +1,75 @@
 export default {
+  'Link Nextcloud contact': 'Nextcloud-Kontakt verknüpfen',
+  'Nextcloud contact links': 'Nextcloud-Kontaktverknüpfungen',
+  'Links are private to your account. A contact card and a genealogy person remain separate identities.':
+    'Verknüpfungen sind nur für dein Konto sichtbar. Eine Kontaktkarte und eine Person im Stammbaum bleiben getrennte Identitäten.',
+  'Only tree managers and owners can copy contact details into confidential genealogy records.':
+    'Nur Stammbaum-Verwaltung und Eigentümer können Kontaktangaben in vertrauliche Stammbaumdatensätze kopieren.',
+  'No readable address books are available.': 'Keine lesbaren Adressbücher verfügbar.',
+  'Address book': 'Adressbuch',
+  System: 'System',
+  Shared: 'Geteilt',
+  'This address book is read-only; linking still works.':
+    'Dieses Adressbuch ist schreibgeschützt; Verknüpfen ist trotzdem möglich.',
+  'Find contact': 'Kontakt finden',
+  'Search contacts': 'Kontakte suchen',
+  'Enter at least three characters to search contacts.':
+    'Gib mindestens drei Zeichen für die Kontaktsuche ein.',
+  'No matching contacts on this page.': 'Keine passenden Kontakte auf dieser Seite.',
+  'Choose a valid search page.': 'Wähle eine gültige Suchseite.',
+  'Choose a valid link page.': 'Wähle eine gültige Verknüpfungsseite.',
+  'Review link': 'Verknüpfung prüfen',
+  'Review private link': 'Private Verknüpfung prüfen',
+  'No contact details are copied into the tree by linking.':
+    'Durch die Verknüpfung werden keine Kontaktangaben in den Stammbaum kopiert.',
+  'Link contact': 'Kontakt verknüpfen',
+  'My linked contacts': 'Meine verknüpften Kontakte',
+  'No contacts linked yet.': 'Noch keine Kontakte verknüpft.',
+  'The contact changed. Review its current fields before copying.':
+    'Der Kontakt hat sich geändert. Prüfe vor dem Kopieren die aktuellen Angaben.',
+  email: 'E-Mail',
+  phone: 'Telefon',
+  address: 'Adresse',
+  'Compare and copy': 'Vergleichen und kopieren',
+  'This card is unavailable. Its saved genealogy copies remain.':
+    'Diese Kontaktkarte ist nicht verfügbar. Bereits gespeicherte Kopien im Stammbaum bleiben erhalten.',
+  'Unlink contact': 'Kontaktverknüpfung lösen',
+  'Compare contact field': 'Kontaktangabe vergleichen',
+  'Current saved genealogy values': 'Aktuell gespeicherte Stammbaumangaben',
+  'No saved value of this type yet.': 'Noch keine gespeicherte Angabe dieses Typs.',
+  'Copy action': 'Kopieraktion',
+  'Add new copy': 'Neue Kopie hinzufügen',
+  'Replace saved copy': 'Gespeicherte Kopie ersetzen',
+  'Record to replace': 'Zu ersetzender Datensatz',
+  'Choose a record': 'Datensatz auswählen',
+  'Review copy': 'Kopie prüfen',
+  'Review genealogy copy': 'Stammbaumkopie prüfen',
+  'Current card value': 'Aktueller Wert der Kontaktkarte',
+  'Saved value to replace': 'Zu ersetzender gespeicherter Wert',
+  'This management-only genealogy copy remains after the card changes, becomes unavailable or is unlinked.':
+    'Diese nur für die Verwaltung sichtbare Stammbaumkopie bleibt erhalten, wenn sich die Kontaktkarte ändert, nicht mehr verfügbar ist oder die Verknüpfung gelöst wird.',
+  'I understand this confidential copy is retained independently':
+    'Ich verstehe, dass diese vertrauliche Kopie unabhängig aufbewahrt wird',
+  'Copy into genealogy': 'In den Stammbaum kopieren',
+  'Open Contacts': 'Contacts öffnen',
+  'Unlink this contact? The card and saved genealogy copies remain.':
+    'Diese Kontaktverknüpfung lösen? Die Kontaktkarte und gespeicherte Stammbaumkopien bleiben erhalten.',
+  'Nextcloud Contacts is not available for this account.':
+    'Nextcloud Contacts ist für dieses Konto nicht verfügbar.',
+  'The person, card or your access changed. Review again.':
+    'Die Person, Kontaktkarte oder dein Zugriff hat sich geändert. Bitte erneut prüfen.',
+  'The person changed. Review again.': 'Die Person hat sich geändert. Bitte erneut prüfen.',
+  'Review this contact again.': 'Prüfe diesen Kontakt erneut.',
+  'Review this contact before linking it.': 'Prüfe diesen Kontakt vor der Verknüpfung.',
+  'This link request was already used for another card.':
+    'Diese Verknüpfungsanfrage wurde bereits für eine andere Kontaktkarte verwendet.',
+  'Too many contact records to compare safely.': 'Zu viele Kontaktdatensätze für einen sicheren Vergleich.',
+  'Review this contact field before copying it.': 'Prüfe diese Kontaktangabe vor dem Kopieren.',
+  'Acknowledge that the genealogy copy is retained independently.':
+    'Bestätige, dass die Stammbaumkopie unabhängig aufbewahrt wird.',
+  'This contact could not be processed. Refresh and try again.':
+    'Dieser Kontakt konnte nicht verarbeitet werden. Aktualisiere die Ansicht und versuche es erneut.',
+  'Unnamed contact': 'Kontakt ohne Namen',
   Research: 'Recherchiere zu',
   'Create research task': 'Rechercheaufgabe erstellen',
   'Research task': 'Rechercheaufgabe',

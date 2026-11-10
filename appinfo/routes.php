@@ -1,6 +1,27 @@
 <?php
 return [
     'routes' => [
+        ['name' => 'contact#books', 'url' => '/api/v1/trees/{tree}/contacts/books', 'verb' => 'GET'],
+        ['name' => 'contact#search', 'url' => '/api/v1/trees/{tree}/contacts/search', 'verb' => 'POST'],
+        [
+            'name' => 'contact#reviewLink',
+            'url' => '/api/v1/trees/{tree}/contacts/review-link',
+            'verb' => 'POST',
+        ],
+        ['name' => 'contact#link', 'url' => '/api/v1/trees/{tree}/contacts/links', 'verb' => 'POST'],
+        ['name' => 'contact#index', 'url' => '/api/v1/trees/{tree}/contacts/links', 'verb' => 'GET'],
+        ['name' => 'contact#birthday', 'url' => '/api/v1/trees/{tree}/contacts/birthday', 'verb' => 'GET'],
+        [
+            'name' => 'contact#reviewCopy',
+            'url' => '/api/v1/trees/{tree}/contacts/links/{id}/review-copy',
+            'verb' => 'POST',
+        ],
+        [
+            'name' => 'contact#copy',
+            'url' => '/api/v1/trees/{tree}/contacts/links/{id}/copy',
+            'verb' => 'POST',
+        ],
+        ['name' => 'contact#unlink', 'url' => '/api/v1/trees/{tree}/contacts/links/{id}', 'verb' => 'DELETE'],
         ['name' => 'task#collections', 'url' => '/api/v1/integrations/tasks/collections', 'verb' => 'GET'],
         ['name' => 'task#review', 'url' => '/api/v1/trees/{tree}/tasks/review', 'verb' => 'POST'],
         ['name' => 'task#reserve', 'url' => '/api/v1/trees/{tree}/tasks', 'verb' => 'POST'],
