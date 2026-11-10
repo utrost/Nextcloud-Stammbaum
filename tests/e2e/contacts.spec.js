@@ -169,6 +169,36 @@ test('private Contacts link, reviewed confidential copy and unlink keep independ
     expect(copied.text).toContain('@example.invalid');
     expect(copied.original.fields.some((f) => f.value === 'Nextcloud Contacts')).toBe(true);
     expect((await good(page, `/trees/${tr.id}`)).revision).toBe(revision + 1);
+    for (const kind of ['phone', 'address']) {
+      const fieldReview = await good(
+        page,
+        `/trees/${tr.id}/contacts/links/${linked.id}/review-copy`,
+        'POST',
+        {
+          kind,
+          index: 0,
+          mode: 'append',
+        },
+      );
+      const fieldCopy = await good(
+        page,
+        `/trees/${tr.id}/contacts/links/${linked.id}/copy`,
+        'POST',
+        {
+          review: fieldReview,
+          requestId: key(),
+          acknowledged: true,
+        },
+        201,
+      );
+      expect(fieldCopy).toMatchObject({ category: 'contact', type: kind, visibility: 'management' });
+      expect(fieldCopy.text).toBe(fieldReview.proposed.display);
+      if (kind === 'address') {
+        expect(fieldCopy.fields.find((field) => field.label === 'Street')?.value).toBe('Example Street 5');
+        expect(fieldCopy.fields.find((field) => field.label === 'Postal code')?.value).toBe('12345');
+      }
+    }
+    expect((await good(page, `/trees/${tr.id}`)).revision).toBe(revision + 3);
 
     await putFictionalCard(page, uid, { email: `changed-${uid.slice(0, 8)}@example.invalid`, update: true });
     const changed = await good(page, `/trees/${tr.id}/contacts/links?person=${p.id}`);
@@ -212,12 +242,30 @@ test('private Contacts link, reviewed confidential copy and unlink keep independ
     expect((await good(page, `/trees/${tr.id}/records/${copied.id}`)).text).toBe(
       'Deliberate manual correction',
     );
+    const acceptedReplaceReview = await good(
+      page,
+      `/trees/${tr.id}/contacts/links/${linked.id}/review-copy`,
+      'POST',
+      { kind: 'email', index: 0, mode: 'replace', replaceId: copied.id },
+    );
+    const replaced = await good(
+      page,
+      `/trees/${tr.id}/contacts/links/${linked.id}/copy`,
+      'POST',
+      {
+        review: acceptedReplaceReview,
+        requestId: key(),
+        acknowledged: true,
+      },
+      201,
+    );
+    expect(replaced.id).toBe(copied.id);
+    expect(replaced.text).toBe(acceptedReplaceReview.proposed.display);
+    expect(replaced.original.text).toBe(copied.text);
     await good(page, `/trees/${tr.id}/contacts/links/${linked.id}`, 'DELETE');
     expect((await good(page, `/trees/${tr.id}/contacts/links?person=${p.id}`)).items).toEqual([]);
     expect((await cardDav(page, uid)).status).toBe(200);
-    expect((await good(page, `/trees/${tr.id}/records/${copied.id}`)).text).toBe(
-      'Deliberate manual correction',
-    );
+    expect((await good(page, `/trees/${tr.id}/records/${copied.id}`)).text).toBe(replaced.text);
     expect((await good(page, `/trees/${tr.id}/contacts/birthday?person=${p.id}`)).linkedContactBirthday).toBe(
       false,
     );
