@@ -235,7 +235,7 @@ final class ResearchTasks
                         409,
                     );
                 }
-                return $this->reserved($old, $actor);
+                return $this->reserved($old, $actor, $current);
             }
             $recent = $this->store->one(
                 'SELECT COUNT(*) AS n FROM *PREFIX*stb_task_links WHERE actor_id = ? AND created_at >= ?',
@@ -255,11 +255,6 @@ final class ResearchTasks
                 'object_name' => $id . '.ics',
                 'request_id' => $requestId,
                 'payload_hash' => $hash,
-                'payload_json' => Store::json([
-                    'title' => $review['title'],
-                    'note' => $review['note'],
-                    'due' => $review['due'],
-                ]),
                 'source_revision' => $review['sourceRevision'],
                 'member_revision' => $review['memberRevision'],
                 'status' => 'pending',
@@ -267,11 +262,11 @@ final class ResearchTasks
                 'updated_at' => $now,
             ]);
             $row = $this->store->one('SELECT * FROM *PREFIX*stb_task_links WHERE id = ?', [$id]);
-            return $this->reserved($row, $actor);
+            return $this->reserved($row, $actor, $current);
         });
     }
 
-    private function reserved(array $row, string $actor): array
+    private function reserved(array $row, string $actor, array $review): array
     {
         $this->calendar($actor, $row['collection_uri']);
         if ($row['status'] === 'linked') {
@@ -281,10 +276,6 @@ final class ResearchTasks
             throw new Problem('unavailable', 'This task request is no longer available.', 409);
         }
         if ((int) $row['created_at'] < time() - 300) {
-            $this->store->execute(
-                "UPDATE *PREFIX*stb_task_links SET status = 'expired', payload_json = '{}' WHERE id = ?",
-                [$row['id']],
-            );
             throw new Problem('review_expired', 'Review this task again.', 412);
         }
         [$m, $source] = $this->authority($row['tree_id'], $actor, $row['person_id'], true);
@@ -294,20 +285,19 @@ final class ResearchTasks
         ) {
             throw new Problem('conflict', 'The research or your access changed. Review the task again.', 412);
         }
-        $data = json_decode($row['payload_json'], true, 16, JSON_THROW_ON_ERROR);
         $link =
             $this->urls->linkToRouteAbsolute('stammbaum.page.index') .
             '#tree=' .
             rawurlencode($row['tree_id']) .
             '&view=people&person=' .
             rawurlencode($row['person_id']);
-        $description = ($data['note'] === '' ? '' : $data['note'] . "\n\n") . $link;
+        $description = ($review['note'] === '' ? '' : $review['note'] . "\n\n") . $link;
         return [
             'id' => $row['id'],
             'status' => 'pending',
             'collection' => $row['collection_uri'],
             'objectName' => $row['object_name'],
-            'ics' => self::ics($row['id'], $data['title'], $description, $data['due']),
+            'ics' => self::ics($row['id'], $review['title'], $description, $review['due']),
         ];
     }
 
@@ -354,7 +344,7 @@ final class ResearchTasks
                 );
             }
             $this->store->execute(
-                "UPDATE *PREFIX*stb_task_links SET status = 'linked', payload_json = '{}', updated_at = ? WHERE id = ?",
+                "UPDATE *PREFIX*stb_task_links SET status = 'linked', updated_at = ? WHERE id = ?",
                 [time(), $id],
             );
             return ['id' => $id, 'status' => 'linked'];
@@ -368,10 +358,10 @@ final class ResearchTasks
             return ['items' => []];
         }
         $source = $this->people->row($tree, $person, $m);
-        // A timed-out DAV request may have succeeded. Keep its opaque identity for
-        // reconciliation, but discard the short-lived copied task text.
+        // A timed-out DAV request may have succeeded. Retain only its opaque
+        // identity for manual reconciliation; no task content is stored here.
         $this->store->execute(
-            "UPDATE *PREFIX*stb_task_links SET status = 'outcome-unknown', payload_json = '{}' WHERE actor_id = ? AND status = 'pending' AND created_at < ?",
+            "UPDATE *PREFIX*stb_task_links SET status = 'outcome-unknown' WHERE actor_id = ? AND status = 'pending' AND created_at < ?",
             [$actor, time() - 300],
         );
         $rows = $this->store->rows(

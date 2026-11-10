@@ -19,7 +19,6 @@ final class Version000116Date20261110080000 extends SimpleMigrationStep
             $t->addColumn('object_name', 'string', ['length' => 80]);
             $t->addColumn('request_id', 'string', ['length' => 80]);
             $t->addColumn('payload_hash', 'string', ['length' => 64]);
-            $t->addColumn('payload_json', 'text');
             $t->addColumn('source_revision', 'integer');
             $t->addColumn('member_revision', 'integer');
             $t->addColumn('status', 'string', ['length' => 24]);

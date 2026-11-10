@@ -28,7 +28,7 @@ final class AccountLifecycle implements IEventListener
             } else {
                 // A pending DAV write cannot survive account or credential invalidation.
                 $this->store->execute(
-                    "UPDATE *PREFIX*stb_task_links SET status = 'authority-invalidated', payload_json = '{}' WHERE actor_id = ? AND status = 'pending'",
+                    "UPDATE *PREFIX*stb_task_links SET status = 'authority-invalidated' WHERE actor_id = ? AND status = 'pending'",
                     [$uid],
                 );
             }
