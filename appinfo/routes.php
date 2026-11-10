@@ -1,6 +1,11 @@
 <?php
 return [
     'routes' => [
+        ['name' => 'task#collections', 'url' => '/api/v1/integrations/tasks/collections', 'verb' => 'GET'],
+        ['name' => 'task#review', 'url' => '/api/v1/trees/{tree}/tasks/review', 'verb' => 'POST'],
+        ['name' => 'task#reserve', 'url' => '/api/v1/trees/{tree}/tasks', 'verb' => 'POST'],
+        ['name' => 'task#index', 'url' => '/api/v1/trees/{tree}/tasks', 'verb' => 'GET'],
+        ['name' => 'task#complete', 'url' => '/api/v1/trees/{tree}/tasks/{id}/complete', 'verb' => 'POST'],
         ['name' => 'export#preview', 'url' => '/api/v1/trees/{tree}/exports/preview', 'verb' => 'POST'],
         ['name' => 'export#create', 'url' => '/api/v1/trees/{tree}/exports', 'verb' => 'POST'],
         ['name' => 'export#index', 'url' => '/api/v1/trees/{tree}/exports', 'verb' => 'GET'],

@@ -499,6 +499,62 @@
   flex-wrap: wrap;
   margin: 10px 0 22px;
 }
+.research-tasks {
+  margin: -8px 0 20px;
+  min-width: 0;
+}
+.research-tasks > button {
+  border-color: var(--stb-accent) !important;
+  color: var(--stb-accent) !important;
+}
+.task-review {
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px solid var(--stb-border);
+  border-radius: 12px;
+  background: var(--stb-tint);
+  overflow-wrap: anywhere;
+}
+.task-review > p:first-child {
+  margin-top: 0;
+  color: var(--color-text-maxcontrast);
+}
+.task-review fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.task-review fieldset > label {
+  display: block;
+  font-weight: 600;
+}
+.task-review fieldset > label.check,
+.task-preview > label.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-weight: 400;
+}
+.task-review textarea {
+  min-height: 74px !important;
+}
+.task-preview,
+.task-links {
+  border-top: 1px solid var(--stb-border);
+  margin-top: 18px;
+  padding-top: 12px;
+}
+.task-preview h3,
+.task-links h3 {
+  font-size: 15px;
+  margin: 0 0 10px;
+}
+.task-links ul {
+  margin: 0 0 12px;
+  padding-left: 18px;
+}
 #stammbaum-app .detail-actions button {
   font-size: 12px;
 }

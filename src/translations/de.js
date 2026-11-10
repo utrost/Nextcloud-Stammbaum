@@ -1,4 +1,60 @@
 export default {
+  Research: 'Recherchiere zu',
+  'Create research task': 'Rechercheaufgabe erstellen',
+  'Research task': 'Rechercheaufgabe',
+  'Tasks owns the resulting task. People with access to the chosen task list may see its copied details.':
+    'Die neue Aufgabe wird in Tasks verwaltet. Personen mit Zugriff auf die gewählte Aufgabenliste können die kopierten Angaben sehen.',
+  'Working…': 'In Bearbeitung…',
+  'No writable task list is available.': 'Keine beschreibbare Aufgabenliste verfügbar.',
+  'Task list': 'Aufgabenliste',
+  'Task title': 'Aufgabentitel',
+  'Research instruction': 'Recherchehinweis',
+  'Due date (optional)': 'Fälligkeitsdatum (optional)',
+  'Include this living or unknown-status person in the task':
+    'Diese lebende Person oder Person mit unbekanntem Lebensstatus in die Aufgabe aufnehmen',
+  'Review task': 'Aufgabe prüfen',
+  'Review copied details': 'Kopierte Angaben prüfen',
+  'A private link back to this person will be included.': 'Ein Link zu dieser Person wird hinzugefügt.',
+  'The selected task list has separate sharing permissions. Its readers and synchronized devices can retain this copy.':
+    'Für die gewählte Aufgabenliste gelten eigene Freigaben. Lesende Personen und synchronisierte Geräte können diese Kopie behalten.',
+  'I understand who may see this task': 'Ich verstehe, wer diese Aufgabe sehen kann',
+  'Create task': 'Aufgabe erstellen',
+  'My linked tasks': 'Meine verknüpften Aufgaben',
+  'Linked task': 'Verknüpfte Aufgabe',
+  'Task creation pending': 'Aufgabenerstellung noch offen',
+  'Source changed; review before updating': 'Quelle geändert; vor einer Aktualisierung erneut prüfen',
+  'Task result uncertain; check Tasks': 'Aufgabenergebnis ungewiss; bitte in Tasks prüfen',
+  'Refresh links': 'Verknüpfungen aktualisieren',
+  'Open Tasks to see current completion and edit the task.':
+    'Öffne Tasks, um den aktuellen Bearbeitungsstand zu sehen und die Aufgabe zu ändern.',
+  'Open Tasks': 'Tasks öffnen',
+  'Task lists could not be loaded. Try again.':
+    'Aufgabenlisten konnten nicht geladen werden. Bitte erneut versuchen.',
+  'Nextcloud Tasks is not available for this account.':
+    'Nextcloud Tasks ist für dieses Konto nicht verfügbar.',
+  'You can no longer write to this task list.': 'Du kannst nicht mehr in diese Aufgabenliste schreiben.',
+  'Task creation could not be confirmed. Refresh before trying again.':
+    'Die Erstellung der Aufgabe konnte nicht bestätigt werden. Aktualisiere die Ansicht vor einem neuen Versuch.',
+  'Export permission is required to copy genealogy details.':
+    'Zum Kopieren genealogischer Angaben ist eine Exportberechtigung erforderlich.',
+  'Review inclusion of a living person or unknown living status.':
+    'Prüfe die Aufnahme einer lebenden Person oder einer Person mit unbekanntem Lebensstatus.',
+  'Enter a valid due date.': 'Gib ein gültiges Fälligkeitsdatum ein.',
+  'Review this task before creating it.': 'Prüfe diese Aufgabe vor dem Erstellen.',
+  'The research or your access changed. Review the task again.':
+    'Die Forschungsdaten oder dein Zugriff haben sich geändert. Prüfe die Aufgabe erneut.',
+  'Review this task again.': 'Prüfe diese Aufgabe erneut.',
+  'Acknowledge the task list audience before creating it.':
+    'Bestätige vor dem Erstellen, wer die Aufgabenliste sehen kann.',
+  'This task request was already used for different details.':
+    'Diese Aufgabenanfrage wurde bereits für andere Angaben verwendet.',
+  'This task request is no longer available.': 'Diese Aufgabenanfrage ist nicht mehr verfügbar.',
+  'Too many new task requests. Try again later.':
+    'Zu viele neue Aufgabenanfragen. Versuche es später erneut.',
+  'Task creation could not be verified yet. Refresh before trying again.':
+    'Die Erstellung der Aufgabe konnte noch nicht geprüft werden. Aktualisiere die Ansicht vor einem neuen Versuch.',
+  'This task could not be processed. Refresh and try again.':
+    'Diese Aufgabe konnte nicht verarbeitet werden. Aktualisiere die Ansicht und versuche es erneut.',
   'This early version supports manual research, reviewed GEDCOM import and current-state export. Review the exchange limitations before transferring research. External integrations remain planned.':
     'Diese frühe Version unterstützt manuelle Forschung, geprüften GEDCOM-Import und den Export des aktuellen Forschungsstands. Prüfe vor der Übertragung die Austauschbeschränkungen. Externe Integrationen sind weiterhin geplant.',
   'Only unchanged scalar root vendor extensions can be included with full privacy options; other extensions are omitted.':
