@@ -94,7 +94,10 @@ test('task reviews deny missing export rights and stale or reused confirmations'
       revision: 0,
     });
     await login(viewer, 'stb_viewer');
-    expect((await request(viewer, `/trees/${tr.id}/tasks/review`, 'POST', payload)).status).toBe(403);
+    const viewerCollections = await good(viewer, '/integrations/tasks/collections');
+    expect(viewerCollections.items.length).toBeGreaterThan(0);
+    const viewerPayload = { ...payload, collection: viewerCollections.items[0].uri };
+    expect((await request(viewer, `/trees/${tr.id}/tasks/review`, 'POST', viewerPayload)).status).toBe(403);
     let members = await good(page, `/trees/${tr.id}/members`);
     let membership = members.items.find((m) => m.userId === 'stb_viewer');
     await good(page, `/trees/${tr.id}/members`, 'POST', {
@@ -103,7 +106,7 @@ test('task reviews deny missing export rights and stale or reused confirmations'
       exportAllowed: true,
       revision: membership.revision,
     });
-    const viewerReview = await good(viewer, `/trees/${tr.id}/tasks/review`, 'POST', payload);
+    const viewerReview = await good(viewer, `/trees/${tr.id}/tasks/review`, 'POST', viewerPayload);
     const viewerReservation = await good(
       viewer,
       `/trees/${tr.id}/tasks`,

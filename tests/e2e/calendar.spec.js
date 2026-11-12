@@ -332,7 +332,12 @@ test('Calendar rejects stale reviews, missing export authority and invalid anniv
       revision: 0,
     });
     await login(viewer, 'stb_viewer');
-    expect((await request(viewer, `/trees/${tr.id}/calendar/review`, 'POST', valid)).status).toBe(403);
+    const viewerCalendars = await good(viewer, '/integrations/calendar/collections');
+    expect(viewerCalendars.items.length).toBeGreaterThan(0);
+    const viewerPayload = { ...valid, collection: viewerCalendars.items[0].uri };
+    expect((await request(viewer, `/trees/${tr.id}/calendar/review`, 'POST', viewerPayload)).status).toBe(
+      403,
+    );
     expect((await good(viewer, `/trees/${tr.id}/calendar?person=${p.id}`)).items).toEqual([]);
     let member = (await good(page, `/trees/${tr.id}/members`)).items.find((m) => m.userId === 'stb_viewer');
     await good(page, `/trees/${tr.id}/members`, 'POST', {
@@ -341,9 +346,6 @@ test('Calendar rejects stale reviews, missing export authority and invalid anniv
       exportAllowed: true,
       revision: member.revision,
     });
-    const viewerCalendars = await good(viewer, '/integrations/calendar/collections');
-    expect(viewerCalendars.items.length).toBeGreaterThan(0);
-    const viewerPayload = { ...valid, collection: viewerCalendars.items[0].uri };
     const viewerReview = await good(viewer, `/trees/${tr.id}/calendar/review`, 'POST', viewerPayload);
     const hidden = await person(page, tr.id, 'Private', {
       livingStatus: 'deceased',
