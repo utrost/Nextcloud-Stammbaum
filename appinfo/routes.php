@@ -1,6 +1,15 @@
 <?php
 return [
     'routes' => [
+        [
+            'name' => 'calendar#collections',
+            'url' => '/api/v1/integrations/calendar/collections',
+            'verb' => 'GET',
+        ],
+        ['name' => 'calendar#review', 'url' => '/api/v1/trees/{tree}/calendar/review', 'verb' => 'POST'],
+        ['name' => 'calendar#create', 'url' => '/api/v1/trees/{tree}/calendar', 'verb' => 'POST'],
+        ['name' => 'calendar#index', 'url' => '/api/v1/trees/{tree}/calendar', 'verb' => 'GET'],
+        ['name' => 'calendar#unlink', 'url' => '/api/v1/trees/{tree}/calendar/{id}', 'verb' => 'DELETE'],
         ['name' => 'contact#books', 'url' => '/api/v1/trees/{tree}/contacts/books', 'verb' => 'GET'],
         ['name' => 'contact#search', 'url' => '/api/v1/trees/{tree}/contacts/search', 'verb' => 'POST'],
         [

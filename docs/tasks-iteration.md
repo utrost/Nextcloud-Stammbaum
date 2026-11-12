@@ -4,6 +4,8 @@ This iteration implements a small part of [the optional Nextcloud integration co
 
 ## Delivered journey
 
+Alpha.25 tightened the outbound privacy default: a management-only person now requires a separate explicit inclusion choice, even for a manager or owner who may read that person.
+
 An account with export authority can open a person and choose **Create research task**. The app discovers writable calendars through Nextcloud's public calendar manager, then uses the signed-in account's same-origin CalDAV session to identify collections supporting VTODO. The user enters a title, optional note and due date, reviews the copied content and separate task-list audience, then confirms. Living or unknown-status people require a separate explicit inclusion choice. A management-only person is available only to a manager/owner. The task includes a route back to that person; opening the route rechecks current tree access.
 
 The server creates a private operation row with a random UUID and source/membership revisions. It stores a payload hash for retry matching, but no task title, note or due date. A retry must supply the same current review to reconstruct the task. The browser submits one VTODO at a deterministic object name with `If-None-Match: *`. On success the server verifies the VTODO UID through the public calendar search interface and marks the link as created. Repeating the same confirmation reuses the operation ID; the conditional DAV write prevents overwriting an existing object. A failed verification is shown as uncertain rather than as a successful task. Review data expires after five minutes; new task operations are limited to 20 per account per hour. An expired pending operation keeps only its opaque identity for investigation.

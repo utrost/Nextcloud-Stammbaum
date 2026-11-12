@@ -1,4 +1,89 @@
 export default {
+  'Add to Nextcloud Calendar': 'Zu Nextcloud Calendar hinzufügen',
+  'Calendar event': 'Kalendereintrag',
+  'Calendar owns the event. Its sharing permissions and synchronized copies are separate from this tree.':
+    'Der Eintrag wird in Calendar verwaltet. Seine Freigaben und synchronisierten Kopien sind vom Stammbaum getrennt.',
+  'No writable calendar is available.': 'Kein beschreibbarer Kalender verfügbar.',
+  'Calendars could not be loaded. Try again.':
+    'Kalender konnten nicht geladen werden. Bitte erneut versuchen.',
+  Calendar: 'Kalender',
+  'Event type': 'Eintragsart',
+  'One-time appointment': 'Einmaliger Termin',
+  'Yearly anniversary': 'Jährlicher Gedenktag',
+  'Anniversary of': 'Gedenktag für',
+  Birth: 'Geburt',
+  Death: 'Tod',
+  'Appointment date': 'Termindatum',
+  'Start time (optional; one hour)': 'Beginn (optional; eine Stunde)',
+  Timezone: 'Zeitzone',
+  'Event title': 'Titel des Eintrags',
+  'Location (optional)': 'Ort (optional)',
+  Location: 'Ort',
+  'Include this living or unknown-status person in the event':
+    'Diese lebende Person oder Person mit unbekanntem Lebensstatus im Kalendereintrag nennen',
+  'Include this management-only person in the event':
+    'Diese nur für die Verwaltung sichtbare Person im Kalendereintrag nennen',
+  'Include this management-only person in the task':
+    'Diese nur für die Verwaltung sichtbare Person in die Aufgabe aufnehmen',
+  'Review inclusion of a management-only person.':
+    'Prüfe die Aufnahme einer nur für die Verwaltung sichtbaren Person.',
+  'Review event': 'Eintrag prüfen',
+  'Review calendar event': 'Kalendereintrag prüfen',
+  'Change event details': 'Eintragsangaben ändern',
+  'Family appointment': 'Familientermin',
+  'Birthday of': 'Geburtstag von',
+  'Remembrance of': 'Gedenktag für',
+  'one hour': 'eine Stunde',
+  'Repeats yearly': 'Wiederholt sich jährlich',
+  '29 February repeats only in leap years': 'Der 29. Februar wiederholt sich nur in Schaltjahren',
+  'Nextcloud may already show a birthday from Contacts. Duplicate detection is incomplete.':
+    'Nextcloud zeigt möglicherweise bereits einen Geburtstag aus Contacts. Die Erkennung doppelter Einträge ist unvollständig.',
+  'I want another birthday event despite the linked contact':
+    'Ich möchte trotz des verknüpften Kontakts einen weiteren Geburtstagseintrag',
+  'I understand who may see this event': 'Ich verstehe, wer diesen Eintrag sehen kann',
+  'Create calendar event': 'Kalendereintrag erstellen',
+  'My linked calendar events': 'Meine verknüpften Kalendereinträge',
+  'Linked event': 'Verknüpfter Kalendereintrag',
+  'Event result uncertain; check Calendar': 'Ergebnis ungewiss; bitte in Calendar prüfen',
+  'Event creation pending': 'Kalendereintrag wird noch erstellt',
+  'Calendar event is missing or moved': 'Kalendereintrag fehlt oder wurde verschoben',
+  'Calendar access is unavailable': 'Kalenderzugriff nicht verfügbar',
+  'Unlink event': 'Eintragsverknüpfung lösen',
+  'Unlink this event? The Calendar entry remains.':
+    'Diese Eintragsverknüpfung lösen? Der Kalendereintrag bleibt bestehen.',
+  'Acknowledge the possible duplicate birthday before creating it.':
+    'Bestätige den möglicherweise doppelten Geburtstag vor dem Erstellen.',
+  'Open Calendar': 'Calendar öffnen',
+  'Nextcloud Calendar is not available for this account.':
+    'Nextcloud Calendar ist für dieses Konto nicht verfügbar.',
+  'Choose a valid exact calendar date.': 'Wähle ein gültiges, genaues Kalenderdatum.',
+  'Only an exact full date can supply an anniversary.':
+    'Nur ein genaues, vollständiges Datum kann einen Jahrestag bestimmen.',
+  'An anniversary date could not be determined.': 'Ein Jahrestagsdatum konnte nicht bestimmt werden.',
+  'Choose a valid appointment time.': 'Wähle eine gültige Uhrzeit.',
+  'Choose a supported timezone.': 'Wähle eine unterstützte Zeitzone.',
+  'This time does not exist in the selected timezone.':
+    'Diese Uhrzeit gibt es in der gewählten Zeitzone nicht.',
+  'This time occurs twice in the selected timezone. Choose another time.':
+    'Diese Uhrzeit kommt in der gewählten Zeitzone zweimal vor. Wähle eine andere Uhrzeit.',
+  'This calendar has separate sharing permissions. Its readers and synchronized devices can retain the copied details.':
+    'Für diesen Kalender gelten eigene Freigaben. Lesende Personen und synchronisierte Geräte können die kopierten Angaben behalten.',
+  'Review this calendar event before creating it.': 'Prüfe diesen Kalendereintrag vor dem Erstellen.',
+  'Acknowledge the calendar audience before creating it.':
+    'Bestätige vor dem Erstellen, wer diesen Kalender sehen kann.',
+  'The research or your access changed. Review the event again.':
+    'Die Forschungsdaten oder dein Zugriff haben sich geändert. Prüfe den Eintrag erneut.',
+  'Review this calendar event again.': 'Prüfe diesen Kalendereintrag erneut.',
+  'This event request was already used for different details.':
+    'Diese Eintragsanfrage wurde bereits für andere Angaben verwendet.',
+  'Too many new calendar requests. Try again later.':
+    'Zu viele neue Kalenderanfragen. Versuche es später erneut.',
+  'Calendar creation could not be verified. Check Calendar before retrying.':
+    'Der Kalendereintrag konnte nicht bestätigt werden. Prüfe Calendar vor einem neuen Versuch.',
+  'The event may have been created, but your access or the research changed. Check Calendar.':
+    'Der Eintrag wurde möglicherweise erstellt, aber dein Zugriff oder die Forschungsdaten haben sich geändert. Prüfe Calendar.',
+  'This calendar event could not be processed. Refresh and try again.':
+    'Dieser Kalendereintrag konnte nicht verarbeitet werden. Aktualisiere die Ansicht und versuche es erneut.',
   'Link Nextcloud contact': 'Nextcloud-Kontakt verknüpfen',
   'Nextcloud contact links': 'Nextcloud-Kontaktverknüpfungen',
   'Links are private to your account. A contact card and a genealogy person remain separate identities.':
@@ -126,8 +211,8 @@ export default {
     'Die Erstellung der Aufgabe konnte noch nicht geprüft werden. Aktualisiere die Ansicht vor einem neuen Versuch.',
   'This task could not be processed. Refresh and try again.':
     'Diese Aufgabe konnte nicht verarbeitet werden. Aktualisiere die Ansicht und versuche es erneut.',
-  'This early version supports manual research, reviewed GEDCOM import and current-state export. Review the exchange limitations before transferring research. External integrations remain planned.':
-    'Diese frühe Version unterstützt manuelle Forschung, geprüften GEDCOM-Import und den Export des aktuellen Forschungsstands. Prüfe vor der Übertragung die Austauschbeschränkungen. Externe Integrationen sind weiterhin geplant.',
+  'This early version supports manual research, reviewed GEDCOM import and current-state export. Review exchange limitations before transferring research. Optional Nextcloud Tasks, Calendar and Contacts actions are available from a person.':
+    'Diese frühe Version unterstützt manuelle Forschung, geprüften GEDCOM-Import und den Export des aktuellen Forschungsstands. Prüfe vor der Übertragung die Austauschbeschränkungen. Optionale Aktionen für Nextcloud Tasks, Calendar und Contacts sind bei Personen verfügbar.',
   'Only unchanged scalar root vendor extensions can be included with full privacy options; other extensions are omitted.':
     'Nur unveränderte skalare Herstellerfelder auf Datensatzebene können bei vollständiger Freigabe enthalten sein; andere Erweiterungen werden ausgelassen.',
   Exports: 'Export',

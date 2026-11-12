@@ -94,7 +94,10 @@ test('task reviews deny missing export rights and stale or reused confirmations'
       revision: 0,
     });
     await login(viewer, 'stb_viewer');
-    expect((await request(viewer, `/trees/${tr.id}/tasks/review`, 'POST', payload)).status).toBe(403);
+    const viewerCollections = await good(viewer, '/integrations/tasks/collections');
+    expect(viewerCollections.items.length).toBeGreaterThan(0);
+    const viewerPayload = { ...payload, collection: viewerCollections.items[0].uri };
+    expect((await request(viewer, `/trees/${tr.id}/tasks/review`, 'POST', viewerPayload)).status).toBe(403);
     let members = await good(page, `/trees/${tr.id}/members`);
     let membership = members.items.find((m) => m.userId === 'stb_viewer');
     await good(page, `/trees/${tr.id}/members`, 'POST', {
@@ -103,7 +106,7 @@ test('task reviews deny missing export rights and stale or reused confirmations'
       exportAllowed: true,
       revision: membership.revision,
     });
-    const viewerReview = await good(viewer, `/trees/${tr.id}/tasks/review`, 'POST', payload);
+    const viewerReview = await good(viewer, `/trees/${tr.id}/tasks/review`, 'POST', viewerPayload);
     const viewerReservation = await good(
       viewer,
       `/trees/${tr.id}/tasks`,
@@ -149,6 +152,20 @@ test('task reviews deny missing export rights and stale or reused confirmations'
       (await request(page, `/trees/${tr.id}/tasks/review`, 'POST', { ...payload, personId: unknown.id }))
         .status,
     ).toBe(422);
+    const hidden = await person(page, tr.id, 'Private', {
+      livingStatus: 'deceased',
+      visibility: 'management',
+    });
+    expect(
+      (await request(page, `/trees/${tr.id}/tasks/review`, 'POST', { ...payload, personId: hidden.id }))
+        .status,
+    ).toBe(422);
+    const explicitHidden = await good(page, `/trees/${tr.id}/tasks/review`, 'POST', {
+      ...payload,
+      personId: hidden.id,
+      includeManagement: true,
+    });
+    expect(explicitHidden.includeManagement).toBe(true);
     const review = await good(page, `/trees/${tr.id}/tasks/review`, 'POST', payload);
     const id = key();
     const one = await good(

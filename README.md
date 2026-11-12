@@ -16,6 +16,8 @@ Use **Exports** to review the included research, privacy options and format limi
 
 The app currently targets **Nextcloud 34**, PHP **8.3+**, with MariaDB verified. It uses Nextcloud accounts and private app storage; Library and Relate are development references, not dependencies.
 
+From a person, authorized researchers can create reviewed Nextcloud Tasks or Calendar entries and privately link a Nextcloud Contacts card. These optional journeys keep each app's permissions and ownership separate. Their current limits are recorded in the iteration notes below.
+
 - [GEDCOM iteration and verification](docs/iteration-02.md)
 - [Import profile, limits and preserved-original contract](docs/gedcom-import-profile.md)
 - [First-iteration scope, evidence and remaining work](docs/iteration-01.md)
@@ -26,6 +28,7 @@ The app currently targets **Nextcloud 34**, PHP **8.3+**, with MariaDB verified.
 - [Nextcloud Tasks, Calendar and Contacts integration concept](docs/nextcloud-integration-concept.md)
 - [First Tasks integration journey and verified limits](docs/tasks-iteration.md)
 - [Nextcloud Contacts linking and confidential-copy contract](docs/contacts-iteration.md)
+- [Reviewed Nextcloud Calendar events and limits](docs/calendar-iteration.md)
 - [GitHub roadmap and implementation backlog](https://github.com/utrost/Nextcloud-Stammbaum/issues/1)
 
 ## Build

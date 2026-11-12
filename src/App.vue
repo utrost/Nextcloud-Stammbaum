@@ -14,6 +14,7 @@ import ImportPanel from './components/ImportPanel.vue';
 import ContextPanel from './components/ContextPanel.vue';
 import TabList from './components/TabList.vue';
 import ResearchTaskPanel from './components/ResearchTaskPanel.vue';
+import CalendarPanel from './components/CalendarPanel.vue';
 import ContactLinkPanel from './components/ContactLinkPanel.vue';
 const contactCopyCounter = ref(0);
 const savedViews = ref({ revision: 1, items: [], home: null, openingView: null }),
@@ -1447,6 +1448,7 @@ onBeforeUnmount(() => {
                   </button>
                 </div>
                 <ResearchTaskPanel :tree-id="tree.id" :person="selected" :can-export="tree.canExport" />
+                <CalendarPanel :tree-id="tree.id" :person="selected" :can-export="tree.canExport" />
                 <ContactLinkPanel
                   :tree-id="tree.id"
                   :person="selected"
@@ -1653,7 +1655,7 @@ onBeforeUnmount(() => {
         <p class="iteration-note">
           {{
             t(
-              'This early version supports manual research, reviewed GEDCOM import and current-state export. Review the exchange limitations before transferring research. External integrations remain planned.',
+              'This early version supports manual research, reviewed GEDCOM import and current-state export. Review exchange limitations before transferring research. Optional Nextcloud Tasks, Calendar and Contacts actions are available from a person.',
             )
           }}
         </p>

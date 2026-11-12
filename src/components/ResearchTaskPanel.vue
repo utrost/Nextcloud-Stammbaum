@@ -14,6 +14,7 @@ const open = ref(false),
   note = ref(''),
   due = ref(''),
   includeLiving = ref(false),
+  includeManagement = ref(false),
   review = ref(null),
   acknowledged = ref(false),
   links = ref([]);
@@ -92,12 +93,13 @@ watch(
     note.value = '';
     due.value = '';
     includeLiving.value = false;
+    includeManagement.value = false;
     acknowledged.value = false;
     key = requestId();
   },
 );
 
-watch([title, note, due, collection, includeLiving], () => {
+watch([title, note, due, collection, includeLiving, includeManagement], () => {
   reviewSequence++;
   review.value = null;
   acknowledged.value = false;
@@ -121,6 +123,7 @@ async function preview() {
         note: note.value,
         due: due.value,
         includeLiving: includeLiving.value,
+        includeManagement: includeManagement.value,
       },
     });
     if (seq === reviewSequence && treeId === props.treeId && personId === props.person.id)
@@ -234,6 +237,11 @@ async function refresh() {
           <label v-if="person.livingStatus !== 'deceased'" class="check"
             ><input v-model="includeLiving" type="checkbox" />{{
               t('Include this living or unknown-status person in the task')
+            }}</label
+          >
+          <label v-if="person.visibility === 'management'" class="check"
+            ><input v-model="includeManagement" type="checkbox" />{{
+              t('Include this management-only person in the task')
             }}</label
           >
           <button type="submit">{{ t('Review task') }}</button>

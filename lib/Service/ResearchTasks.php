@@ -20,8 +20,13 @@ final class ResearchTasks
         private IURLGenerator $urls,
     ) {}
 
-    private function authority(string $tree, string $actor, string $person, bool $includeLiving): array
-    {
+    private function authority(
+        string $tree,
+        string $actor,
+        string $person,
+        bool $includeLiving,
+        bool $includeManagement,
+    ): array {
         $m = $this->trees->access($tree, $actor);
         if (!Trees::management($m) && !(bool) $m['export_allowed']) {
             throw new Problem('forbidden', 'Export permission is required to copy genealogy details.', 403);
@@ -33,6 +38,9 @@ final class ResearchTasks
                 'review_required',
                 'Review inclusion of a living person or unknown living status.',
             );
+        }
+        if ($p['visibility'] === 'management' && !$includeManagement) {
+            throw new Problem('review_required', 'Review inclusion of a management-only person.');
         }
         return [$m, $row, $p];
     }
@@ -129,7 +137,13 @@ final class ResearchTasks
             throw Problem::missing();
         }
         $this->calendar($actor, $uri);
-        [$m, $row, $p] = $this->authority($tree, $actor, $person, ($b['includeLiving'] ?? false) === true);
+        [$m, $row, $p] = $this->authority(
+            $tree,
+            $actor,
+            $person,
+            ($b['includeLiving'] ?? false) === true,
+            ($b['includeManagement'] ?? false) === true,
+        );
         $name = trim($p['givenName'] . ' ' . $p['familyName']) ?: 'Unnamed person';
         $title = Values::text($b['title'] ?? 'Research ' . $name, 'title', 200, true);
         $note = Values::text($b['note'] ?? '', 'note', 1000);
@@ -153,6 +167,7 @@ final class ResearchTasks
             'due' => $due,
             'collection' => $uri,
             'includeLiving' => ($b['includeLiving'] ?? false) === true,
+            'includeManagement' => ($b['includeManagement'] ?? false) === true,
             'sourceRevision' => (int) $row['revision'],
             'memberRevision' => (int) $m['revision'],
             'treeRevision' => $this->trees->get($tree, $actor)['revision'],
@@ -183,6 +198,7 @@ final class ResearchTasks
                     'due',
                     'collection',
                     'includeLiving',
+                    'includeManagement',
                     'sourceRevision',
                     'memberRevision',
                     'treeRevision',
@@ -219,6 +235,7 @@ final class ResearchTasks
                     $review['note'],
                     $review['due'],
                     $review['includeLiving'],
+                    $review['includeManagement'],
                     $review['sourceRevision'],
                     $review['memberRevision'],
                 ]),
@@ -278,7 +295,7 @@ final class ResearchTasks
         if ((int) $row['created_at'] < time() - 300) {
             throw new Problem('review_expired', 'Review this task again.', 412);
         }
-        [$m, $source] = $this->authority($row['tree_id'], $actor, $row['person_id'], true);
+        [$m, $source] = $this->authority($row['tree_id'], $actor, $row['person_id'], true, true);
         if (
             (int) $source['revision'] !== (int) $row['source_revision'] ||
             (int) $m['revision'] !== (int) $row['member_revision']
