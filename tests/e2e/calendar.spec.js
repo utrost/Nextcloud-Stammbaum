@@ -361,6 +361,17 @@ test('Calendar rejects stale reviews, missing export authority and invalid anniv
       includeManagement: true,
     });
     expect(explicitHidden.includeManagement).toBe(true);
+    const unknown = await person(page, tr.id, 'Unknown');
+    expect(
+      (await request(page, `/trees/${tr.id}/calendar/review`, 'POST', { ...valid, personId: unknown.id }))
+        .status,
+    ).toBe(422);
+    const explicitUnknown = await good(page, `/trees/${tr.id}/calendar/review`, 'POST', {
+      ...valid,
+      personId: unknown.id,
+      includeLiving: true,
+    });
+    expect(explicitUnknown.includeLiving).toBe(true);
     expect(
       (
         await request(viewer, `/trees/${tr.id}/calendar/review`, 'POST', {
