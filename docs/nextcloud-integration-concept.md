@@ -1,6 +1,6 @@
 # Tighter Nextcloud integration
 
-Design proposal, 8 November 2026. This is new enhancement scope requested by the user, not implemented functionality or an expansion of release-0.15 parity acceptance. Initial compatibility target: Nextcloud 34; select and verify exact Calendar, Tasks and Contacts versions during the adapter work.
+Design proposal, 8 November 2026. This is new enhancement scope requested by the user, outside release-0.15 parity acceptance. Implemented increments and remaining limits are recorded in the [Tasks](tasks-iteration.md), [Contacts](contacts-iteration.md) and [Calendar](calendar-iteration.md) iteration notes. Initial compatibility target: Nextcloud 34; exact supported versions are pinned and verified per adapter.
 
 ## Product direction
 
