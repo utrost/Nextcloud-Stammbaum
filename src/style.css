@@ -499,7 +499,8 @@
   flex-wrap: wrap;
   margin: 10px 0 22px;
 }
-.research-tasks {
+.research-tasks,
+.calendar-appointments {
   margin: -8px 0 20px;
   min-width: 0;
 }
@@ -597,7 +598,8 @@
   gap: 8px;
   font-weight: 400;
 }
-.research-tasks > button {
+.research-tasks > button,
+.calendar-appointments > button {
   border-color: var(--stb-accent) !important;
   color: var(--stb-accent) !important;
 }

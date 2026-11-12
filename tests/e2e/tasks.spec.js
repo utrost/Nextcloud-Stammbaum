@@ -149,6 +149,20 @@ test('task reviews deny missing export rights and stale or reused confirmations'
       (await request(page, `/trees/${tr.id}/tasks/review`, 'POST', { ...payload, personId: unknown.id }))
         .status,
     ).toBe(422);
+    const hidden = await person(page, tr.id, 'Private', {
+      livingStatus: 'deceased',
+      visibility: 'management',
+    });
+    expect(
+      (await request(page, `/trees/${tr.id}/tasks/review`, 'POST', { ...payload, personId: hidden.id }))
+        .status,
+    ).toBe(422);
+    const explicitHidden = await good(page, `/trees/${tr.id}/tasks/review`, 'POST', {
+      ...payload,
+      personId: hidden.id,
+      includeManagement: true,
+    });
+    expect(explicitHidden.includeManagement).toBe(true);
     const review = await good(page, `/trees/${tr.id}/tasks/review`, 'POST', payload);
     const id = key();
     const one = await good(
