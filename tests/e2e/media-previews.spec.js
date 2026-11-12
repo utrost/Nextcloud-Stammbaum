@@ -57,7 +57,8 @@ test('image derivatives are bounded, cached, regenerated and permission checked 
     bytes = await png(page),
     m = await upload(page, tr.id, bytes, 'fictional-cache.png', { personId: p.id });
   const rev = (await good(page, `/trees/${tr.id}`)).revision;
-  const url = `${endpoint}/trees/${tr.id}/media/${m.id}/preview?size=320`;
+  const previewUrl = (size) => `${endpoint}/trees/${tr.id}/media/${m.id}/preview?size=${size}`;
+  const url = previewUrl(320);
   const first = await page.request.get(url);
   expect(first.status()).toBe(200);
   const raster = await first.body();
@@ -79,9 +80,9 @@ test('image derivatives are bounded, cached, regenerated and permission checked 
     if (response.status() === 200) expect(await response.body()).toEqual(raster);
   }
   expect(await (await page.request.get(url)).body()).toEqual(raster);
-  const large = await page.request.get(url.replace('320', '1600'));
+  const large = await page.request.get(previewUrl(1600));
   expect((await large.body()).readUInt32BE(16)).toBe(1600);
-  expect((await page.request.get(url.replace('320', '9000'))).status()).toBe(422);
+  expect((await page.request.get(previewUrl(9000))).status()).toBe(422);
   expect((await good(page, `/trees/${tr.id}`)).revision).toBe(rev);
   expect(await (await page.request.get(`${endpoint}/trees/${tr.id}/media/${m.id}/original`)).body()).toEqual(
     bytes,
