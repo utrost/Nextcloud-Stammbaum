@@ -8,7 +8,10 @@ export function calendarObjectUrl(collection, objectName) {
 /** Best effort: a missing initial ETag disables in-app external removal. */
 export async function captureCreatedEtag(treeId, kind, id, collection) {
   try {
-    const response = await fetch(calendarObjectUrl(collection, `${id}.ics`), { credentials: 'same-origin' });
+    const response = await fetch(calendarObjectUrl(collection, `${id}.ics`), {
+      credentials: 'same-origin',
+      cache: 'no-store',
+    });
     if (!response.ok) return false;
     const etag = response.headers.get('ETag');
     if (!etag) return false;

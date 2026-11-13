@@ -67,6 +67,7 @@ async function refresh(item) {
     if (result.canRemoveExternal) {
       const response = await fetch(calendarObjectUrl(result.collection, `${result.id}.ics`), {
         credentials: 'same-origin',
+        cache: 'no-store',
       }).catch(() => {
         throw new Error('Destination could not be checked. Try again.');
       });
@@ -120,6 +121,7 @@ async function reviewExternalRemoval(item) {
     });
     const response = await fetch(calendarObjectUrl(review.collection, review.objectName), {
       credentials: 'same-origin',
+      cache: 'no-store',
     }).catch(() => {
       throw new Error('Destination could not be checked. Try again.');
     });
@@ -160,7 +162,7 @@ async function removeExternal() {
     )
       throw new Error('Review external removal again.');
     const url = calendarObjectUrl(review.collection, review.objectName);
-    const check = await fetch(url, { credentials: 'same-origin' }).catch(() => {
+    const check = await fetch(url, { credentials: 'same-origin', cache: 'no-store' }).catch(() => {
       throw new Error('Destination could not be checked. Try again.');
     });
     if (!check.ok) throw new Error('Destination could not be checked. Try again.');

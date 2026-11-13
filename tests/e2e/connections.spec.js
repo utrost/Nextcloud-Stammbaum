@@ -36,6 +36,7 @@ async function dav(page, connection, method = 'GET', body, etag) {
       const response = await fetch(url, {
         method,
         credentials: 'same-origin',
+        cache: 'no-store',
         headers: {
           ...(etag ? { 'If-Match': etag } : {}),
           ...(method !== 'GET' ? { requesttoken: window.OC.requestToken } : {}),
