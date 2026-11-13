@@ -261,6 +261,8 @@ test('native visual baselines cover family, expanded evidence and narrow screens
   await page.setViewportSize({ width: 390, height: 1000 });
   await expect(page.locator('.citation-card')).toHaveScreenshot('research-evidence-phone.png', options);
   await page.locator('.research-toggle').click();
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.mouse.move(0, 0);
   await expect(page.locator('.graph-shell')).toHaveScreenshot('family-phone.png', options);
 });
 
