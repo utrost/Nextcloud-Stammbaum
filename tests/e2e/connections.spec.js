@@ -241,7 +241,10 @@ test('Connections workspace gives keyboard-reachable refresh and local unlink at
   await expect(page.getByRole('status')).toContainText('Connection status refreshed.');
   await page.getByRole('button', { name: 'Open source' }).click();
   await expect(page.getByRole('tab', { name: 'People' })).toHaveAttribute('aria-selected', 'true');
-  await page.getByRole('tab', { name: 'Connections' }).click();
+  await page
+    .getByRole('tablist', { name: 'Tree workspace' })
+    .getByRole('tab', { name: 'Connections' })
+    .click();
   page.once('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: 'Unlink locally' }).focus();
   await page.keyboard.press('Enter');
