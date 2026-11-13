@@ -322,7 +322,11 @@ final class Media
                     ? $this->referenceEntry($tree, $actor, $referenceId, $referenceField, $referenceRevision)
                     : null;
             $visibility = Values::choice(
-                $b['visibility'] ?? 'members',
+                ($b['visibility'] ?? '') === ''
+                    ? (Trees::management($m)
+                        ? 'management'
+                        : 'members')
+                    : $b['visibility'],
                 ['members', 'management'],
                 'visibility',
             );

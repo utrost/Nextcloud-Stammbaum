@@ -160,6 +160,7 @@ test('oriented portrait crop and reset work in the browser; a warm preview canno
     mimeType: 'image/jpeg',
     buffer: bytes,
   });
+  await page.getByRole('combobox', { name: 'Visibility' }).selectOption('members');
   await page.getByRole('button', { name: 'Upload original', exact: true }).click();
   await page.getByRole('button', { name: 'Edit media', exact: true }).click();
   const dialog = page.getByRole('dialog');

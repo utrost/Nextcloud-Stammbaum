@@ -92,7 +92,7 @@ test('shared private media never leaks metadata, originals or previews to ordina
     p = await person(page, tr.id, 'Public'),
     q = await person(page, tr.id, 'Secret', { visibility: 'management' });
   await grant(page, tr.id, 'stb_editor', 'editor');
-  const up = await upload(page, tr.id, await png(page), { personId: p.id });
+  const up = await upload(page, tr.id, await png(page), { personId: p.id, visibility: 'members' });
   expect(up.status, JSON.stringify(up.body)).toBe(201);
   const m = up.body;
   await good(page, `/trees/${tr.id}/media/${m.id}`, 'PUT', {
@@ -108,6 +108,41 @@ test('shared private media never leaks metadata, originals or previews to ordina
       404,
     );
   expect((await request(editor, `/trees/${tr.id}/media/${m.id}`, 'PUT', edit(m))).status).toBe(404);
+  await ctx.close();
+});
+
+test('upload visibility defaults follow the uploader role and remain enforced on direct URLs', async ({
+  page,
+  browser,
+}) => {
+  await login(page);
+  const tr = await tree(page),
+    bytes = await png(page);
+  await grant(page, tr.id, 'stb_editor', 'editor');
+  const ownerUpload = await upload(page, tr.id, bytes);
+  expect(ownerUpload.status, JSON.stringify(ownerUpload.body)).toBe(201);
+  expect(ownerUpload.body.visibility).toBe('management');
+  const ctx = await browser.newContext(),
+    editor = await ctx.newPage();
+  await login(editor, 'stb_editor');
+  expect((await good(editor, `/trees/${tr.id}/media`)).items).toEqual([]);
+  for (const suffix of ['', '/original', '/preview'])
+    expect(
+      (await editor.request.get(`${endpoint}/trees/${tr.id}/media/${ownerUpload.body.id}${suffix}`)).status(),
+    ).toBe(404);
+  const editorUpload = await upload(editor, tr.id, bytes);
+  expect(editorUpload.status, JSON.stringify(editorUpload.body)).toBe(201);
+  expect(editorUpload.body.visibility).toBe('members');
+  expect((await good(editor, `/trees/${tr.id}/media`)).items.map((m) => m.id)).toEqual([
+    editorUpload.body.id,
+  ]);
+  await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&view=media`);
+  await page.getByLabel('Choose original', { exact: true }).setInputFiles({
+    name: 'fictional-visibility.png',
+    mimeType: 'image/png',
+    buffer: bytes,
+  });
+  await expect(page.getByRole('combobox', { name: 'Visibility' })).toHaveValue('management');
   await ctx.close();
 });
 
@@ -128,6 +163,10 @@ test('uploads reject disguised active content, over-limit images and files; malf
   const oversized = await png(page);
   oversized.writeUInt32BE(16001, 16);
   expect((await upload(page, tr.id, oversized)).status).toBe(422);
+  const tooManyPixels = await png(page);
+  tooManyPixels.writeUInt32BE(4001, 16);
+  tooManyPixels.writeUInt32BE(4000, 20);
+  expect((await upload(page, tr.id, tooManyPixels)).status).toBe(422);
   expect((await upload(page, tr.id, Buffer.alloc(10485761, 65))).status).toBe(413);
   const bytes = Buffer.from(
       '%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n',
@@ -136,6 +175,11 @@ test('uploads reject disguised active content, over-limit images and files; malf
       file: { name: 'fictional.pdf', mimeType: 'application/pdf', buffer: bytes },
     });
   expect(pdf.status, JSON.stringify(pdf.body)).toBe(201);
+  const disguised = await upload(page, tr.id, bytes, {
+    file: { name: 'disguised.png', mimeType: 'image/png', buffer: bytes },
+  });
+  expect(disguised.status, JSON.stringify(disguised.body)).toBe(201);
+  expect(disguised.body.mime).toBe('application/pdf');
   const r = await page.request.get(`${endpoint}/trees/${tr.id}/media/${pdf.body.id}/original`);
   expect(r.headers()['content-disposition']).toContain('attachment');
   expect(r.headers()['x-content-type-options']).toBe('nosniff');

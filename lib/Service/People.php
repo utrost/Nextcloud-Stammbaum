@@ -401,8 +401,8 @@ final class People
                 )['n'];
             }
             $counts['media'] = (int) $this->store->one(
-                "SELECT COUNT(DISTINCT v.id) AS n FROM *PREFIX*stb_media v WHERE v.tree_id = ? AND (EXISTS (SELECT 1 FROM *PREFIX*stb_media_people a WHERE a.media_id = v.id AND a.person_id = ?) OR EXISTS (SELECT 1 FROM *PREFIX*stb_media_refs x WHERE x.media_id = v.id AND x.kind = 'person' AND x.target_id = ?))",
-                [$tree, $id, $id],
+                "SELECT COUNT(DISTINCT v.id) AS n FROM *PREFIX*stb_media v WHERE v.tree_id = ? AND (EXISTS (SELECT 1 FROM *PREFIX*stb_media_people a WHERE a.media_id = v.id AND a.person_id = ?) OR EXISTS (SELECT 1 FROM *PREFIX*stb_media_refs x WHERE x.media_id = v.id AND x.kind = 'person' AND x.target_id = ?) OR EXISTS (SELECT 1 FROM *PREFIX*stb_media_refs x JOIN *PREFIX*stb_participants a ON a.record_id = x.target_id WHERE x.media_id = v.id AND x.kind = 'event' AND a.person_id = ?))",
+                [$tree, $id, $id, $id],
             )['n'];
             $counts['connections'] = (int) $this->store->one(
                 'SELECT COUNT(*) AS n FROM *PREFIX*stb_relations WHERE tree_id = ? AND active = 1 AND (source_id = ? OR target_id = ?)',

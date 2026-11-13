@@ -47,13 +47,14 @@ function work() {
     { stdio: 'pipe' },
   );
 }
-async function upload(page, tid) {
+async function upload(page, tid, visibility) {
   const requestId = key();
   const result = await page.request.post(`${endpoint}/trees/${tid}/media`, {
     headers: { requesttoken: await page.evaluate(() => window.OC.requestToken) },
     multipart: {
       title: 'Fictional letter',
       requestId,
+      ...(visibility ? { visibility } : {}),
       file: { name: 'letter.pdf', mimeType: 'application/pdf', buffer: pdf },
     },
   });
@@ -117,9 +118,10 @@ test('export defaults filter private and living records, packages originals and 
   await person(page, tr.id, 'LivingSecret', { livingStatus: 'living' });
   await person(page, tr.id, 'UnknownSecret');
   await person(page, tr.id, 'PrivateSecret', { livingStatus: 'deceased', visibility: 'management' });
-  await upload(page, tr.id);
+  await upload(page, tr.id, 'members');
   const review = await preview(page, tr.id);
   expect(review.counts.people).toBe(1);
+  expect(review.counts.media).toBe(1);
   const job = await create(page, tr.id, { media: true });
   work();
   const result = await good(page, `/trees/${tr.id}/exports/${job.id}`);

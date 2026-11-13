@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { login, tree, person, grant, good, request, key, endpoint } from './helpers.js';
 import { editable } from '../../src/domain.js';
 const pdf = readFileSync('tests/fixtures/media-two-pages.pdf');
-async function upload(page, tid, title = 'Fictional document', image = false) {
+async function upload(page, tid, title = 'Fictional document', image = false, visibility) {
   const bytes = image
     ? Buffer.from(
         await page.evaluate(() => {
@@ -25,6 +25,7 @@ async function upload(page, tid, title = 'Fictional document', image = false) {
     multipart: {
       title,
       requestId: key(),
+      ...(visibility ? { visibility } : {}),
       file: {
         name: image ? 'fictional.png' : 'fictional.pdf',
         mimeType: image ? 'image/png' : 'application/pdf',
@@ -188,8 +189,8 @@ test('hidden people and event participants protect metadata, suggestions, filter
     p = await person(page, tr.id, 'Secret', { visibility: 'management' });
   await grant(page, tr.id, 'stb_editor', 'editor');
   const e = await event(page, tr.id, p),
-    a = await upload(page, tr.id),
-    b = await upload(page, tr.id);
+    a = await upload(page, tr.id, 'Fictional document A', false, 'members'),
+    b = await upload(page, tr.id, 'Fictional document B', false, 'members');
   await save(page, tr.id, a, {
     ...a.metadata,
     people: [{ name: 'Secret caption', personId: p.id, association: 'mentioned' }],
@@ -235,6 +236,59 @@ test('person deletion retains captions privately and restoration does not resurr
     confirmed: true,
   });
   expect((await good(page, `/trees/${tr.id}/media?person=${p.id}`)).items).toEqual([]);
+});
+
+test('deletion review counts shared-event media and restore does not revive its link or expose the original', async ({
+  page,
+  browser,
+}) => {
+  await login(page);
+  const tr = await tree(page),
+    p = await person(page, tr.id, 'Alma'),
+    q = await person(page, tr.id, 'Bruno'),
+    e = await event(page, tr.id, p, {
+      participants: [
+        { personId: p.id, role: 'subject' },
+        { personId: q.id, role: 'subject' },
+      ],
+      confirmedParticipants: [p.id, q.id],
+    }),
+    m = await upload(page, tr.id);
+  await save(
+    page,
+    tr.id,
+    m,
+    { ...m.metadata, eventId: e.id },
+    { visibility: 'members', confirmRelease: true },
+  );
+  await grant(page, tr.id, 'stb_editor', 'editor');
+  const ctx = await browser.newContext(),
+    editor = await ctx.newPage();
+  await login(editor, 'stb_editor');
+  expect((await request(editor, `/trees/${tr.id}/people/${p.id}/deletion-impact`)).status).toBe(403);
+  const review = await good(page, `/trees/${tr.id}/people/${p.id}/deletion-impact`);
+  expect(review.records).toBe(1);
+  expect(review.media).toBe(1);
+  await good(page, `/trees/${tr.id}/people/${p.id}/delete`, 'POST', {
+    revision: review.revision,
+    treeRevision: review.treeRevision,
+    confirmed: true,
+  });
+  const after = await good(page, `/trees/${tr.id}/media/${m.id}`);
+  expect(after.metadata.eventId).toBe('');
+  expect(after.visibility).toBe('management');
+  expect(await (await page.request.get(`${endpoint}/trees/${tr.id}/media/${m.id}/original`)).body()).toEqual(
+    pdf,
+  );
+  expect((await good(editor, `/trees/${tr.id}/media`)).items).toEqual([]);
+  expect((await editor.request.get(`${endpoint}/trees/${tr.id}/media/${m.id}/original`)).status()).toBe(404);
+  await good(page, `/trees/${tr.id}/people/${p.id}/restore`, 'POST', {
+    revision: review.revision + 1,
+    confirmed: true,
+  });
+  expect((await good(page, `/trees/${tr.id}/media?event=${e.id}`)).items).toEqual([]);
+  expect((await good(page, `/trees/${tr.id}/media/${m.id}`)).metadata.eventId).toBe('');
+  await ctx.close();
 });
 
 test('metadata editor and responsive viewer support names, dates, event/person links, filters and discard', async ({
@@ -310,7 +364,7 @@ test('viewer closes after metadata dependency revocation and failed filters clea
   await login(page);
   const tr = await tree(page),
     p = await person(page, tr.id, 'Alma'),
-    m = await upload(page, tr.id);
+    m = await upload(page, tr.id, 'Fictional document', false, 'members');
   await save(page, tr.id, m, {
     ...m.metadata,
     people: [{ name: 'Alma', personId: p.id, association: 'mentioned', page: '2' }],
@@ -354,7 +408,7 @@ test('metadata draft survives stale saves and explicit reconciliation; viewer ca
 }) => {
   await login(page);
   const tr = await tree(page),
-    m = await upload(page, tr.id);
+    m = await upload(page, tr.id, 'Fictional document', false, 'members');
   await grant(page, tr.id, 'stb_viewer', 'viewer');
   await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&view=media`);
   await page.getByRole('button', { name: 'Edit media', exact: true }).click();
