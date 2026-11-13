@@ -11,6 +11,7 @@ final class GedcomExport
         'Media metadata is preserved as descriptive notes; crops and preferred portraits are not portable.',
         'Living status, other sex, structured details and competing assertions have limited portable equivalents.',
         'Only unchanged scalar root vendor extensions can be included with full privacy options; other extensions are omitted.',
+        'The export ZIP can exceed the 32 MiB or 100-entry media-import limits; transferring its media may require splitting it into smaller packages.',
     ];
     public function __construct(
         private Store $store,
