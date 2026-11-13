@@ -48,6 +48,7 @@ const trees = ref([]),
   loading = ref(true),
   busy = ref(false),
   error = ref(''),
+  sessionExpired = ref(false),
   treeLoadFailure = ref(null),
   notice = ref(''),
   navOpen = ref(false);
@@ -288,7 +289,15 @@ async function loadPeople(page = 0) {
     people.value = page ? [...people.value, ...r.items] : r.items;
     nextPage.value = r.nextPage;
   } catch (e) {
-    if (seq === peopleSequence) peopleError.value = t(e.message);
+    if (seq === peopleSequence) {
+      peopleError.value = t(e.message);
+      if (e.status === 403 || e.status === 404) {
+        people.value = [];
+        nextPage.value = null;
+        selected.value = null;
+        graph.value = { people: [], relations: [], limited: false, focusId: null };
+      }
+    }
   } finally {
     if (seq === peopleSequence) peopleLoading.value = false;
   }
@@ -402,10 +411,31 @@ async function chooseTree(id, initial = {}, authorized = false) {
   }
 }
 function retryError() {
+  if (sessionExpired.value) {
+    location.reload();
+    return;
+  }
   const failed = treeLoadFailure.value;
   error.value = '';
   if (failed) chooseTree(failed.id, failed.initial);
   else if (!tree.value) startup();
+}
+function authExpired() {
+  sessionExpired.value = true;
+  tree.value = null;
+  trees.value = [];
+  people.value = [];
+  selected.value = null;
+  editor.value = null;
+  members.value = [];
+  invitations.value = [];
+  history.value = [];
+  claims.value = [];
+  relations.value = [];
+  portrait.value = null;
+  graph.value = { people: [], relations: [], limited: false, focusId: null };
+  invitation.value = null;
+  error.value = t('Sign in to continue.');
 }
 async function loadGraph() {
   const seq = ++graphSequence;
@@ -685,7 +715,9 @@ async function createInvite() {
       method: 'POST',
       body: { role: inviteRole.value, exportAllowed: inviteExport.value },
     });
-    inviteUrl.value = location.origin + location.pathname + '#invite=' + r.token;
+    // A fragment is not sent to Nextcloud and is lost during its login redirect.
+    // The query survives that redirect and is removed before the review is shown.
+    inviteUrl.value = location.origin + location.pathname + '?invite=' + encodeURIComponent(r.token);
     await loadManage();
   });
 }
@@ -915,6 +947,14 @@ function deleteNamedView() {
 }
 async function startup(authorized = false) {
   const startupRequest = ++startupSequence;
+  const hash = new URLSearchParams(location.hash.slice(1));
+  const query = new URLSearchParams(location.search);
+  if (query.has('invite') || hash.has('invite')) {
+    inviteToken.value = query.get('invite') ?? hash.get('invite') ?? '';
+    // Remove the one-time token before loading other app or Nextcloud resources.
+    window.history.replaceState(null, '', location.pathname);
+  }
+  const pendingInvite = inviteToken.value;
   // Invalidate older tree loads before waiting for the account/tree list.
   treeSequence++;
   loading.value = true;
@@ -928,11 +968,8 @@ async function startup(authorized = false) {
     const available = await api('/trees');
     if (startupRequest !== startupSequence) return;
     trees.value = available.items;
-    const hash = new URLSearchParams(location.hash.slice(1));
-    if (hash.has('invite')) {
-      inviteToken.value = hash.get('invite');
-      window.history.replaceState(null, '', location.pathname);
-      const result = await api('/invitations/review', { method: 'POST', body: { token: inviteToken.value } });
+    if (pendingInvite) {
+      const result = await api('/invitations/review', { method: 'POST', body: { token: pendingInvite } });
       if (startupRequest === startupSequence) invitation.value = result;
     } else if (hash.has('tree')) {
       await chooseTree(hash.get('tree'), Object.fromEntries(hash), authorized);
@@ -956,11 +993,13 @@ async function routeChanged() {
 }
 onMounted(() => {
   startup();
+  window.addEventListener('stammbaum:auth-expired', authExpired);
   window.addEventListener('hashchange', routeChanged);
   window.addEventListener('beforeunload', treeUnload);
 });
 onBeforeUnmount(() => {
   startupSequence++;
+  window.removeEventListener('stammbaum:auth-expired', authExpired);
   window.removeEventListener('hashchange', routeChanged);
   window.removeEventListener('beforeunload', treeUnload);
   clearTimeout(searchTimer);
@@ -1020,7 +1059,7 @@ onBeforeUnmount(() => {
       <div v-if="error" class="feedback error" role="alert">
         {{ error }}
         <button @click="retryError">
-          {{ t('Retry') }}
+          {{ t(sessionExpired ? 'Sign in again' : 'Retry') }}
         </button>
       </div>
       <div v-if="notice" class="feedback success" role="status">
@@ -1190,6 +1229,13 @@ onBeforeUnmount(() => {
               ><button :disabled="busy" @click="createInvite">{{ t('Create invitation') }}</button>
               <p class="muted">
                 {{ t('Single use. Expires after 48 hours. The recipient must sign in to Nextcloud.') }}
+              </p>
+              <p class="muted">
+                {{
+                  t(
+                    'If the recipient has no Nextcloud account, ask a host administrator to create one. They can then open this invitation before it expires.',
+                  )
+                }}
               </p>
               <template v-if="inviteUrl"
                 ><label

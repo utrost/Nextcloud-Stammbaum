@@ -1,4 +1,7 @@
 export default {
+  'Sign in again': 'Erneut anmelden',
+  'If the recipient has no Nextcloud account, ask a host administrator to create one. They can then open this invitation before it expires.':
+    'Wenn die eingeladene Person noch kein Nextcloud-Konto hat, bitte die Host-Administration um eines. Danach kann sie diese Einladung vor Ablauf öffnen.',
   'Reference connection': 'Verbindung als Verweis',
   'Exact age at death': 'Genaues Alter beim Tod',
   'Recorded death precedes birth.': 'Das erfasste Todesdatum liegt vor dem Geburtsdatum.',

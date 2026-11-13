@@ -10,7 +10,7 @@ Use **Expand person research** to read evidence alongside retained assertions an
 
 For existing research, create an empty tree and open **Imports**. Upload a supported GEDCOM file, review its diagnostics and preview, then explicitly confirm activation. Nextcloud processes it in the background. The current profile includes additional events, occupations, name components and confidential contact details. Missing media references appear in person Details; the referenced files are not automatically downloaded. The [named import profile](docs/gedcom-import-profile.md) is deliberately bounded; unsupported standard fields block activation.
 
-In **Media**, upload a JPEG, PNG or PDF from your device or use **Choose from Nextcloud Files**. Confirm **Import private copy** to store unchanged bytes under the tree's permissions. The copy counts against Stammbaum's storage quota and remains available if the source later changes or is deleted. The gallery has private cached thumbnails and **Open preview** for larger images and PDF pages, with zoom and page controls. PDF previews require the optional Poppler runtime; unsupported documents keep their original download. Explicit GEDCOM media matching remains separate work.
+In **Media**, upload a JPEG, PNG or PDF from your device or use **Choose from Nextcloud Files**. Confirm **Import private copy** to store unchanged bytes under the tree's permissions. The copy counts against Stammbaum's storage quota and remains available if the source later changes or is deleted. The gallery has private cached thumbnails and **Open preview** for larger images and PDF pages, with zoom and page controls. PDF previews require the optional Poppler runtime; unsupported documents keep their original download. Individual imported GEDCOM file references can be matched with reviewed private copies; ZIP package matching remains separate work.
 
 Use **Exports** to review the included research, privacy options and format limitations before generating GEDCOM or an optional package of original media. Results are private to the requester, expire after 24 hours and become invalid after tree/access changes. Managers can review **Move medium to trash** and restore retained media through **Media trash**; originals continue to occupy storage. See the [export and media lifecycle contract](docs/export-media-lifecycle-iteration.md) and [alpha.21 export reliability changes](docs/export-reliability-iteration.md).
 
@@ -22,6 +22,8 @@ Authorized researchers can create a reviewed Nextcloud Task from a person, sourc
 - [Import profile, limits and preserved-original contract](docs/gedcom-import-profile.md)
 - [First-iteration scope, evidence and remaining work](docs/iteration-01.md)
 - [Architecture and data contracts](docs/architecture.md)
+- [Native Nextcloud platform adaptation and verified compatibility](docs/platform-adaptation.md)
+- [Alpha.33 core issue closeout and acceptance evidence](docs/core-closeout-alpha33.md)
 - [Build, install, test and recovery instructions](docs/operations.md)
 - [Development environment and lessons from Library/Relate](docs/development.md)
 - [Implementation roadmap](docs/implementation-roadmap.md)

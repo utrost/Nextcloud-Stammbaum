@@ -81,6 +81,7 @@ test('Nextcloud disable and password events revoke invitation authority; recreat
       before.membershipRevision,
     );
     const homePerson = await person(page, tr.id, 'Account home');
+    const authored = await person(again, tr.id, 'Retained authorship');
     await good(again, `/trees/${tr.id}/views/home`, 'PUT', { revision: 1, homeId: homePerson.id });
     await good(again, `/trees/${tr.id}/connections`);
     const incarnation = fixtureDatabase(
@@ -129,6 +130,12 @@ test('Nextcloud disable and password events revoke invitation authority; recreat
     );
     expect((await request(page, '/invitations/review', 'POST', { token: second.token })).status).toBe(404);
     occ('user:delete', uid);
+    expect((await good(page, `/trees/${tr.id}/people/${authored.id}`)).id).toBe(authored.id);
+    expect(
+      (await good(page, `/trees/${tr.id}/people/${authored.id}/history`)).items.some(
+        (entry) => entry.actorId === uid,
+      ),
+    ).toBe(true);
     expect(
       fixtureDatabase('SELECT id FROM *PREFIX*stb_contact_links WHERE actor_id = ?', [uid], true),
     ).toEqual([]);
