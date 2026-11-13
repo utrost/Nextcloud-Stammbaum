@@ -17,6 +17,7 @@ const props = defineProps({
     canEdit: Boolean,
     canExport: Boolean,
     management: Boolean,
+    openMediumId: String,
   }),
   emit = defineEmits(['changed', 'person']);
 const reviewRegion = ref(null);
@@ -267,9 +268,21 @@ watch(
     resetFilters();
   },
 );
-onMounted(() => {
-  load();
+onMounted(async () => {
   window.addEventListener('beforeunload', unload);
+  await load();
+  const seq = sequence;
+  if (props.openMediumId && !props.person && !props.event) {
+    try {
+      const medium = await api(`/trees/${props.treeId}/media/${props.openMediumId}`);
+      if (seq !== sequence) return;
+      if (!items.value.some((item) => item.id === medium.id)) items.value = [medium, ...items.value];
+      await nextTick();
+      document.querySelector(`[data-medium-id="${medium.id}"]`)?.focus({ preventScroll: false });
+    } catch (e) {
+      if (seq === sequence) error.value = t(e.message);
+    }
+  }
 });
 onBeforeUnmount(() => {
   sequence++;
@@ -459,7 +472,7 @@ onBeforeUnmount(() => {
       }}
     </p>
     <div class="media-grid">
-      <article v-for="m in items" :key="m.id" class="panel media-card">
+      <article v-for="m in items" :key="m.id" :data-medium-id="m.id" tabindex="-1" class="panel media-card">
         <MediaPreview :url="url(m) + '&size=320'" :label="m.title" lazy @unavailable="unavailable(m.id)" />
         <span class="badge">{{ m.mime === 'application/pdf' ? 'PDF' : t('Image') }}</span>
         <h3>{{ m.title }}</h3>

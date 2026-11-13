@@ -106,6 +106,7 @@ final class IntegrationSources
                 ($dto['visibility'] ?? 'members') === 'management' ||
                 count(array_filter($people, fn($p) => $p['visibility'] === 'management')) > 0,
             'person' => $type === 'person' ? $dto : null,
+            'anchorPersonId' => $type === 'event' ? $people[0]['id'] ?? '' : '',
         ];
     }
 }

@@ -48,15 +48,19 @@ final class CalendarAppointments
         throw Problem::missing();
     }
 
-    public function collections(string $actor): array
+    public function collections(string $actor, int $page = 0): array
     {
+        if ($page < 0 || $page > 10000) {
+            throw new Problem('validation', 'Choose an available calendar page.');
+        }
         $this->trees->active($actor);
         $user = $this->users->get($actor);
         if (!$user || !$this->apps->isEnabledForUser('calendar', $user)) {
-            return ['available' => false, 'items' => [], 'readOnlyItems' => []];
+            return ['available' => false, 'items' => [], 'readOnlyItems' => [], 'nextPage' => null];
         }
         $items = [];
         $readOnly = [];
+        $choices = [];
         foreach ($this->calendars->getCalendarsForPrincipal('principals/users/' . $actor) as $c) {
             if (
                 $c->isDeleted() ||
@@ -66,6 +70,10 @@ final class CalendarAppointments
             ) {
                 continue;
             }
+            $choices[] = $c;
+        }
+        usort($choices, fn($a, $b) => strcmp($a->getUri(), $b->getUri()));
+        foreach (array_slice($choices, $page * 50, 50) as $c) {
             $entry = [
                 'uri' => $c->getUri(),
                 'name' => $c->getDisplayName() ?: $c->getUri(),
@@ -78,11 +86,13 @@ final class CalendarAppointments
             } else {
                 $readOnly[] = $entry + ['state' => 'read-only'];
             }
-            if (count($items) + count($readOnly) >= 50) {
-                break;
-            }
         }
-        return ['available' => true, 'items' => $items, 'readOnlyItems' => $readOnly];
+        return [
+            'available' => true,
+            'items' => $items,
+            'readOnlyItems' => $readOnly,
+            'nextPage' => count($choices) > ($page + 1) * 50 ? $page + 1 : null,
+        ];
     }
 
     private static function date(string $value): DateTimeImmutable
@@ -491,13 +501,18 @@ final class CalendarAppointments
         }
         $calendar = $this->calendar($actor, $row['collection_uri']);
         if (!$this->found($calendar, $row['id'])) {
+            $target =
+                $source['type'] === 'person'
+                    ? '&view=people&person=' . rawurlencode($source['id'])
+                    : '&view=people&person=' .
+                        rawurlencode($source['anchorPersonId']) .
+                        '&event=' .
+                        rawurlencode($source['id']);
             $backlink =
                 $this->urls->linkToRouteAbsolute('stammbaum.page.index') .
                 '#tree=' .
                 rawurlencode($tree) .
-                ($source['type'] === 'person'
-                    ? '&view=people&person=' . rawurlencode($source['id'])
-                    : '&view=people');
+                $target;
             try {
                 $calendar->createFromStringMinimal(
                     $row['object_name'],

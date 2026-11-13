@@ -1132,6 +1132,10 @@ export default {
     'In schreibgeschützten Aufgabenlisten können keine Aufgaben erstellt werden.',
   'Read-only calendars are unavailable for creation.':
     'In schreibgeschützten Kalendern können keine Einträge erstellt werden.',
+  'Load more task lists': 'Weitere Aufgabenlisten laden',
+  'Load more calendars': 'Weitere Kalender laden',
+  'Choose an available task-list page.': 'Wähle eine verfügbare Aufgabenlistenseite.',
+  'Choose an available calendar page.': 'Wähle eine verfügbare Kalenderseite.',
   'Include living or unknown-status people in the task':
     'Lebende Personen oder Personen mit unbekanntem Lebensstatus in die Aufgabe aufnehmen',
   'Include management-only research in the task':
