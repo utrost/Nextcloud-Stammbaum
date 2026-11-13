@@ -32,6 +32,26 @@ const transform = (page) => page.locator('.graph-world').evaluate((e) => e.style
 
 test.beforeEach(async ({ page }) => login(page));
 
+test('nonbiological cycles use a single person identity and mark cross-generation references', async ({
+  page,
+}) => {
+  const tr = await tree(page),
+    a = await person(page, tr.id, 'Reference A'),
+    b = await person(page, tr.id, 'Reference B');
+  expect((await relative(page, tr.id, a, b, 'child', 'adoptive')).status).toBe(201);
+  expect((await relative(page, tr.id, b, a, 'child', 'foster')).status).toBe(201);
+  const revision = (await good(page, `/trees/${tr.id}`)).revision;
+  const graph = await good(page, `/trees/${tr.id}/graph?focus=${a.id}&up=2&down=2`);
+  expect(ids(graph)).toEqual([a.id, b.id].sort());
+  expect(graph.relations).toHaveLength(2);
+  await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&focus=${a.id}`);
+  await expect(page.locator('.person-node')).toHaveCount(2);
+  await expect(page.locator('.edge.reference')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Text view', exact: true }).click();
+  await expect(page.locator('.graph-text')).toContainText('Reference connection');
+  expect((await good(page, `/trees/${tr.id}`)).revision).toBe(revision);
+});
+
 test('ordered expansions add exactly one mode-appropriate neighborhood without writing genealogy', async ({
   page,
 }) => {

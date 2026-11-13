@@ -70,6 +70,7 @@ const portrait = ref(null),
   researchExpanded = ref(false),
   researchToggle = ref(null);
 const graph = ref({ people: [], relations: [], limited: false, focusId: null }),
+  graphComponent = ref(null),
   graphLoading = ref(false),
   graphError = ref(''),
   focus = ref(''),
@@ -106,7 +107,8 @@ let searchTimer,
   peopleSequence = 0,
   detailSequence = 0,
   graphSequence = 0,
-  treeSequence = 0;
+  treeSequence = 0,
+  graphFailureStatus = 0;
 const name = (p) => personName(p, t('Unnamed person'));
 const management = computed(() => ['manager', 'owner'].includes(tree.value?.role));
 const canEdit = computed(() => ['editor', 'manager', 'owner'].includes(tree.value?.role));
@@ -363,12 +365,28 @@ async function chooseTree(id, initial = {}, authorized = false) {
     if (opening) setCamera({ ...opening.camera });
     focus.value =
       initial.focus || opening?.focus || savedViews.value.home?.id || r.homeId || people.value[0]?.id || '';
-    if (initial.person || opening?.selected) await inspect(initial.person || opening.selected);
+    if (initial.person || opening?.selected) {
+      const inspected = await inspect(initial.person || opening.selected);
+      if (inspected === 'missing') error.value = '';
+    }
     if (seq !== treeSequence) return;
     linkedEventId.value =
       tab.value === 'people' && selected.value && validTarget(initial.event) ? initial.event : '';
     if (linkedEventId.value) detailTab.value = 'timeline';
-    if (focus.value) await loadGraph();
+    if (focus.value) {
+      await loadGraph();
+      if (initial.focus && graphFailureStatus === 404) {
+        // A copied link may point to a person no longer visible to this member.
+        // Keep the tree open, but do not retain the inaccessible ID in the URL.
+        focus.value = savedViews.value.home?.id || r.homeId || people.value[0]?.id || '';
+        expansions.value = [];
+        if (focus.value) await loadGraph();
+        else {
+          graphError.value = '';
+          graph.value = { people: [], relations: [], limited: false, focusId: null };
+        }
+      }
+    }
     if (seq !== treeSequence) return;
     if (tab.value === 'manage') await loadManage();
     if (seq !== treeSequence) return;
@@ -391,6 +409,7 @@ function retryError() {
 }
 async function loadGraph() {
   const seq = ++graphSequence;
+  graphFailureStatus = 0;
   graphLoading.value = true;
   graphError.value = '';
   const id = tree.value.id;
@@ -405,6 +424,7 @@ async function loadGraph() {
     }
   } catch (e) {
     if (seq === graphSequence) {
+      graphFailureStatus = e.status || 0;
       graphError.value = t(e.message);
       graph.value = { people: [], relations: [], limited: false, focusId: null };
     }
@@ -473,8 +493,10 @@ async function inspect(id) {
     historyPage.value = h.nextPage;
     detailTab.value = 'connections';
     urlState();
+    return true;
   } catch (e) {
     if (seq === detailSequence) error.value = t(e.message);
+    return e.status === 404 ? 'missing' : false;
   } finally {
     if (seq === detailSequence) detailLoading.value = false;
   }
@@ -536,6 +558,8 @@ async function branch(id, view = null) {
   }
   tab.value = 'family';
   await loadGraph();
+  await nextTick();
+  graphComponent.value?.centerFocus();
   urlState();
 }
 async function previous() {
@@ -1400,6 +1424,7 @@ onBeforeUnmount(() => {
                 </div>
                 <FamilyGraph
                   v-else-if="graph.people.length"
+                  ref="graphComponent"
                   :graph="graph"
                   v-model:text-view="graphTextView"
                   :aria-busy="graphLoading"
@@ -1471,6 +1496,17 @@ onBeforeUnmount(() => {
                       </dd>
                     </div>
                   </dl>
+                  <p v-if="selected.exactAgeAtDeath !== null" class="muted life-age">
+                    {{ t('Exact age at death') }}: {{ selected.exactAgeAtDeath }}
+                  </p>
+                  <ul v-if="selected.dateWarnings?.length" class="life-warnings" role="status">
+                    <li v-if="selected.dateWarnings.includes('death_before_birth')">
+                      {{ t('Recorded death precedes birth.') }}
+                    </li>
+                    <li v-if="selected.dateWarnings.includes('living_with_death_date')">
+                      {{ t('Living status conflicts with a recorded death date.') }}
+                    </li>
+                  </ul>
                 </div>
                 <div class="detail-actions">
                   <button
