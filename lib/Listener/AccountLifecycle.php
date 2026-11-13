@@ -27,6 +27,7 @@ final class AccountLifecycle implements IEventListener
                 $this->store->execute('DELETE FROM *PREFIX*stb_task_links WHERE actor_id = ?', [$uid]);
                 $this->store->execute('DELETE FROM *PREFIX*stb_calendar_links WHERE actor_id = ?', [$uid]);
                 $this->store->execute('DELETE FROM *PREFIX*stb_contact_links WHERE actor_id = ?', [$uid]);
+                $this->store->execute('DELETE FROM *PREFIX*stb_connection_actors WHERE actor_id = ?', [$uid]);
             } else {
                 // A pending DAV write cannot survive account or credential invalidation.
                 $this->store->execute(
@@ -36,6 +37,10 @@ final class AccountLifecycle implements IEventListener
                 $this->store->execute(
                     "UPDATE *PREFIX*stb_calendar_links SET status = 'authority-invalidated' WHERE actor_id = ? AND status = 'pending'",
                     [$uid],
+                );
+                $this->store->execute(
+                    "UPDATE *PREFIX*stb_contact_links SET status = 'authority-invalidated', updated_at = ? WHERE actor_id = ? AND status = 'linked'",
+                    [time(), $uid],
                 );
             }
             $rows = $this->store->rows('SELECT tree_id FROM *PREFIX*stb_members WHERE user_id = ?', [$uid]);

@@ -2054,3 +2054,49 @@
 .export-panel > h3 {
   margin-top: 24px;
 }
+
+.integration-connections .panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.connection-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  display: grid;
+  gap: 12px;
+}
+.connection-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+.connection-card p {
+  margin: 8px 0 0;
+  overflow-wrap: anywhere;
+}
+.connection-card .button-row {
+  margin: 0;
+}
+.connection-card .status-pill {
+  display: inline-block;
+  margin-inline-start: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--color-background-hover, #eef1f5);
+  font-size: 0.85em;
+}
+.connection-removal {
+  margin-block: 20px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
