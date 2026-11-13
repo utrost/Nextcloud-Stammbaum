@@ -16,6 +16,12 @@ const notice = ref('');
 const removal = ref(null);
 const removalAcknowledged = ref(false);
 let sequence = 0;
+function clearDisplayedConnections() {
+  items.value = [];
+  removal.value = null;
+  removalAcknowledged.value = false;
+  nextPage.value = null;
+}
 const statusText = (status) =>
   t(
     {
@@ -43,7 +49,10 @@ async function load(target = 0) {
     page.value = target;
     nextPage.value = result.nextPage;
   } catch (e) {
-    if (ticket === sequence) error.value = t(e.message);
+    if (ticket === sequence) {
+      clearDisplayedConnections();
+      error.value = t(e.message);
+    }
   } finally {
     if (ticket === sequence) loading.value = false;
   }
@@ -73,6 +82,7 @@ async function refresh(item) {
     );
     notice.value = t('Connection status refreshed.');
   } catch (e) {
+    clearDisplayedConnections();
     error.value = t(e.message);
   } finally {
     busy.value = '';
@@ -93,6 +103,7 @@ async function unlink(item) {
     );
     notice.value = t('Local connection removed. The external item remains.');
   } catch (e) {
+    clearDisplayedConnections();
     error.value = t(e.message);
   } finally {
     busy.value = '';
@@ -126,6 +137,7 @@ async function reviewExternalRemoval(item) {
     if (observed !== review.etag) throw new Error('The external item changed. Remove it in its own app.');
     removal.value = review;
   } catch (e) {
+    clearDisplayedConnections();
     error.value = t(e.message);
   } finally {
     busy.value = '';
@@ -189,6 +201,7 @@ async function removeExternal() {
     notice.value = t('External item removed and local link closed.');
     await load(page.value);
   } catch (e) {
+    clearDisplayedConnections();
     error.value = t(e.message);
   } finally {
     busy.value = '';

@@ -245,6 +245,17 @@ test('Connections workspace gives keyboard-reachable refresh and local unlink at
     .getByRole('tablist', { name: 'Tree workspace' })
     .getByRole('tab', { name: 'Connections' })
     .click();
+  const blockedList = (url) =>
+    url.pathname.endsWith(`/trees/${tr.id}/connections`) && url.searchParams.has('page');
+  await page.route(blockedList, (route) =>
+    route.fulfill({ status: 403, contentType: 'application/json', body: '{"message":"Access changed."}' }),
+  );
+  await page.getByRole('button', { name: 'Refresh list' }).click();
+  await expect(page.getByRole('alert')).toContainText('Access changed.');
+  await expect(page.getByText('Mira', { exact: false })).toHaveCount(0);
+  await page.unroute(blockedList);
+  await page.getByRole('button', { name: 'Retry' }).click();
+  await expect(page.getByRole('button', { name: 'Unlink locally' })).toBeVisible();
   page.once('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: 'Unlink locally' }).focus();
   await page.keyboard.press('Enter');
