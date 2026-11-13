@@ -18,6 +18,7 @@ final class ResearchTasks
         private IAppManager $apps,
         private IUserManager $users,
         private IURLGenerator $urls,
+        private ConnectionIdentity $identity,
     ) {}
 
     private function authority(
@@ -274,6 +275,8 @@ final class ResearchTasks
                 'payload_hash' => $hash,
                 'source_revision' => $review['sourceRevision'],
                 'member_revision' => $review['memberRevision'],
+                'account_incarnation' => $this->identity->current($actor),
+                'dependency_digest' => hash('sha256', $review['personId'] . ':' . $review['sourceRevision']),
                 'status' => 'pending',
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -366,6 +369,25 @@ final class ResearchTasks
             );
             return ['id' => $id, 'status' => 'linked'];
         });
+    }
+
+    /** Read-only destination reconciliation; a missing VTODO is never recreated here. */
+    public function destinationStatus(string $actor, string $collection, string $id): string
+    {
+        try {
+            $found = $this->calendar($actor, $collection)->search(
+                '',
+                [],
+                ['uid' => 'stb-' . $id . '@stammbaum.nextcloud', 'types' => ['VTODO']],
+                1,
+            );
+            return $found ? 'linked' : 'destination-changed';
+        } catch (Problem $e) {
+            if (in_array($e->errorCode, ['not_found', 'unavailable'], true)) {
+                return 'unavailable';
+            }
+            throw $e;
+        }
     }
 
     public function list(string $tree, string $actor, string $person): array

@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 import { api, userId } from '../api.js';
 import { requestId, personName } from '../domain.js';
 import { t } from '../i18n.js';
+import { captureCreatedEtag } from '../integrations.js';
 
 const props = defineProps({ treeId: String, person: Object, canExport: Boolean });
 const open = ref(false),
@@ -182,7 +183,7 @@ async function create() {
   busy.value = true;
   error.value = '';
   try {
-    await api(`/trees/${treeId}/calendar`, {
+    const created = await api(`/trees/${treeId}/calendar`, {
       method: 'POST',
       body: {
         review: review.value,
@@ -191,6 +192,8 @@ async function create() {
         requestId: key,
       },
     });
+    if (created.status === 'linked')
+      await captureCreatedEtag(treeId, 'calendar', created.id, review.value.collection);
     if (seq !== sequence || treeId !== props.treeId || personId !== props.person.id) return;
     review.value = null;
     acknowledged.value = false;

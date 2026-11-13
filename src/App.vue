@@ -16,6 +16,7 @@ import TabList from './components/TabList.vue';
 import ResearchTaskPanel from './components/ResearchTaskPanel.vue';
 import CalendarPanel from './components/CalendarPanel.vue';
 import ContactLinkPanel from './components/ContactLinkPanel.vue';
+import IntegrationConnections from './components/IntegrationConnections.vue';
 const contactCopyCounter = ref(0);
 const savedViews = ref({ revision: 1, items: [], home: null, openingView: null }),
   preferenceDraft = ref(null),
@@ -121,6 +122,7 @@ const mainTabs = computed(() => [
   'people',
   'sources',
   'media',
+  'connections',
   ...(tree.value?.canExport ? ['exports'] : []),
   ...(management.value ? ['imports', 'manage'] : []),
 ]);
@@ -323,9 +325,16 @@ async function chooseTree(id, initial = {}, authorized = false) {
     tree.value = r;
     editTreeName.value = r.name;
     editTreeDescription.value = r.description;
-    tab.value = ['family', 'people', 'sources', 'media', 'imports', 'exports', 'manage'].includes(
-      initial.view,
-    )
+    tab.value = [
+      'family',
+      'people',
+      'sources',
+      'media',
+      'connections',
+      'imports',
+      'exports',
+      'manage',
+    ].includes(initial.view)
       ? initial.view
       : 'family';
     if (['manage', 'imports'].includes(tab.value) && !management.value) tab.value = 'family';
@@ -1194,6 +1203,12 @@ onBeforeUnmount(() => {
             :tree-id="tree.id"
             :management="management"
             :can-edit="canEdit"
+          />
+          <IntegrationConnections
+            v-else-if="tab === 'connections'"
+            :key="tree.id"
+            :tree-id="tree.id"
+            @open-person="openMediaPerson"
           />
           <div
             v-else

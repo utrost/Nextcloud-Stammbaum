@@ -19,6 +19,7 @@ final class ContactLinks
         private IContactsManager $contacts,
         private IAppManager $apps,
         private IUserManager $users,
+        private ConnectionIdentity $identity,
     ) {}
 
     private function available(string $actor): bool
@@ -255,6 +256,13 @@ final class ContactLinks
                 [$actor, $tree, $requestId],
             );
             if ($prior) {
+                if ($prior['status'] !== 'linked') {
+                    throw new Problem(
+                        'retry_conflict',
+                        'This contact link was already unlinked. Review a new link.',
+                        409,
+                    );
+                }
                 if (
                     $prior['person_id'] !== $review['personId'] ||
                     $prior['book_key'] !== $card['bookKey'] ||
@@ -270,7 +278,7 @@ final class ContactLinks
                 return $this->linkDto($actor, $prior);
             }
             $prior = $this->store->one(
-                'SELECT * FROM *PREFIX*stb_contact_links WHERE actor_id = ? AND tree_id = ? AND person_id = ? AND book_key = ? AND card_uid = ? AND member_revision = ?',
+                "SELECT * FROM *PREFIX*stb_contact_links WHERE actor_id = ? AND tree_id = ? AND person_id = ? AND book_key = ? AND card_uid = ? AND member_revision = ? AND status = 'linked'",
                 [$actor, $tree, $review['personId'], $card['bookKey'], $card['cardUid'], $m['revision']],
             );
             if ($prior) {
@@ -288,7 +296,13 @@ final class ContactLinks
                 'card_hash' => $card['hash'],
                 'request_id' => $requestId,
                 'member_revision' => (int) $m['revision'],
+                'source_revision' => (int) $person['revision'],
+                'account_incarnation' => $this->identity->current($actor),
+                'dependency_digest' => hash('sha256', $review['personId'] . ':' . $person['revision']),
+                'destination_etag' => $card['hash'],
+                'status' => 'linked',
                 'created_at' => time(),
+                'updated_at' => time(),
             ]);
             return $this->linkDto($actor, $this->linkRow($tree, $actor, $id));
         });
@@ -304,6 +318,14 @@ final class ContactLinks
 
     private function linkDto(string $actor, array $link): array
     {
+        if ($link['status'] !== 'linked') {
+            return [
+                'id' => $link['id'],
+                'status' => $link['status'],
+                'card' => null,
+                'createdAt' => (int) $link['created_at'],
+            ];
+        }
         try {
             $card = $this->card($actor, $link['book_key'], $link['card_uid'], $link['card_uri']);
             return [
@@ -333,7 +355,7 @@ final class ContactLinks
             throw new Problem('validation', 'Choose a valid link page.');
         }
         $rows = $this->store->rows(
-            'SELECT * FROM *PREFIX*stb_contact_links WHERE tree_id = ? AND person_id = ? AND actor_id = ? AND member_revision = ? ORDER BY created_at DESC, id DESC LIMIT 26 OFFSET ' .
+            "SELECT * FROM *PREFIX*stb_contact_links WHERE tree_id = ? AND person_id = ? AND actor_id = ? AND member_revision = ? AND status = 'linked' ORDER BY created_at DESC, id DESC LIMIT 26 OFFSET " .
                 $page * 25,
             [$tree, $person, $actor, $m['revision']],
         );
@@ -346,6 +368,9 @@ final class ContactLinks
     private function activeLink(string $tree, string $actor, string $id, string $need = 'viewer'): array
     {
         $link = $this->linkRow($tree, $actor, $id);
+        if ($link['status'] !== 'linked') {
+            throw Problem::missing();
+        }
         $m = $this->trees->access($tree, $actor, $need);
         $this->people->row($tree, $link['person_id'], $m);
         if ((int) $link['member_revision'] !== (int) $m['revision']) {
@@ -483,12 +508,32 @@ final class ContactLinks
         ]);
     }
 
+    /** Read-only destination reconciliation; no contact text enters the registry. */
+    public function destinationStatus(
+        string $actor,
+        string $book,
+        string $uid,
+        string $uri,
+        string $hash,
+    ): string {
+        try {
+            return $this->card($actor, $book, $uid, $uri)['hash'] === $hash
+                ? 'linked'
+                : 'destination-changed';
+        } catch (Problem $e) {
+            if (in_array($e->errorCode, ['not_found', 'unavailable'], true)) {
+                return 'unavailable';
+            }
+            throw $e;
+        }
+    }
+
     public function birthdaySignal(string $tree, string $actor, string $person): array
     {
         $m = $this->trees->access($tree, $actor);
         $this->people->row($tree, $person, $m);
         $rows = $this->store->rows(
-            'SELECT * FROM *PREFIX*stb_contact_links WHERE tree_id = ? AND person_id = ? AND actor_id = ? AND member_revision = ? ORDER BY created_at DESC LIMIT 25',
+            "SELECT * FROM *PREFIX*stb_contact_links WHERE tree_id = ? AND person_id = ? AND actor_id = ? AND member_revision = ? AND status = 'linked' ORDER BY created_at DESC LIMIT 25",
             [$tree, $person, $actor, $m['revision']],
         );
         foreach ($rows as $r) {
@@ -511,10 +556,10 @@ final class ContactLinks
         $this->trees->active($actor);
         return $this->store->write(function () use ($tree, $actor, $id) {
             $link = $this->linkRow($tree, $actor, $id);
-            $this->store->execute('DELETE FROM *PREFIX*stb_contact_links WHERE id = ? AND actor_id = ?', [
-                $link['id'],
-                $actor,
-            ]);
+            $this->store->execute(
+                "UPDATE *PREFIX*stb_contact_links SET status = 'unlinked', updated_at = ? WHERE id = ? AND actor_id = ?",
+                [time(), $link['id'], $actor],
+            );
             return ['removed' => true];
         });
     }

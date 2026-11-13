@@ -1,6 +1,37 @@
 <?php
 return [
     'routes' => [
+        ['name' => 'connection#index', 'url' => '/api/v1/trees/{tree}/connections', 'verb' => 'GET'],
+        [
+            'name' => 'connection#refresh',
+            'url' => '/api/v1/trees/{tree}/connections/{kind}/{id}/refresh',
+            'verb' => 'POST',
+        ],
+        [
+            'name' => 'connection#unlink',
+            'url' => '/api/v1/trees/{tree}/connections/{kind}/{id}',
+            'verb' => 'DELETE',
+        ],
+        [
+            'name' => 'connection#acknowledgeEtag',
+            'url' => '/api/v1/trees/{tree}/connections/{kind}/{id}/etag',
+            'verb' => 'POST',
+        ],
+        [
+            'name' => 'connection#observeEtag',
+            'url' => '/api/v1/trees/{tree}/connections/{kind}/{id}/observe-etag',
+            'verb' => 'POST',
+        ],
+        [
+            'name' => 'connection#reviewRemoval',
+            'url' => '/api/v1/trees/{tree}/connections/{kind}/{id}/review-removal',
+            'verb' => 'POST',
+        ],
+        [
+            'name' => 'connection#completeRemoval',
+            'url' => '/api/v1/trees/{tree}/connections/{kind}/{id}/complete-removal',
+            'verb' => 'POST',
+        ],
         [
             'name' => 'calendar#collections',
             'url' => '/api/v1/integrations/calendar/collections',

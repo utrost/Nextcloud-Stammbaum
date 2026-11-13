@@ -82,6 +82,33 @@ test('Nextcloud disable and password events revoke invitation authority; recreat
     );
     const homePerson = await person(page, tr.id, 'Account home');
     await good(again, `/trees/${tr.id}/views/home`, 'PUT', { revision: 1, homeId: homePerson.id });
+    await good(again, `/trees/${tr.id}/connections`);
+    const incarnation = fixtureDatabase(
+      'SELECT incarnation FROM *PREFIX*stb_connection_actors WHERE actor_id = ?',
+      [uid],
+      true,
+    )[0].incarnation;
+    const linkId = crypto.randomUUID();
+    fixtureDatabase(
+      'INSERT INTO *PREFIX*stb_contact_links (id, tree_id, person_id, actor_id, book_key, card_uri, card_uid, card_hash, request_id, member_revision, created_at, updated_at, status, source_revision, account_incarnation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        linkId,
+        tr.id,
+        homePerson.id,
+        uid,
+        'fictional-book',
+        'fictional.vcf',
+        'fictional-card',
+        '0'.repeat(64),
+        key(),
+        (await good(again, `/trees/${tr.id}`)).membershipRevision,
+        Math.floor(Date.now() / 1000),
+        Math.floor(Date.now() / 1000),
+        'linked',
+        homePerson.revision,
+        incarnation,
+      ],
+    );
     const second = await good(again, `/trees/${tr.id}/invitations`, 'POST', { role: 'viewer' }, 201);
     execFileSync(
       'docker',
@@ -103,6 +130,12 @@ test('Nextcloud disable and password events revoke invitation authority; recreat
     expect((await request(page, '/invitations/review', 'POST', { token: second.token })).status).toBe(404);
     occ('user:delete', uid);
     expect(
+      fixtureDatabase('SELECT id FROM *PREFIX*stb_contact_links WHERE actor_id = ?', [uid], true),
+    ).toEqual([]);
+    expect(
+      fixtureDatabase('SELECT actor_id FROM *PREFIX*stb_connection_actors WHERE actor_id = ?', [uid], true),
+    ).toEqual([]);
+    expect(
       fixtureDatabase('SELECT user_id FROM *PREFIX*stb_preferences WHERE user_id = ?', [uid], true),
     ).toEqual([]);
     add(uid);
@@ -110,6 +143,7 @@ test('Nextcloud disable and password events revoke invitation authority; recreat
     ctx = await browser.newContext();
     const recreated = await ctx.newPage();
     await login(recreated, uid);
+    expect((await good(recreated, `/trees/${tr.id}/connections`)).items).toEqual([]);
     expect((await request(recreated, `/trees/${tr.id}`)).status).toBe(404);
     expect((await good(page, `/trees/${tr.id}/members`)).items.find((m) => m.userId === uid).active).toBe(
       false,

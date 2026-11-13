@@ -15,7 +15,7 @@ final class InvalidateAuthority extends Command
     protected function configure(): void
     {
         $this->setName('stammbaum:invalidate-authority')->setDescription(
-            'Revoke Stammbaum invitation links and unfinished upload authority after recovery.',
+            'Revoke invitations and unfinished connection/upload authority after recovery.',
         );
     }
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -23,6 +23,12 @@ final class InvalidateAuthority extends Command
         $this->store->write(function () {
             $this->store->execute('UPDATE *PREFIX*stb_members SET revision = revision + 1');
             $this->store->execute('UPDATE *PREFIX*stb_invites SET used = 1');
+            foreach (['stb_task_links', 'stb_calendar_links', 'stb_contact_links'] as $table) {
+                $this->store->execute(
+                    "UPDATE *PREFIX*$table SET status = 'authority-invalidated', updated_at = ? WHERE status IN ('pending', 'outcome-unknown')",
+                    [time()],
+                );
+            }
             foreach ($this->store->rows('SELECT id FROM *PREFIX*stb_trees') as $tree) {
                 $this->store->bump($tree['id']);
                 $this->store->audit(
@@ -36,7 +42,7 @@ final class InvalidateAuthority extends Command
             }
         });
         $output->writeln(
-            'Stammbaum invitations revoked and membership generations advanced. Unfinished uploads require new requests. Existing tree memberships and completed originals remain intact.',
+            'Stammbaum invitations and pending connections invalidated; membership generations advanced. Unfinished uploads require new requests. Existing tree memberships and completed originals remain intact.',
         );
         return self::SUCCESS;
     }

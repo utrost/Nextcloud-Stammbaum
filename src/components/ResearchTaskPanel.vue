@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 import { api, userId } from '../api.js';
 import { requestId, personName } from '../domain.js';
 import { t } from '../i18n.js';
+import { captureCreatedEtag } from '../integrations.js';
 
 const props = defineProps({ treeId: String, person: Object, canExport: Boolean });
 const open = ref(false),
@@ -170,6 +171,7 @@ async function create() {
       }
       await api(`/trees/${treeId}/tasks/${reservation.id}/complete`, { method: 'POST' });
     }
+    await captureCreatedEtag(treeId, 'task', reservation.id, reservation.collection || collection.value);
     if (seq !== sequence || treeId !== props.treeId || personId !== props.person.id) return;
     review.value = null;
     acknowledged.value = false;
