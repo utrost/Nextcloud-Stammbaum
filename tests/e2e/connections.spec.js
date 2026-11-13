@@ -231,6 +231,9 @@ test('Connections workspace gives keyboard-reachable refresh and local unlink at
   await event(page, tr.id, p.id);
   await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&view=connections`);
   await expect(page.getByRole('heading', { name: 'My app connections' })).toBeVisible();
+  await expect(
+    page.getByText('Source details are hidden. You can still remove this private link.'),
+  ).toHaveCount(0);
   for (const width of [1440, 390, 320]) {
     await page.setViewportSize({ width, height: 950 });
     await expect(page.getByRole('button', { name: 'Refresh status' })).toBeVisible();
