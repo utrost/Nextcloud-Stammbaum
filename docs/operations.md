@@ -15,7 +15,7 @@ npm run package
 
 ## Supported scaffold and licenses
 
-The current supported development target is Nextcloud 34 with PHP 8.3+ and MariaDB. CI creates Nextcloud 34.0.4/MariaDB 11 from scratch, checks PHP 8.3 syntax, installs the exact package and executes the native browser suite. Alice also exercises an existing Nextcloud 34 installation with PHP 8.5. PostgreSQL, SQLite and other Nextcloud majors are not certified by this scaffold evidence; the broader compatibility contract remains #2.
+The current supported development target is Nextcloud 34 with PHP 8.3+ and MariaDB. CI creates Nextcloud 34.0.4/MariaDB 11 from scratch, checks PHP 8.3 syntax, installs the exact package and executes the native browser suite. Alice also exercises an existing Nextcloud 34 installation with PHP 8.5. PostgreSQL, SQLite and other Nextcloud majors are not certified by this scaffold evidence; see the [platform adaptation decision](platform-adaptation.md) for the exact verified matrix and boundaries.
 
 Stammbaum is AGPL-3.0-or-later. The bundled Vue runtime is MIT licensed; [THIRD-PARTY-NOTICES](../THIRD-PARTY-NOTICES) contains its notice and license text, and both that file and [LICENSE](../LICENSE) ship in every runtime archive. Exact build-tool dependencies and their declared licenses are recorded in `package-lock.json`; build tools are not distributed as app runtime dependencies. Runtime scripts, styles and icons are packaged locally; the UI inherits the host Nextcloud theme/fonts without loading an app-owned external font service.
 
