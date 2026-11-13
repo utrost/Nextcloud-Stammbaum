@@ -98,6 +98,35 @@ final class Values
         }
         return ['kind' => $kind, 'value' => $value, 'end' => $end];
     }
+    /** Derived feedback only: it must never replace or rewrite an assertion. */
+    public static function lifeContext(array $person): array
+    {
+        $birth = $person['birthDate'] ?? [];
+        $death = $person['deathDate'] ?? [];
+        $warnings = [];
+        if (
+            ($person['livingStatus'] ?? 'unknown') === 'living' &&
+            (($death['value'] ?? '') !== '' || ($death['end'] ?? '') !== '')
+        ) {
+            $warnings[] = 'living_with_death_date';
+        }
+        $exact = static fn(array $date): bool => ($date['kind'] ?? '') === 'exact' &&
+            preg_match('/^\d{4}(?:-\d{2}(?:-\d{2})?)?$/D', (string) ($date['value'] ?? '')) === 1;
+        $age = null;
+        if ($exact($birth) && $exact($death)) {
+            $born = $birth['value'];
+            $died = $death['value'];
+            if (strcmp(self::boundary($died, true), self::boundary($born, false)) < 0) {
+                $warnings[] = 'death_before_birth';
+            } elseif (strlen($born) === 10 && strlen($died) === 10) {
+                $age = (int) substr($died, 0, 4) - (int) substr($born, 0, 4);
+                if (substr($died, 5) < substr($born, 5)) {
+                    $age--;
+                }
+            }
+        }
+        return ['dateWarnings' => $warnings, 'exactAgeAtDeath' => $age];
+    }
     public static function person(array $b): array
     {
         $given = self::text($b['givenName'] ?? '', 'givenName', 200);
