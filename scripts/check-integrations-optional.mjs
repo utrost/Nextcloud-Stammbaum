@@ -48,9 +48,14 @@ try {
     disabled.push(app);
   }
   reload();
-  const unavailable = (await good(page, `/trees/${linkedTree.id}/connections`)).items.find(
-    (x) => x.id === linked.id,
-  );
+  let unavailable;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    unavailable = (await good(page, `/trees/${linkedTree.id}/connections`)).items.find(
+      (x) => x.id === linked.id,
+    );
+    if (unavailable.status === 'unavailable') break;
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
   assert.equal(unavailable.status, 'unavailable');
   assert.equal(unavailable.kind, 'calendar');
   const tr = await tree(page);
