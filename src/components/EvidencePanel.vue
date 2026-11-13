@@ -13,6 +13,7 @@ const props = defineProps({
   person: Object,
   claims: Array,
   relations: Array,
+  openSourceId: String,
 });
 const sources = ref([]),
   citations = ref([]),
@@ -104,7 +105,17 @@ watch(
     load();
   },
 );
-onMounted(() => load());
+onMounted(async () => {
+  if (props.openSourceId && !props.person) {
+    try {
+      source.value = await api(`/trees/${props.treeId}/sources/${props.openSourceId}`);
+    } catch (e) {
+      error.value = t(e.message);
+      return;
+    }
+  }
+  load();
+});
 onBeforeUnmount(() => sequence++);
 </script>
 <template>

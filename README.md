@@ -28,6 +28,7 @@ Authorized researchers can create a reviewed Nextcloud Task from a person, sourc
 - [Nextcloud Tasks, Calendar and Contacts integration concept](docs/nextcloud-integration-concept.md)
 - [Same-instance integration API and permission contract](docs/integration-api-contract.md)
 - [Alpha.27 optional-integration test and Alice deployment evidence](docs/integration-acceptance-alpha27.md)
+- [Alpha.28 collection pagination and precise backlink evidence](docs/integration-discovery-links-alpha28.md)
 - [First Tasks integration journey and verified limits](docs/tasks-iteration.md)
 - [Nextcloud Contacts linking and confidential-copy contract](docs/contacts-iteration.md)
 - [Reviewed Nextcloud Calendar events and limits](docs/calendar-iteration.md)

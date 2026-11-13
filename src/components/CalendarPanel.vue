@@ -26,6 +26,7 @@ const open = ref(false),
   error = ref(''),
   collections = ref([]),
   readOnlyCount = ref(0),
+  nextCollectionPage = ref(null),
   collection = ref(''),
   mode = ref('appointment'),
   anniversaryKind = ref('birth'),
@@ -94,16 +95,43 @@ async function toggle() {
   error.value = '';
   title.value ||= `${t('Family appointment')}: ${originLabel.value}`;
   try {
-    const result = await api('/integrations/calendar/collections');
+    const result = await api('/integrations/calendar/collections?page=0');
     if (!result.available) throw new Error('Nextcloud Calendar is not available for this account.');
     if (seq !== sequence) return;
     const detected = await discoverEventCalendars([...result.items, ...(result.readOnlyItems || [])]);
     if (seq !== sequence) return;
     collections.value = detected.filter((item) => item.state !== 'read-only');
     readOnlyCount.value = detected.length - collections.value.length;
+    nextCollectionPage.value = result.nextPage;
     if (!collections.value.some((c) => c.uri === collection.value))
       collection.value = collections.value[0]?.uri || '';
     await loadLinks();
+  } catch (e) {
+    if (seq === sequence) error.value = t(e.message);
+  } finally {
+    if (seq === sequence) busy.value = false;
+  }
+}
+
+async function loadMoreCollections() {
+  const next = nextCollectionPage.value;
+  if (next === null || busy.value) return;
+  const seq = sequence;
+  busy.value = true;
+  error.value = '';
+  try {
+    const result = await api(`/integrations/calendar/collections?page=${next}`);
+    if (!result.available) throw new Error('Nextcloud Calendar is not available for this account.');
+    const detected = await discoverEventCalendars([...result.items, ...(result.readOnlyItems || [])]);
+    if (seq !== sequence) return;
+    const seen = new Set(collections.value.map((item) => item.uri));
+    collections.value = [
+      ...collections.value,
+      ...detected.filter((item) => item.state !== 'read-only' && !seen.has(item.uri)),
+    ];
+    readOnlyCount.value += detected.filter((item) => item.state === 'read-only').length;
+    nextCollectionPage.value = result.nextPage;
+    if (!collection.value) collection.value = collections.value[0]?.uri || '';
   } catch (e) {
     if (seq === sequence) error.value = t(e.message);
   } finally {
@@ -120,6 +148,7 @@ watch(
     busy.value = false;
     collections.value = [];
     readOnlyCount.value = 0;
+    nextCollectionPage.value = null;
     review.value = null;
     links.value = [];
     mode.value = 'appointment';
@@ -335,6 +364,9 @@ async function unlink(id) {
           <button type="submit">{{ t('Review event') }}</button>
         </fieldset>
       </form>
+      <button v-if="nextCollectionPage !== null && !review" :disabled="busy" @click="loadMoreCollections">
+        {{ t('Load more calendars') }}
+      </button>
       <div v-if="review" class="task-preview">
         <h3>{{ t('Review calendar event') }}</h3>
         <p>

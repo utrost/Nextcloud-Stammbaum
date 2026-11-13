@@ -12,6 +12,14 @@ function resetDisposableRateWindow(table, actor = fixture.user) {
   ]);
 }
 
+async function english(page) {
+  const preferences = await good(page, '/preferences');
+  if (preferences.locale !== 'en') {
+    await good(page, '/preferences', 'PUT', { locale: 'en', revision: preferences.revision });
+    await page.reload();
+  }
+}
+
 async function event(page, treeId, people) {
   return good(
     page,
@@ -34,6 +42,7 @@ test('source and media research tasks require a fresh review and expose only the
   page,
 }) => {
   await login(page);
+  await english(page);
   resetDisposableRateWindow('stb_task_links');
   const capability = await good(page, '/integrations/tasks/collections');
   test.skip(!capability.available || !capability.items.length, 'Optional Tasks list absent.');
@@ -101,6 +110,9 @@ test('source and media research tasks require a fresh review and expose only the
   );
   expect(dav.status).toBe(204);
   expect(dav.bytes).toContain('PRIORITY:1');
+  expect(dav.bytes.replace(/\r\n[ \t]/g, '')).toContain(`&view=sources&source=${source.id}`);
+  await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&view=sources&source=${source.id}`);
+  await expect(page.getByRole('heading', { name: source.title })).toBeVisible();
   expect(
     (await good(page, `/trees/${tr.id}/tasks?sourceType=source&sourceId=${source.id}`)).items[0].completion,
   ).toBe('complete');
@@ -139,6 +151,14 @@ test('source and media research tasks require a fresh review and expose only the
   const [mediumLink] = (await good(page, `/trees/${tr.id}/tasks?sourceType=medium&sourceId=${medium.id}`))
     .items;
   expect(mediumLink.status).toBe('linked');
+  const mediumIcs = await page.evaluate(async ({ collection, id }) => {
+    const user = document.getElementById('stammbaum-app').dataset.userId;
+    const url = `/remote.php/dav/calendars/${encodeURIComponent(user)}/${encodeURIComponent(collection)}/${id}.ics`;
+    return (await fetch(url, { credentials: 'same-origin' })).text();
+  }, mediumLink);
+  expect(mediumIcs.replace(/\r\n[ \t]/g, '')).toContain(`&view=media&medium=${medium.id}`);
+  await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&view=media&medium=${medium.id}`);
+  await expect(page.locator(`[data-medium-id="${medium.id}"]`)).toBeFocused();
   const removed = await page.evaluate(async ({ collection, id }) => {
     const user = document.getElementById('stammbaum-app').dataset.userId;
     const url = `/remote.php/dav/calendars/${encodeURIComponent(user)}/${encodeURIComponent(collection)}/${id}.ics`;
@@ -218,6 +238,7 @@ test('shared-event calendar publication checks every participant and never chang
   browser,
 }) => {
   await login(page);
+  await english(page);
   resetDisposableRateWindow('stb_calendar_links');
   const capability = await good(page, '/integrations/calendar/collections');
   test.skip(!capability.available || !capability.items.length, 'Optional Calendar absent.');
@@ -261,6 +282,20 @@ test('shared-event calendar publication checks every participant and never chang
   const [eventTask] = (await good(page, `/trees/${tr.id}/tasks?sourceType=event&sourceId=${record.id}`))
     .items;
   expect(eventTask.status).toBe('linked');
+  const eventTaskIcs = await page.evaluate(async ({ collection, id }) => {
+    const user = document.getElementById('stammbaum-app').dataset.userId;
+    const url = `/remote.php/dav/calendars/${encodeURIComponent(user)}/${encodeURIComponent(collection)}/${id}.ics`;
+    return (await fetch(url, { credentials: 'same-origin' })).text();
+  }, eventTask);
+  expect(eventTaskIcs.replace(/\r\n[ \t]/g, '')).toContain(`&person=${p.id}&event=${record.id}`);
+  const eventIcs = await page.evaluate(async ({ collection, id }) => {
+    const user = document.getElementById('stammbaum-app').dataset.userId;
+    const url = `/remote.php/dav/calendars/${encodeURIComponent(user)}/${encodeURIComponent(collection)}/${id}.ics`;
+    return (await fetch(url, { credentials: 'same-origin' })).text();
+  }, link);
+  expect(eventIcs.replace(/\r\n[ \t]/g, '')).toContain(`&person=${p.id}&event=${record.id}`);
+  await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&view=people&person=${p.id}&event=${record.id}`);
+  await expect(page.locator(`[data-record-id="${record.id}"]`)).toBeFocused();
   expect((await good(page, `/trees/${tr.id}`)).revision).toBe(revision);
   const en = await good(page, '/preferences');
   await good(page, '/preferences', 'PUT', { locale: 'de', revision: en.revision });
@@ -319,6 +354,11 @@ test('shared-event calendar publication checks every participant and never chang
     };
     expect((await request(viewer, `/trees/${tr.id}/calendar/review`, 'POST', payload)).status).toBe(404);
     expect((await request(viewer, `/trees/${tr.id}/tasks/review`, 'POST', payload)).status).toBe(404);
+    await viewer.goto(
+      `${fixture.baseURL}/index.php/apps/stammbaum/#tree=${tr.id}&view=people&person=${p.id}&event=${bridge.id}`,
+    );
+    await expect(viewer.locator(`[data-record-id="${bridge.id}"]`)).toHaveCount(0);
+    await expect(viewer.getByText(bridge.title)).toHaveCount(0);
   } finally {
     await context.close();
   }

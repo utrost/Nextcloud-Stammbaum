@@ -51,6 +51,9 @@ const trees = ref([]),
   treeLoadFailure = ref(null),
   notice = ref(''),
   navOpen = ref(false);
+const linkedSourceId = ref(''),
+  linkedMediumId = ref(''),
+  linkedEventId = ref('');
 const portrait = ref(null),
   people = ref([]),
   nextPage = ref(null),
@@ -303,6 +306,9 @@ async function chooseTree(id, initial = {}, authorized = false) {
   tree.value = null;
   researchExpanded.value = false;
   selected.value = null;
+  linkedSourceId.value = '';
+  linkedMediumId.value = '';
+  linkedEventId.value = '';
   focus.value = '';
   camera.value = { x: 20, y: 20, zoom: 1 };
   cameraReady.value = false;
@@ -338,6 +344,9 @@ async function chooseTree(id, initial = {}, authorized = false) {
       ? initial.view
       : 'family';
     if (['manage', 'imports'].includes(tab.value) && !management.value) tab.value = 'family';
+    const validTarget = (value) => typeof value === 'string' && /^[0-9a-f-]{36}$/.test(value);
+    linkedSourceId.value = tab.value === 'sources' && validTarget(initial.source) ? initial.source : '';
+    linkedMediumId.value = tab.value === 'media' && validTarget(initial.medium) ? initial.medium : '';
     await loadPeople();
     if (seq !== treeSequence) return;
     if (peopleError.value) throw new Error(peopleError.value);
@@ -356,6 +365,9 @@ async function chooseTree(id, initial = {}, authorized = false) {
       initial.focus || opening?.focus || savedViews.value.home?.id || r.homeId || people.value[0]?.id || '';
     if (initial.person || opening?.selected) await inspect(initial.person || opening.selected);
     if (seq !== treeSequence) return;
+    linkedEventId.value =
+      tab.value === 'people' && selected.value && validTarget(initial.event) ? initial.event : '';
+    if (linkedEventId.value) detailTab.value = 'timeline';
     if (focus.value) await loadGraph();
     if (seq !== treeSequence) return;
     if (tab.value === 'manage') await loadManage();
@@ -433,6 +445,7 @@ async function selectPerson(id) {
   await inspect(id);
 }
 async function inspect(id) {
+  linkedEventId.value = '';
   const seq = ++detailSequence;
   detailLoading.value = true;
   error.value = '';
@@ -545,6 +558,9 @@ async function previous() {
 async function changeTab(value) {
   if (value === tab.value || !navigate()) return;
   researchExpanded.value = false;
+  linkedSourceId.value = '';
+  linkedMediumId.value = '';
+  linkedEventId.value = '';
   tab.value = value;
   urlState();
   if (value === 'manage') await action(loadManage);
@@ -1193,6 +1209,7 @@ onBeforeUnmount(() => {
             v-else-if="tab === 'sources'"
             :key="tree.id"
             :tree-id="tree.id"
+            :open-source-id="linkedSourceId"
             :management="management"
             :can-edit="canEdit"
             :can-export="tree.canExport"
@@ -1202,6 +1219,7 @@ onBeforeUnmount(() => {
             @person="openMediaPerson"
             :key="tree.id"
             :tree-id="tree.id"
+            :open-medium-id="linkedMediumId"
             :management="management"
             :can-edit="canEdit"
             :can-export="tree.canExport"
@@ -1583,6 +1601,7 @@ onBeforeUnmount(() => {
                       :can-export="tree.canExport"
                       :management="management"
                       :section="detailTab"
+                      :target-event-id="linkedEventId"
                       @evidence="changeDetailTab('evidence')"
                       @person="selectPerson"
                     />
