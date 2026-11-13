@@ -1,4 +1,9 @@
 export default {
+  'Reference connection': 'Verbindung als Verweis',
+  'Exact age at death': 'Genaues Alter beim Tod',
+  'Recorded death precedes birth.': 'Das erfasste Todesdatum liegt vor dem Geburtsdatum.',
+  'Living status conflicts with a recorded death date.':
+    'Der Status „lebend“ widerspricht einem erfassten Todesdatum.',
   'Referenced media': 'Referenzierte Medien',
   'Loading media references…': 'Medienreferenzen werden geladen …',
   'Original FILE reference': 'Ursprüngliche FILE-Referenz',
