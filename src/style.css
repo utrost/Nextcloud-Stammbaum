@@ -493,6 +493,20 @@
 .life-dates small {
   display: block;
 }
+.life-age {
+  margin: -6px 0 12px;
+}
+.life-warnings {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--color-warning, #a35b32);
+  border-radius: 0 8px 8px 0;
+  background: var(--stb-tint);
+}
+.life-warnings li + li {
+  margin-top: 6px;
+}
 .detail-actions {
   display: flex;
   gap: 8px;
@@ -840,6 +854,11 @@
   stroke: var(--stb-accent);
   stroke-width: 3;
 }
+.edge.reference {
+  stroke: var(--color-warning, #a35b32);
+  stroke-width: 2.5;
+  stroke-dasharray: 11 4 2 4;
+}
 .person-node {
   position: absolute !important;
   width: 200px;
@@ -920,6 +939,10 @@
 }
 .line.partner {
   border-color: var(--stb-accent);
+}
+.line.reference {
+  border-color: var(--color-warning, #a35b32);
+  border-top-style: dashed;
 }
 .graph-text {
   padding: 20px;

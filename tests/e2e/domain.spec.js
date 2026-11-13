@@ -114,6 +114,47 @@ test('calendar validation, unnamed confirmation and unknown defaults', async ({ 
   const leap = await person(page, t.id, 'Leap', { birthDate: { kind: 'exact', value: '2000-02-29' } });
   expect(leap.birthDate.value).toBe('2000-02-29');
 });
+test('life-date feedback uses only exact full dates and never rewrites uncertain assertions', async ({
+  page,
+}) => {
+  const tr = await tree(page);
+  const impossible = await person(page, tr.id, 'Impossible', {
+    livingStatus: 'living',
+    birthDate: { kind: 'exact', value: '1901-01-01' },
+    deathDate: { kind: 'exact', value: '1900-12-31' },
+  });
+  expect(impossible.dateWarnings).toEqual(['living_with_death_date', 'death_before_birth']);
+  expect(impossible.exactAgeAtDeath).toBeNull();
+  const partial = await person(page, tr.id, 'Uncertain', {
+    birthDate: { kind: 'exact', value: '1890' },
+    deathDate: { kind: 'about', value: '1900' },
+  });
+  expect(partial.dateWarnings).toEqual([]);
+  expect(partial.exactAgeAtDeath).toBeNull();
+  const certainPartial = await person(page, tr.id, 'Certain partial', {
+    birthDate: { kind: 'exact', value: '1900' },
+    deathDate: { kind: 'exact', value: '1899' },
+  });
+  expect(certainPartial.dateWarnings).toEqual(['death_before_birth']);
+  expect(certainPartial.exactAgeAtDeath).toBeNull();
+  const exact = await person(page, tr.id, 'Exact', {
+    livingStatus: 'deceased',
+    birthDate: { kind: 'exact', value: '1890-12-31' },
+    deathDate: { kind: 'exact', value: '1900-12-30' },
+  });
+  expect(exact.exactAgeAtDeath).toBe(9);
+  const revision = (await good(page, `/trees/${tr.id}`)).revision;
+  await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&focus=${impossible.id}&person=${impossible.id}`);
+  await expect(page.locator('.life-warnings')).toContainText('Recorded death precedes birth.');
+  await expect(page.locator('.life-warnings')).toContainText(
+    'Living status conflicts with a recorded death date.',
+  );
+  expect((await good(page, `/trees/${tr.id}/people/${impossible.id}`)).birthDate.value).toBe('1901-01-01');
+  expect((await good(page, `/trees/${tr.id}/people/${impossible.id}`)).deathDate.value).toBe('1900-12-31');
+  expect((await good(page, `/trees/${tr.id}`)).revision).toBe(revision);
+  await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&focus=${exact.id}&person=${exact.id}`);
+  await expect(page.locator('.life-age')).toHaveText('Exact age at death: 9');
+});
 test('biological cycles, duplicates and cross-tree edges fail; relative creation rolls back', async ({
   page,
 }) => {

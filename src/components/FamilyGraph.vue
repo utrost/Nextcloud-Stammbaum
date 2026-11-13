@@ -16,6 +16,12 @@ const layout = computed(() => layoutGraph(props.graph.people));
 const camera = computed(() => props.modelValue || { x: 20, y: 20, zoom: 1 });
 const name = (p) => personName(p, t('Unnamed person'));
 const peopleById = computed(() => Object.fromEntries(props.graph.people.map((p) => [p.id, p])));
+function referenceConnection(edge) {
+  const source = peopleById.value[edge.sourceId];
+  const target = peopleById.value[edge.targetId];
+  if (!source || !target) return false;
+  return edge.kind === 'partner' ? source.level !== target.level : target.level !== source.level + 1;
+}
 function move(v) {
   emit('update:modelValue', { ...camera.value, ...v });
 }
@@ -48,6 +54,7 @@ function center(zoom = camera.value.zoom) {
       y: viewport.value.clientHeight / 2 - (p.y + graphCard.height / 2) * zoom,
     });
 }
+defineExpose({ centerFocus: () => center() });
 watch(
   () => props.graph.focusId,
   () => nextTick(center),
@@ -229,7 +236,7 @@ function path(edge) {
             v-for="e in graph.relations"
             :key="e.id"
             :d="path(e)"
-            :class="['edge', e.kind, e.parentType]"
+            :class="['edge', e.kind, e.parentType, { reference: referenceConnection(e) }]"
           />
         </svg>
         <button
@@ -274,6 +281,7 @@ function path(edge) {
           {{ name(peopleById[e.sourceId]) }} → {{ name(peopleById[e.targetId]) }} ·
           {{ t(e.kind === 'partner' ? 'Partner' : 'Parent')
           }}<template v-if="e.kind === 'parent'"> ({{ t(title(e.parentType)) }})</template>
+          <span v-if="referenceConnection(e)"> · {{ t('Reference connection') }}</span>
         </li>
       </ul>
     </div>
@@ -296,7 +304,10 @@ function path(edge) {
       <span><i class="line biological"></i>{{ t('Biological') }}</span
       ><span><i class="line adoptive"></i>{{ t('Adoptive') }} / {{ t('Foster') }}</span
       ><span><i class="line other"></i>{{ t('Unknown') }} / {{ t('Step') }} / {{ t('Other') }}</span
-      ><span><i class="line partner"></i>{{ t('Partner') }}</span>
+      ><span><i class="line partner"></i>{{ t('Partner') }}</span
+      ><span v-if="graph.relations.some(referenceConnection)"
+        ><i class="line reference"></i>{{ t('Reference connection') }}</span
+      >
     </div>
   </div>
 </template>

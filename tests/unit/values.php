@@ -40,4 +40,38 @@ $p = Values::person(['confirmUnnamed' => true]);
 ok($p['livingStatus'] === 'unknown');
 ok($p['birthDate']['value'] === '');
 fails(fn() => Values::person(['givenName' => 'Ada', 'sex' => 'invented']));
+$life = Values::lifeContext([
+    'livingStatus' => 'deceased',
+    'birthDate' => Values::date(['kind' => 'exact', 'value' => '1890-12-31']),
+    'deathDate' => Values::date(['kind' => 'exact', 'value' => '1900-12-30']),
+]);
+ok($life['exactAgeAtDeath'] === 9 && $life['dateWarnings'] === []);
+$impossible = Values::lifeContext([
+    'livingStatus' => 'living',
+    'birthDate' => Values::date(['kind' => 'exact', 'value' => '1901-01-01']),
+    'deathDate' => Values::date(['kind' => 'exact', 'value' => '1900-12-31']),
+]);
+ok($impossible['exactAgeAtDeath'] === null);
+ok($impossible['dateWarnings'] === ['living_with_death_date', 'death_before_birth']);
+ok(
+    Values::lifeContext([
+        'livingStatus' => 'unknown',
+        'birthDate' => Values::date(['kind' => 'exact', 'value' => '1900']),
+        'deathDate' => Values::date(['kind' => 'exact', 'value' => '1899']),
+    ])['dateWarnings'] === ['death_before_birth'],
+);
+ok(
+    Values::lifeContext([
+        'livingStatus' => 'unknown',
+        'birthDate' => Values::date(['kind' => 'exact', 'value' => '1900']),
+        'deathDate' => Values::date(['kind' => 'exact', 'value' => '1901-01-01']),
+    ])['exactAgeAtDeath'] === null,
+);
+ok(
+    Values::lifeContext([
+        'livingStatus' => 'unknown',
+        'birthDate' => Values::date(['kind' => 'literal', 'value' => 'ancient calendar']),
+        'deathDate' => Values::date(['kind' => 'exact', 'value' => '1901-01-01']),
+    ])['dateWarnings'] === [],
+);
 echo "Historical date and person validation passed.\n";

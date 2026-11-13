@@ -30,7 +30,8 @@ final class People
     }
     public function dto(array $r): array
     {
-        return array_merge(json_decode($r['data_json'], true, 32, JSON_THROW_ON_ERROR), [
+        $data = json_decode($r['data_json'], true, 32, JSON_THROW_ON_ERROR);
+        return array_merge($data, Values::lifeContext($data), [
             'id' => $r['id'],
             'treeId' => $r['tree_id'],
             'revision' => (int) $r['revision'],
