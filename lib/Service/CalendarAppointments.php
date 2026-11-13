@@ -23,6 +23,7 @@ final class CalendarAppointments
         private IUserManager $users,
         private IURLGenerator $urls,
         private ContactLinks $contacts,
+        private ConnectionIdentity $identity,
     ) {}
 
     private function source(
@@ -308,6 +309,19 @@ final class CalendarAppointments
         );
     }
 
+    /** Read-only destination reconciliation; never publishes a replacement. */
+    public function destinationStatus(string $actor, string $collection, string $id): string
+    {
+        try {
+            return $this->found($this->calendar($actor, $collection), $id) ? 'linked' : 'destination-changed';
+        } catch (Problem $e) {
+            if (in_array($e->errorCode, ['not_found', 'unavailable'], true)) {
+                return 'unavailable';
+            }
+            throw $e;
+        }
+    }
+
     public function create(string $tree, string $actor, array $b): array
     {
         $review = $b['review'] ?? null;
@@ -424,6 +438,11 @@ final class CalendarAppointments
                 'payload_hash' => $hash,
                 'source_revision' => $current['sourceRevision'],
                 'member_revision' => $current['memberRevision'],
+                'account_incarnation' => $this->identity->current($actor),
+                'dependency_digest' => hash(
+                    'sha256',
+                    $current['personId'] . ':' . $current['sourceRevision'],
+                ),
                 'status' => 'pending',
                 'created_at' => $now,
                 'updated_at' => $now,

@@ -1,4 +1,64 @@
 export default {
+  Connections: 'Verknüpfungen',
+  'My app connections': 'Meine App-Verknüpfungen',
+  'Only you can see these links. Tasks, Calendar and Contacts keep their own copies and sharing permissions.':
+    'Nur du siehst diese Verknüpfungen. Tasks, Calendar und Contacts verwalten eigene Kopien und Freigaben.',
+  'Refresh list': 'Liste aktualisieren',
+  'Refresh status': 'Status aktualisieren',
+  'Open source': 'Quelle öffnen',
+  Previous: 'Zurück',
+  Next: 'Weiter',
+  'Choose a valid connection page.': 'Wähle eine gültige Verknüpfungsseite.',
+  'Connection status refreshed.': 'Verknüpfungsstatus aktualisiert.',
+  'Loading connections…': 'Verknüpfungen werden geladen …',
+  'No personal app connections in this tree yet.':
+    'In diesem Stammbaum gibt es noch keine persönlichen App-Verknüpfungen.',
+  'Contact card': 'Kontaktkarte',
+  'Pending confirmation': 'Bestätigung ausstehend',
+  Linked: 'Verknüpft',
+  'Source changed — review before updating': 'Quelle geändert – vor einer Aktualisierung prüfen',
+  'External item changed or was removed': 'Externer Eintrag geändert oder entfernt',
+  'Source or external app unavailable': 'Quelle oder externe App nicht verfügbar',
+  'Access changed — new review required': 'Zugriff geändert – neue Prüfung erforderlich',
+  'Outcome uncertain — check the external app': 'Ergebnis unklar – externe App prüfen',
+  'Unlinked locally': 'Lokale Verknüpfung gelöst',
+  'Source details are hidden. You can still remove this private link.':
+    'Quelldetails sind verborgen. Du kannst diese private Verknüpfung weiterhin lösen.',
+  'Check the destination before starting a new copy. Retrying this link will not create another item.':
+    'Prüfe das Ziel vor einer neuen Kopie. Ein erneuter Versuch dieser Verknüpfung erzeugt keinen weiteren Eintrag.',
+  'Nothing was overwritten. Review the source and destination before making a new copy.':
+    'Es wurde nichts überschrieben. Prüfe Quelle und Ziel vor einer neuen Kopie.',
+  'Unlink locally': 'Lokal lösen',
+  'Unlink this connection locally? The external item will remain.':
+    'Diese Verknüpfung lokal lösen? Der externe Eintrag bleibt erhalten.',
+  'Local connection removed. The external item remains.':
+    'Lokale Verknüpfung entfernt. Der externe Eintrag bleibt erhalten.',
+  'Review external removal': 'Externes Entfernen prüfen',
+  'Remove created external item': 'Erstellten externen Eintrag entfernen',
+  'This deletes the unchanged item from its Nextcloud app. Synced copies may remain. A changed item will be refused.':
+    'Dies löscht den unveränderten Eintrag in seiner Nextcloud-App. Synchronisierte Kopien können bestehen bleiben. Ein geänderter Eintrag wird nicht gelöscht.',
+  'I understand the external item will be deleted': 'Ich verstehe, dass der externe Eintrag gelöscht wird',
+  'Delete external item': 'Externen Eintrag löschen',
+  'External item removed and local link closed.':
+    'Externer Eintrag entfernt und lokale Verknüpfung geschlossen.',
+  'The external item changed. Remove it in its own app.':
+    'Der externe Eintrag wurde geändert. Entferne ihn in seiner eigenen App.',
+  'External removal could not be verified. Refresh before retrying.':
+    'Das externe Entfernen konnte nicht bestätigt werden. Vor erneutem Versuch aktualisieren.',
+  'Review external removal again.': 'Prüfe das externe Entfernen erneut.',
+  'The external item has no usable ETag.': 'Der externe Eintrag hat keinen verwendbaren ETag.',
+  'Destination could not be checked. Try again.':
+    'Das Ziel konnte nicht geprüft werden. Bitte erneut versuchen.',
+  'The initial ETag capture window expired. Remove the item in its own app.':
+    'Das Zeitfenster für den ursprünglichen ETag ist abgelaufen. Entferne den Eintrag in seiner eigenen App.',
+  'This contact link was already unlinked. Review a new link.':
+    'Diese Kontaktverknüpfung wurde bereits gelöst. Prüfe eine neue Verknüpfung.',
+  'Review this connection again.': 'Prüfe diese Verknüpfung erneut.',
+  'This item cannot be removed safely here. Check the external app.':
+    'Dieser Eintrag kann hier nicht sicher entfernt werden. Prüfe die externe App.',
+  'Review external removal before confirming it.': 'Prüfe das externe Entfernen vor der Bestätigung.',
+  'Unlinking never deletes the external item. Remove an item directly in its Nextcloud app when needed.':
+    'Das Lösen der Verknüpfung entfernt den externen Eintrag nicht. Entferne ihn bei Bedarf in der jeweiligen Nextcloud-App.',
   'Add to Nextcloud Calendar': 'Zu Nextcloud Calendar hinzufügen',
   'Calendar event': 'Kalendereintrag',
   'Calendar owns the event. Its sharing permissions and synchronized copies are separate from this tree.':

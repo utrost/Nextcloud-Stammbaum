@@ -141,6 +141,9 @@ test('private Contacts link, reviewed confidential copy and unlink keep independ
       201,
     );
     expect(retry.id).toBe(linked.id);
+    expect(
+      (await request(page, `/trees/${tr.id}/connections/contact/${linked.id}/review-removal`, 'POST')).status,
+    ).toBe(404);
     expect((await good(page, `/trees/${tr.id}`)).revision).toBe(revision);
     expect((await good(page, `/trees/${tr.id}/contacts/birthday?person=${p.id}`)).linkedContactBirthday).toBe(
       true,

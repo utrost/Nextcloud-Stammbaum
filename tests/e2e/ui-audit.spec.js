@@ -210,11 +210,11 @@ test('main and person tablists support manual keyboard activation and named pane
     await language(viewer, 'de');
     await viewer.setViewportSize({ width: 320, height: 844 });
     const vt = viewer.getByRole('tablist', { name: 'Stammbaum-Arbeitsbereich' });
-    await expect(vt.getByRole('tab')).toHaveCount(4);
+    await expect(vt.getByRole('tab')).toHaveCount(5);
     await vt.getByRole('tab', { name: 'Familie', exact: true }).focus();
     await viewer.keyboard.press('End');
     await viewer.keyboard.press('Enter');
-    await expect(viewer.getByRole('tabpanel', { name: 'Medien', exact: true })).toBeVisible();
+    await expect(viewer.getByRole('tabpanel', { name: 'Verbindungen', exact: true })).toBeVisible();
     await viewer.setViewportSize({ width: 1440, height: 1000 });
     await language(viewer, 'en');
   } finally {

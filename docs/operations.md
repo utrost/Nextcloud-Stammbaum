@@ -75,7 +75,7 @@ After restoring a consistent host/app snapshot, before reopening genealogy acces
 docker exec -u www-data nextcloud php occ stammbaum:invalidate-authority
 ```
 
-This revokes restored invitation links and invalidates unfinished-upload and pending-import authority while preserving current memberships and completed originals. Nextcloud session/app-password recovery remains a host responsibility. The isolated test verifies this command's effects, not an end-to-end backup restoration.
+This revokes restored invitation links and invalidates unfinished-upload, pending-import and pending Tasks/Calendar/Contacts connection authority while preserving current memberships and completed originals. Old app connections do not resume after recovery; owners can inspect and unlink their opaque receipts. Nextcloud session/app-password recovery remains a host responsibility. The isolated test verifies this command's effects, not an end-to-end backup restoration.
 
 ## Import background processing
 

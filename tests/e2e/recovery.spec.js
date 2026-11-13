@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import { fixtureDatabase } from './server-fixture.js';
-import { login, tree, grant, good, key, endpoint, request } from './helpers.js';
+import { login, tree, grant, good, key, endpoint, request, fixture } from './helpers.js';
 const pdf = Buffer.from(
   '%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n',
 );
@@ -65,6 +65,25 @@ test('post-recovery command revokes old invitation links while preserving curren
     m = await good(page, `/trees/${tr.id}`),
     up = await upload(page, tr.id, key());
   expect(up.status).toBe(201);
+  const pendingId = crypto.randomUUID();
+  fixtureDatabase(
+    'INSERT INTO *PREFIX*stb_task_links (id, tree_id, actor_id, person_id, collection_uri, object_name, request_id, payload_hash, source_revision, member_revision, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [
+      pendingId,
+      tr.id,
+      fixture.user,
+      crypto.randomUUID(),
+      'fictional',
+      `${pendingId}.ics`,
+      key(),
+      '0'.repeat(64),
+      1,
+      m.membershipRevision,
+      'pending',
+      Math.floor(Date.now() / 1000),
+      Math.floor(Date.now() / 1000),
+    ],
+  );
   execFileSync(
     'docker',
     ['exec', '-u', 'www-data', 'stammbaum-iteration-nc', 'php', 'occ', 'stammbaum:invalidate-authority'],
@@ -74,6 +93,9 @@ test('post-recovery command revokes old invitation links while preserving curren
   const current = await good(page, `/trees/${tr.id}`);
   expect(current.role).toBe('owner');
   expect(current.membershipRevision).toBeGreaterThan(m.membershipRevision);
+  const pending = (await good(page, `/trees/${tr.id}/connections`)).items.find((x) => x.id === pendingId);
+  expect(pending.status).toBe('authority-invalidated');
+  expect(pending.source).toBeUndefined();
   expect(
     await (await page.request.get(`${endpoint}/trees/${tr.id}/media/${up.body.id}/original`)).body(),
   ).toEqual(pdf);

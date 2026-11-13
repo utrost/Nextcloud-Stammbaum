@@ -4,6 +4,19 @@ namespace OCA\Stammbaum\Service;
 final class People
 {
     public function __construct(private Store $store, private Trees $trees) {}
+
+    /** Source loss is durable even if the person is later restored or released. */
+    private function invalidatePrivateConnections(string $tree, string $person): void
+    {
+        foreach (['stb_task_links', 'stb_calendar_links', 'stb_contact_links'] as $table) {
+            $this->store->execute(
+                'UPDATE *PREFIX*' .
+                    $table .
+                    " SET status = 'unavailable', updated_at = ? WHERE tree_id = ? AND person_id = ? AND status NOT IN ('unlinked', 'authority-invalidated')",
+                [time(), $tree, $person],
+            );
+        }
+    }
     public function row(string $tree, string $id, array $membership, bool $deleted = false): array
     {
         $r = $this->store->one(
@@ -198,6 +211,9 @@ final class People
                 $id,
             ],
         );
+        if ($old['visibility'] === 'members' && $d['visibility'] === 'management') {
+            $this->invalidatePrivateConnections($tree, $id);
+        }
         $this->store->audit($tree, $actor, 'person_updated', $id, $d, $d['visibility']);
         $this->store->bump($tree);
     }
@@ -415,6 +431,7 @@ final class People
                 [$restore ? 0 : 1, time(), $id],
             );
             if (!$restore) {
+                $this->invalidatePrivateConnections($tree, $id);
                 foreach (
                     $this->store->rows('SELECT media_id FROM *PREFIX*stb_media_people WHERE person_id = ?', [
                         $id,
