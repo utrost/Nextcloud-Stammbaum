@@ -364,7 +364,7 @@ test('viewer closes after metadata dependency revocation and failed filters clea
   await login(page);
   const tr = await tree(page),
     p = await person(page, tr.id, 'Alma'),
-    m = await upload(page, tr.id);
+    m = await upload(page, tr.id, 'Fictional document', false, 'members');
   await save(page, tr.id, m, {
     ...m.metadata,
     people: [{ name: 'Alma', personId: p.id, association: 'mentioned', page: '2' }],
@@ -408,7 +408,7 @@ test('metadata draft survives stale saves and explicit reconciliation; viewer ca
 }) => {
   await login(page);
   const tr = await tree(page),
-    m = await upload(page, tr.id);
+    m = await upload(page, tr.id, 'Fictional document', false, 'members');
   await grant(page, tr.id, 'stb_viewer', 'viewer');
   await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&view=media`);
   await page.getByRole('button', { name: 'Edit media', exact: true }).click();
