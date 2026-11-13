@@ -4,12 +4,15 @@ import { api } from '../api.js';
 import { t, title } from '../i18n.js';
 import { dateText, personName } from '../domain.js';
 import MediaPanel from './MediaPanel.vue';
+import ResearchTaskPanel from './ResearchTaskPanel.vue';
+import CalendarPanel from './CalendarPanel.vue';
 import RecordEditor from './RecordEditor.vue';
 import SafeText from './SafeText.js';
 const props = defineProps({
   treeId: String,
   person: Object,
   canEdit: Boolean,
+  canExport: Boolean,
   management: Boolean,
   section: String,
 });
@@ -167,11 +170,16 @@ onBeforeUnmount(() => sequence++);
           {{ t('Use as biography') }}</button
         ><button @click="emit('evidence')">{{ t('Sources and citations') }}</button>
       </div>
+      <div v-if="r.category === 'event'" class="button-row">
+        <ResearchTaskPanel :tree-id="treeId" :source="r" source-type="event" :can-export="canExport" />
+        <CalendarPanel :tree-id="treeId" :event="r" :can-export="canExport" />
+      </div>
       <MediaPanel
         v-if="mediaEvent === r.id"
         :tree-id="treeId"
         :event="r"
         :can-edit="canEdit"
+        :can-export="canExport"
         :management="management"
         @person="emit('person', $event)"
       />

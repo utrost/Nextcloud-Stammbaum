@@ -1119,6 +1119,48 @@ export default {
   'Appoint another active owner before leaving or changing the last owner.':
     'Benenne zuerst einen weiteren aktiven Eigentümer.',
   'This calendar date is not valid.': 'Dieses Kalenderdatum ist ungültig.',
+  Priority: 'Priorität',
+  Unspecified: 'Nicht festgelegt',
+  High: 'Hoch',
+  Normal: 'Normal',
+  Low: 'Niedrig',
+  Completed: 'Erledigt',
+  'Completed in Tasks': 'In Tasks erledigt',
+  'Task was removed or moved in Tasks': 'Aufgabe in Tasks entfernt oder verschoben',
+  'Task list is unavailable': 'Aufgabenliste nicht verfügbar',
+  'Read-only task lists are unavailable for creation.':
+    'In schreibgeschützten Aufgabenlisten können keine Aufgaben erstellt werden.',
+  'Read-only calendars are unavailable for creation.':
+    'In schreibgeschützten Kalendern können keine Einträge erstellt werden.',
+  'Include living or unknown-status people in the task':
+    'Lebende Personen oder Personen mit unbekanntem Lebensstatus in die Aufgabe aufnehmen',
+  'Include management-only research in the task':
+    'Nur für die Verwaltung sichtbare Forschung in die Aufgabe aufnehmen',
+  'Include living or unknown-status people in the event':
+    'Lebende Personen oder Personen mit unbekanntem Lebensstatus im Kalendereintrag nennen',
+  'Include management-only research in the event':
+    'Nur für die Verwaltung sichtbare Forschung im Kalendereintrag nennen',
+  'Anniversaries require a person with an exact birth or death date.':
+    'Gedenktage benötigen eine Person mit einem genauen Geburts- oder Sterbedatum.',
+  'Review inclusion of management-only research.':
+    'Prüfe die Aufnahme von Forschung, die nur für die Verwaltung sichtbar ist.',
+  'The event may have been created, but calendar access changed. Check Calendar.':
+    'Der Eintrag wurde möglicherweise erstellt, aber der Kalenderzugriff hat sich geändert. Prüfe Calendar.',
+  'Open in Tasks': 'In Tasks offen',
+  Open: 'Offen',
+  Untitled: 'Ohne Titel',
+  'Task completion is read from Tasks; edit the task there.':
+    'Der Erledigungsstand wird aus Tasks gelesen; bearbeite die Aufgabe dort.',
+  'A link back to this research will be included. Opening it still requires tree access.':
+    'Ein Link zurück zur Forschung wird eingefügt. Zum Öffnen ist weiterhin Zugriff auf den Stammbaum nötig.',
+  'This task list is shared with your account. Other readers may see copied details.':
+    'Diese Aufgabenliste wurde mit deinem Konto geteilt. Andere Leser können kopierte Angaben sehen.',
+  'This task list’s outward sharing could not be verified. Review its audience before continuing.':
+    'Die weitere Freigabe dieser Aufgabenliste konnte nicht geprüft werden. Prüfe den Leserkreis, bevor du fortfährst.',
+  'This calendar is shared with your account. Other readers may see copied details.':
+    'Dieser Kalender wurde mit deinem Konto geteilt. Andere Leser können kopierte Angaben sehen.',
+  'This calendar’s outward sharing could not be verified. Review its audience before continuing.':
+    'Die weitere Freigabe dieses Kalenders konnte nicht geprüft werden. Prüfe den Leserkreis, bevor du fortfährst.',
   'The month is not valid.': 'Der Monat ist ungültig.',
   'Use YYYY, YYYY-MM or YYYY-MM-DD, or choose literal wording.':
     'Verwende JJJJ, JJJJ-MM oder JJJJ-MM-TT oder wähle den Originalwortlaut.',

@@ -10,7 +10,7 @@ test('reviewed person research task creates one CalDAV VTODO without editing the
   const revision = (await good(page, `/trees/${tr.id}`)).revision;
   await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&view=people&person=${p.id}`);
   await page.getByRole('button', { name: 'Create research task' }).click();
-  const list = page.locator('.research-tasks select');
+  const list = page.getByRole('combobox', { name: /Task list/ });
   await expect(list).toBeVisible();
   test.skip((await list.locator('option').count()) === 0, 'No VTODO-capable task list in this fixture.');
   const collection = await list.inputValue();

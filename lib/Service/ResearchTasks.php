@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace OCA\Stammbaum\Service;
 use OCP\App\IAppManager;
+use OCP\Calendar\ICalendarIsShared;
 use OCP\Calendar\IManager;
 use OCP\Constants;
 use OCP\IURLGenerator;
@@ -13,38 +14,13 @@ final class ResearchTasks
     public function __construct(
         private Store $store,
         private Trees $trees,
-        private People $people,
         private IManager $calendars,
         private IAppManager $apps,
         private IUserManager $users,
         private IURLGenerator $urls,
         private ConnectionIdentity $identity,
+        private IntegrationSources $sources,
     ) {}
-
-    private function authority(
-        string $tree,
-        string $actor,
-        string $person,
-        bool $includeLiving,
-        bool $includeManagement,
-    ): array {
-        $m = $this->trees->access($tree, $actor);
-        if (!Trees::management($m) && !(bool) $m['export_allowed']) {
-            throw new Problem('forbidden', 'Export permission is required to copy genealogy details.', 403);
-        }
-        $row = $this->people->row($tree, $person, $m);
-        $p = $this->people->dto($row);
-        if ($p['livingStatus'] !== 'deceased' && !$includeLiving) {
-            throw new Problem(
-                'review_required',
-                'Review inclusion of a living person or unknown living status.',
-            );
-        }
-        if ($p['visibility'] === 'management' && !$includeManagement) {
-            throw new Problem('review_required', 'Review inclusion of a management-only person.');
-        }
-        return [$m, $row, $p];
-    }
 
     private function calendar(string $actor, string $uri): \OCP\Calendar\ICalendar
     {
@@ -72,22 +48,31 @@ final class ResearchTasks
         $this->trees->active($actor);
         $user = $this->users->get($actor);
         if (!$user || !$this->apps->isEnabledForUser('tasks', $user)) {
-            return ['available' => false, 'items' => []];
+            return ['available' => false, 'items' => [], 'readOnlyItems' => []];
         }
         $items = [];
+        $readOnly = [];
         foreach ($this->calendars->getCalendarsForPrincipal('principals/users/' . $actor) as $c) {
-            if (
-                !$c->isDeleted() &&
-                $c->getPermissions() & Constants::PERMISSION_CREATE &&
-                preg_match('/\A[a-zA-Z0-9_.-]{1,160}\z/D', $c->getUri())
-            ) {
-                $items[] = ['uri' => $c->getUri(), 'name' => $c->getDisplayName() ?: $c->getUri()];
+            if ($c->isDeleted() || !preg_match('/\A[a-zA-Z0-9_.-]{1,160}\z/D', $c->getUri())) {
+                continue;
             }
-            if (count($items) >= 50) {
+            $entry = [
+                'uri' => $c->getUri(),
+                'name' => $c->getDisplayName() ?: $c->getUri(),
+                'audience' =>
+                    $c instanceof ICalendarIsShared && $c->isShared() ? 'shared-with-me' : 'unknown',
+                'componentCheck' => 'authenticated-dav',
+            ];
+            if ($c->getPermissions() & Constants::PERMISSION_CREATE) {
+                $items[] = $entry;
+            } else {
+                $readOnly[] = $entry + ['state' => 'read-only'];
+            }
+            if (count($items) + count($readOnly) >= 50) {
                 break;
             }
         }
-        return ['available' => true, 'items' => $items];
+        return ['available' => true, 'items' => $items, 'readOnlyItems' => $readOnly];
     }
 
     private static function escape(string $value): string
@@ -99,8 +84,13 @@ final class ResearchTasks
         );
     }
 
-    private static function ics(string $id, string $title, string $description, ?string $due): string
-    {
+    private static function ics(
+        string $id,
+        string $title,
+        string $description,
+        ?string $due,
+        int $priority = 0,
+    ): string {
         $lines = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
@@ -111,6 +101,7 @@ final class ResearchTasks
             'STATUS:NEEDS-ACTION',
             'SUMMARY:' . self::escape($title),
             'DESCRIPTION:' . self::escape($description),
+            'PRIORITY:' . $priority,
         ];
         if ($due !== null) {
             $lines[] = 'DUE;VALUE=DATE:' . str_replace('-', '', $due);
@@ -132,22 +123,25 @@ final class ResearchTasks
 
     public function review(string $tree, string $actor, array $b): array
     {
-        $person = $b['personId'] ?? null;
+        $type = $b['sourceType'] ?? 'person';
+        $sourceId = $b['sourceId'] ?? ($b['personId'] ?? null);
         $uri = $b['collection'] ?? null;
-        if (!is_string($person) || !is_string($uri)) {
+        if (!is_string($type) || !is_string($sourceId) || !is_string($uri)) {
             throw Problem::missing();
         }
         $this->calendar($actor, $uri);
-        [$m, $row, $p] = $this->authority(
+        $source = $this->sources->get(
             $tree,
             $actor,
-            $person,
+            $type,
+            $sourceId,
             ($b['includeLiving'] ?? false) === true,
             ($b['includeManagement'] ?? false) === true,
         );
-        $name = trim($p['givenName'] . ' ' . $p['familyName']) ?: 'Unnamed person';
+        $name = $source['label'];
         $title = Values::text($b['title'] ?? 'Research ' . $name, 'title', 200, true);
         $note = Values::text($b['note'] ?? '', 'note', 1000);
+        $priority = (int) Values::choice((string) ($b['priority'] ?? '0'), ['0', '1', '5', '9'], 'priority');
         $due = $b['due'] ?? null;
         if ($due === '') {
             $due = null;
@@ -161,17 +155,23 @@ final class ResearchTasks
             throw new Problem('invalid_date', 'Enter a valid due date.');
         }
         return [
-            'personId' => $person,
+            'personId' => $type === 'person' ? $sourceId : '',
+            'sourceType' => $type,
+            'sourceId' => $sourceId,
             'personName' => $name,
             'title' => $title,
             'note' => $note,
             'due' => $due,
+            'priority' => $priority,
             'collection' => $uri,
             'includeLiving' => ($b['includeLiving'] ?? false) === true,
             'includeManagement' => ($b['includeManagement'] ?? false) === true,
-            'sourceRevision' => (int) $row['revision'],
-            'memberRevision' => (int) $m['revision'],
-            'treeRevision' => $this->trees->get($tree, $actor)['revision'],
+            'sourceRevision' => $source['revision'],
+            'memberRevision' => $source['memberRevision'],
+            'treeRevision' => $source['treeRevision'],
+            'dependencyDigest' => $source['dependencyDigest'],
+            'livingWarning' => $source['livingWarning'],
+            'managementWarning' => $source['managementWarning'],
             'expiresAt' => time() + 300,
             'audienceWarning' =>
                 'The selected task list has separate sharing permissions. Its readers and synchronized devices can retain this copy.',
@@ -194,15 +194,19 @@ final class ResearchTasks
             foreach (
                 [
                     'personId',
+                    'sourceType',
+                    'sourceId',
                     'title',
                     'note',
                     'due',
+                    'priority',
                     'collection',
                     'includeLiving',
                     'includeManagement',
                     'sourceRevision',
                     'memberRevision',
                     'treeRevision',
+                    'dependencyDigest',
                 ]
                 as $key
             ) {
@@ -231,10 +235,13 @@ final class ResearchTasks
                 'sha256',
                 Store::json([
                     $review['personId'],
+                    $review['sourceType'],
+                    $review['sourceId'],
                     $review['collection'],
                     $review['title'],
                     $review['note'],
                     $review['due'],
+                    $review['priority'],
                     $review['includeLiving'],
                     $review['includeManagement'],
                     $review['sourceRevision'],
@@ -269,6 +276,8 @@ final class ResearchTasks
                 'tree_id' => $tree,
                 'actor_id' => $actor,
                 'person_id' => $review['personId'],
+                'source_type' => $review['sourceType'],
+                'source_id' => $review['sourceId'],
                 'collection_uri' => $review['collection'],
                 'object_name' => $id . '.ics',
                 'request_id' => $requestId,
@@ -276,7 +285,7 @@ final class ResearchTasks
                 'source_revision' => $review['sourceRevision'],
                 'member_revision' => $review['memberRevision'],
                 'account_incarnation' => $this->identity->current($actor),
-                'dependency_digest' => hash('sha256', $review['personId'] . ':' . $review['sourceRevision']),
+                'dependency_digest' => $review['dependencyDigest'],
                 'status' => 'pending',
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -298,10 +307,18 @@ final class ResearchTasks
         if ((int) $row['created_at'] < time() - 300) {
             throw new Problem('review_expired', 'Review this task again.', 412);
         }
-        [$m, $source] = $this->authority($row['tree_id'], $actor, $row['person_id'], true, true);
+        $source = $this->sources->get(
+            $row['tree_id'],
+            $actor,
+            $row['source_type'] ?: 'person',
+            $row['source_id'] ?: $row['person_id'],
+            true,
+            true,
+        );
         if (
-            (int) $source['revision'] !== (int) $row['source_revision'] ||
-            (int) $m['revision'] !== (int) $row['member_revision']
+            $source['revision'] !== (int) $row['source_revision'] ||
+            $source['memberRevision'] !== (int) $row['member_revision'] ||
+            ($row['source_id'] !== null && $source['dependencyDigest'] !== $row['dependency_digest'])
         ) {
             throw new Problem('conflict', 'The research or your access changed. Review the task again.', 412);
         }
@@ -309,15 +326,26 @@ final class ResearchTasks
             $this->urls->linkToRouteAbsolute('stammbaum.page.index') .
             '#tree=' .
             rawurlencode($row['tree_id']) .
-            '&view=people&person=' .
-            rawurlencode($row['person_id']);
+            ($source['type'] === 'person'
+                ? '&view=people&person=' . rawurlencode($source['id'])
+                : ($source['type'] === 'source'
+                    ? '&view=sources'
+                    : ($source['type'] === 'medium'
+                        ? '&view=media'
+                        : '&view=people')));
         $description = ($review['note'] === '' ? '' : $review['note'] . "\n\n") . $link;
         return [
             'id' => $row['id'],
             'status' => 'pending',
             'collection' => $row['collection_uri'],
             'objectName' => $row['object_name'],
-            'ics' => self::ics($row['id'], $review['title'], $description, $review['due']),
+            'ics' => self::ics(
+                $row['id'],
+                $review['title'],
+                $description,
+                $review['due'],
+                $review['priority'],
+            ),
         ];
     }
 
@@ -331,14 +359,25 @@ final class ResearchTasks
             if (!$row) {
                 throw Problem::missing();
             }
-            $m = $this->trees->access($tree, $actor);
-            if (!Trees::management($m) && !(bool) $m['export_allowed']) {
-                throw Problem::missing();
+            try {
+                $source = $this->sources->get(
+                    $tree,
+                    $actor,
+                    $row['source_type'] ?: 'person',
+                    $row['source_id'] ?: $row['person_id'],
+                    true,
+                    true,
+                );
+            } catch (Problem $e) {
+                if ($e->errorCode === 'forbidden') {
+                    throw Problem::missing();
+                }
+                throw $e;
             }
-            $source = $this->people->row($tree, $row['person_id'], $m);
             if (
-                (int) $m['revision'] !== (int) $row['member_revision'] ||
-                (int) $source['revision'] !== (int) $row['source_revision']
+                $source['memberRevision'] !== (int) $row['member_revision'] ||
+                $source['revision'] !== (int) $row['source_revision'] ||
+                ($row['source_id'] !== null && $source['dependencyDigest'] !== $row['dependency_digest'])
             ) {
                 throw new Problem(
                     'conflict',
@@ -372,7 +411,7 @@ final class ResearchTasks
     }
 
     /** Read-only destination reconciliation; a missing VTODO is never recreated here. */
-    public function destinationStatus(string $actor, string $collection, string $id): string
+    public function destinationDetails(string $actor, string $collection, string $id): array
     {
         try {
             $found = $this->calendar($actor, $collection)->search(
@@ -381,22 +420,43 @@ final class ResearchTasks
                 ['uid' => 'stb-' . $id . '@stammbaum.nextcloud', 'types' => ['VTODO']],
                 1,
             );
-            return $found ? 'linked' : 'destination-changed';
+            if (!$found) {
+                return ['status' => 'destination-changed', 'completion' => 'unknown'];
+            }
+            $task = $found[0]['objects'][0] ?? [];
+            $status = strtoupper((string) ($task['STATUS'][0] ?? ''));
+            return [
+                'status' => 'linked',
+                'completion' =>
+                    $status === 'COMPLETED'
+                        ? 'complete'
+                        : (in_array($status, ['NEEDS-ACTION', 'IN-PROCESS'], true)
+                            ? 'open'
+                            : 'unknown'),
+            ];
         } catch (Problem $e) {
             if (in_array($e->errorCode, ['not_found', 'unavailable'], true)) {
-                return 'unavailable';
+                return ['status' => 'unavailable', 'completion' => 'unknown'];
             }
             throw $e;
         }
     }
 
-    public function list(string $tree, string $actor, string $person): array
+    public function destinationStatus(string $actor, string $collection, string $id): string
     {
-        $m = $this->trees->access($tree, $actor);
-        if (!Trees::management($m) && !(bool) $m['export_allowed']) {
-            return ['items' => []];
+        return $this->destinationDetails($actor, $collection, $id)['status'];
+    }
+
+    public function list(string $tree, string $actor, string $sourceId, string $sourceType = 'person'): array
+    {
+        try {
+            $source = $this->sources->get($tree, $actor, $sourceType, $sourceId, true, true);
+        } catch (Problem $e) {
+            if ($e->errorCode === 'forbidden') {
+                return ['items' => []];
+            }
+            throw $e;
         }
-        $source = $this->people->row($tree, $person, $m);
         // A timed-out DAV request may have succeeded. Retain only its opaque
         // identity for manual reconciliation; no task content is stored here.
         $this->store->execute(
@@ -404,22 +464,26 @@ final class ResearchTasks
             [$actor, time() - 300],
         );
         $rows = $this->store->rows(
-            "SELECT id, collection_uri, status, source_revision, created_at FROM *PREFIX*stb_task_links WHERE tree_id = ? AND actor_id = ? AND person_id = ? AND member_revision = ? AND status IN ('pending','linked','outcome-unknown') ORDER BY created_at DESC, id DESC LIMIT 25",
-            [$tree, $actor, $person, (int) $m['revision']],
+            "SELECT id, collection_uri, status, source_revision, source_id, dependency_digest, created_at FROM *PREFIX*stb_task_links WHERE tree_id = ? AND actor_id = ? AND source_type = ? AND (source_id = ? OR (source_id IS NULL AND person_id = ? AND source_type = 'person')) AND member_revision = ? AND status IN ('pending','linked','outcome-unknown') ORDER BY created_at DESC, id DESC LIMIT 25",
+            [$tree, $actor, $sourceType, $sourceId, $sourceId, $source['memberRevision']],
         );
-        return [
-            'items' => array_map(
-                fn($r) => [
-                    'id' => $r['id'],
-                    'collection' => $r['collection_uri'],
-                    'status' =>
-                        (int) $r['source_revision'] !== (int) $source['revision']
-                            ? 'source-changed'
-                            : $r['status'],
-                    'createdAt' => (int) $r['created_at'],
-                ],
-                $rows,
-            ),
-        ];
+        $items = [];
+        foreach ($rows as $row) {
+            $stale =
+                (int) $row['source_revision'] !== $source['revision'] ||
+                ($row['source_id'] !== null && $row['dependency_digest'] !== $source['dependencyDigest']);
+            $destination =
+                !$stale && $row['status'] === 'linked'
+                    ? $this->destinationDetails($actor, $row['collection_uri'], $row['id'])
+                    : null;
+            $items[] = [
+                'id' => $row['id'],
+                'collection' => $row['collection_uri'],
+                'status' => $stale ? 'source-changed' : $destination['status'] ?? $row['status'],
+                'completion' => $destination['completion'] ?? 'unknown',
+                'createdAt' => (int) $row['created_at'],
+            ];
+        }
+        return ['items' => $items];
     }
 }

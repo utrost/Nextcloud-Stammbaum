@@ -19,6 +19,7 @@ final class IntegrationConnections
         private ResearchTasks $tasks,
         private CalendarAppointments $calendar,
         private ContactLinks $contacts,
+        private IntegrationSources $sources,
     ) {}
 
     private function table(string $kind): string
@@ -101,7 +102,25 @@ final class IntegrationConnections
             return $item;
         }
         try {
-            $source = $this->people->row($tree, $row['person_id'], $member);
+            if ($kind === 'contact') {
+                $personRow = $this->people->row($tree, $row['person_id'], $member);
+                $person = $this->people->dto($personRow);
+                $source = [
+                    'type' => 'person',
+                    'id' => $row['person_id'],
+                    'label' => trim($person['givenName'] . ' ' . $person['familyName']) ?: 'Unnamed person',
+                    'revision' => (int) $personRow['revision'],
+                ];
+            } else {
+                $source = $this->sources->get(
+                    $tree,
+                    $actor,
+                    $row['source_type'] ?: 'person',
+                    $row['source_id'] ?: $row['person_id'],
+                    true,
+                    true,
+                );
+            }
         } catch (Problem $e) {
             if ($e->errorCode === 'not_found') {
                 $this->store->execute(
@@ -122,7 +141,7 @@ final class IntegrationConnections
             $row['account_incarnation'] === '' ||
             ($kind === 'contact' && (int) $row['source_revision'] === 0)
         ) {
-            $baseline = (int) $row['source_revision'] ?: (int) $source['revision'];
+            $baseline = (int) $row['source_revision'] ?: $source['revision'];
             $this->store->execute(
                 'UPDATE *PREFIX*' .
                     $this->table($kind) .
@@ -138,16 +157,17 @@ final class IntegrationConnections
             );
             $row['source_revision'] = $baseline;
         }
-        $person = $this->people->dto($source);
         $item['source'] = [
-            'type' => 'person',
-            'id' => $row['person_id'],
-            'label' => trim($person['givenName'] . ' ' . $person['familyName']) ?: 'Unnamed person',
+            'type' => $source['type'],
+            'id' => $source['id'],
+            'label' => $source['label'],
         ];
         $item['collection'] = $kind === 'contact' ? $row['book_key'] : $row['collection_uri'];
         if (
-            (int) $row['source_revision'] > 0 &&
-            (int) $row['source_revision'] !== (int) $source['revision']
+            ((int) $row['source_revision'] > 0 && (int) $row['source_revision'] !== $source['revision']) ||
+            ($kind !== 'contact' &&
+                $row['source_id'] !== null &&
+                $row['dependency_digest'] !== $source['dependencyDigest'])
         ) {
             $item['status'] = 'source-changed';
             return $item;
@@ -159,7 +179,9 @@ final class IntegrationConnections
             return $item;
         }
         if ($kind === 'task') {
-            $item['status'] = $this->tasks->destinationStatus($actor, $row['collection_uri'], $row['id']);
+            $details = $this->tasks->destinationDetails($actor, $row['collection_uri'], $row['id']);
+            $item['status'] = $details['status'];
+            $item['completion'] = $details['completion'];
         } elseif ($kind === 'calendar') {
             $item['status'] = $this->calendar->destinationStatus($actor, $row['collection_uri'], $row['id']);
         } else {
