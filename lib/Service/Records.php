@@ -66,7 +66,41 @@ final class Records
                 }
             }
         }
-        return json_decode($r['data_json'], true) + [
+        $data = json_decode($r['data_json'], true);
+        if (($original['title'] ?? '') === 'Missing media reference') {
+            $fileIndexes = [];
+            foreach ($original['fields'] ?? [] as $index => $field) {
+                if (($field['label'] ?? '') === 'FILE' && ($field['value'] ?? '') !== '') {
+                    $fileIndexes[$index] = true;
+                }
+            }
+            if ($fileIndexes) {
+                $visibility = Trees::management($m) ? '' : " AND v.visibility = 'members'";
+                $privatePerson = Trees::management($m) ? '' : " OR p.visibility <> 'members'";
+                $matches = $this->store->rows(
+                    "SELECT x.field_index FROM *PREFIX*stb_media_matches x JOIN *PREFIX*stb_media v ON v.id = x.media_id WHERE x.record_id = ? AND v.tree_id = ? AND v.status = 'ready'" .
+                        $visibility .
+                        " AND NOT EXISTS (SELECT 1 FROM *PREFIX*stb_media_people a LEFT JOIN *PREFIX*stb_people p ON p.id = a.person_id WHERE a.media_id = v.id AND (p.id IS NULL OR p.deleted = 1$privatePerson))" .
+                        MediaMetadata::visibleSql($m),
+                    [$r['id'], $r['tree_id']],
+                );
+                $matched = count(
+                    array_filter($matches, fn($match) => isset($fileIndexes[$match['field_index']])),
+                );
+                foreach ($data['fields'] as &$field) {
+                    if (($field['label'] ?? '') === 'Availability') {
+                        $field['value'] =
+                            $matched === count($fileIndexes)
+                                ? 'Matched private copy'
+                                : ($matched > 0
+                                    ? 'Partly matched private copies'
+                                    : 'Missing: referenced file has not been supplied');
+                    }
+                }
+                unset($field);
+            }
+        }
+        return $data + [
             'id' => $r['id'],
             'originId' => $r['origin_id'],
             'category' => $r['category'],

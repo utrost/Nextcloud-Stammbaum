@@ -223,7 +223,7 @@ final class Exports
             ];
         });
     }
-    public function work(): ?string
+    public function work(?callable $beforePublication = null): ?string
     {
         $r = $this->store->write(function () {
             $this->store->execute(
@@ -321,6 +321,11 @@ final class Exports
                     $zip->close();
                 }
                 $folder->newFile($id . '.zip')->putContent(file_get_contents($temporary));
+            }
+            // A worker may finish rendering after the requester cancelled the job.
+            // Keep the final state check and publication in the same guarded write.
+            if ($beforePublication) {
+                $beforePublication($r);
             }
             $this->store->write(function () use ($r, $id) {
                 $fresh = $this->store->one('SELECT state FROM *PREFIX*stb_exports WHERE id = ?', [$id]);
