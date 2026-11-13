@@ -34,6 +34,7 @@ test('Files import preserves originals, rejects stale selection and isolates sou
     const id = key(),
       first = await copy(page, tr.id, selected, { requestId: id });
     expect(first.status, JSON.stringify(first.body)).toBe(201);
+    expect(first.body.visibility).toBe('management');
     expect((await copy(page, tr.id, selected, { requestId: id })).body.id).toBe(first.body.id);
     expect(
       await (await page.request.get(`${endpoint}/trees/${tr.id}/media/${first.body.id}/original`)).body(),
