@@ -256,7 +256,7 @@ watch(
           >
             {{ t(item.completion === 'complete' ? 'Completed in Tasks' : 'Open in Tasks') }}
           </p>
-          <p v-else-if="item.status !== 'unlinked'" class="muted">
+          <p v-if="!item.source && item.status !== 'unlinked'" class="muted">
             {{ t('Source details are hidden. You can still remove this private link.') }}
           </p>
           <p v-if="item.status === 'outcome-unknown'" class="muted">
