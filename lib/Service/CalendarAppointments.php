@@ -548,7 +548,22 @@ final class CalendarAppointments
                 409,
             );
         }
-        if (!$this->found($calendar, $row['id'])) {
+        try {
+            // The pre-write calendar object may retain an ACL snapshot. Resolve
+            // the account's current destination permission after publication.
+            $currentCalendar = $this->calendar($actor, $row['collection_uri']);
+        } catch (Problem $e) {
+            $this->store->execute(
+                "UPDATE *PREFIX*stb_calendar_links SET status = 'authority-invalidated', updated_at = ? WHERE id = ?",
+                [time(), $row['id']],
+            );
+            throw new Problem(
+                'outcome_unknown',
+                'The event may have been created, but calendar access changed. Check Calendar.',
+                409,
+            );
+        }
+        if (!$this->found($currentCalendar, $row['id'])) {
             throw new Problem(
                 'outcome_unknown',
                 'Calendar creation could not be verified. Check Calendar before retrying.',

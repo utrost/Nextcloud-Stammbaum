@@ -1144,6 +1144,8 @@ export default {
     'Gedenktage benötigen eine Person mit einem genauen Geburts- oder Sterbedatum.',
   'Review inclusion of management-only research.':
     'Prüfe die Aufnahme von Forschung, die nur für die Verwaltung sichtbar ist.',
+  'The event may have been created, but calendar access changed. Check Calendar.':
+    'Der Eintrag wurde möglicherweise erstellt, aber der Kalenderzugriff hat sich geändert. Prüfe Calendar.',
   'Open in Tasks': 'In Tasks offen',
   Open: 'Offen',
   Untitled: 'Ohne Titel',
