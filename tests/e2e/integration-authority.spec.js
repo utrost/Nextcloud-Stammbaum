@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
 import { fixture, good, grant, key, login, person, request, tree } from './helpers.js';
 
 test('all tree roles keep outbound reviews behind export and all-target visibility', async ({
@@ -131,4 +132,69 @@ test('all tree roles keep outbound reviews behind export and all-target visibili
   } finally {
     for (const context of contexts) await context.close();
   }
+});
+
+test('denied integration source requests keep private labels out of responses and new log entries', async ({
+  page,
+  browser,
+}) => {
+  expect(fixture.container).toBe('stammbaum-iteration-nc');
+  await login(page);
+  const tr = await tree(page);
+  const secret = `Fictional private source ${key()}`;
+  const source = await good(
+    page,
+    `/trees/${tr.id}/sources`,
+    'POST',
+    { title: secret, visibility: 'management', requestId: key() },
+    201,
+  );
+  await grant(page, tr.id, 'stb_viewer', 'viewer');
+  const member = (await good(page, `/trees/${tr.id}/members`)).items.find(
+    (item) => item.userId === 'stb_viewer',
+  );
+  await good(page, `/trees/${tr.id}/members`, 'POST', {
+    userId: 'stb_viewer',
+    role: 'viewer',
+    exportAllowed: true,
+    revision: member.revision,
+  });
+  const logPath = '/var/www/html/data/nextcloud.log';
+  const before = Number(
+    execFileSync('docker', ['exec', fixture.container, 'stat', '-c', '%s', logPath]).toString(),
+  );
+  for (const user of ['stb_viewer', 'stb_outsider']) {
+    const context = await browser.newContext({ baseURL: fixture.baseURL });
+    try {
+      const actor = await context.newPage();
+      await login(actor, user);
+      const token = await actor.evaluate(() => window.OC.requestToken);
+      const response = await actor.request.fetch(
+        `/index.php/apps/stammbaum/api/v1/trees/${tr.id}/sources/${source.id}`,
+        { headers: { requesttoken: token } },
+      );
+      expect(response.status()).toBe(404);
+      expect(response.headers()['cache-control']).toContain('no-store');
+      expect(response.headers()['x-content-type-options']).toBe('nosniff');
+      expect(await response.text()).not.toContain(secret);
+      const collections = await good(actor, '/integrations/tasks/collections');
+      const denied = await request(actor, `/trees/${tr.id}/tasks/review`, 'POST', {
+        sourceType: 'source',
+        sourceId: source.id,
+        collection: collections.items[0].uri,
+        title: 'Fictional denied request',
+        includeManagement: true,
+      });
+      expect(denied.status).toBe(404);
+      expect(JSON.stringify(denied.body)).not.toContain(secret);
+    } finally {
+      await context.close();
+    }
+  }
+  const appended = execFileSync(
+    'docker',
+    ['exec', fixture.container, 'tail', '-c', `+${before + 1}`, logPath],
+    { maxBuffer: 4 * 1024 * 1024 },
+  ).toString();
+  expect(appended).not.toContain(secret);
 });
