@@ -4,9 +4,11 @@ import { api } from '../api.js';
 import { t, title } from '../i18n.js';
 import { dateText } from '../domain.js';
 import EvidenceEditor from './EvidenceEditor.vue';
+import ResearchTaskPanel from './ResearchTaskPanel.vue';
 const props = defineProps({
   treeId: String,
   canEdit: Boolean,
+  canExport: Boolean,
   management: Boolean,
   person: Object,
   claims: Array,
@@ -179,6 +181,7 @@ onBeforeUnmount(() => sequence++);
         <button v-if="canEdit" @click="editor = { kind: 'source', record: source }">
           {{ t('Edit source') }}
         </button>
+        <ResearchTaskPanel :tree-id="treeId" :source="source" source-type="source" :can-export="canExport" />
       </article>
       <p v-if="reuse" class="muted">
         {{

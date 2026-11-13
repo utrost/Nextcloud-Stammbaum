@@ -250,6 +250,12 @@ watch(
           <p v-if="item.source">
             {{ item.source.label }} <small v-if="item.collection">· {{ item.collection }}</small>
           </p>
+          <p
+            v-if="item.kind === 'task' && item.status === 'linked' && item.completion !== 'unknown'"
+            class="muted"
+          >
+            {{ t(item.completion === 'complete' ? 'Completed in Tasks' : 'Open in Tasks') }}
+          </p>
           <p v-else-if="item.status !== 'unlinked'" class="muted">
             {{ t('Source details are hidden. You can still remove this private link.') }}
           </p>
@@ -266,7 +272,7 @@ watch(
         </div>
         <div class="button-row">
           <button
-            v-if="item.source"
+            v-if="item.source?.type === 'person'"
             :disabled="loading || !!busy"
             @click="emit('open-person', item.source.id)"
           >

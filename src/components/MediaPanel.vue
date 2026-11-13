@@ -9,11 +9,13 @@ import MediaTrash from './MediaTrash.vue';
 import MediaEditor from './MediaEditor.vue';
 import MediaPreview from './MediaPreview.vue';
 import MediaViewer from './MediaViewer.vue';
+import ResearchTaskPanel from './ResearchTaskPanel.vue';
 const props = defineProps({
     treeId: String,
     person: Object,
     event: Object,
     canEdit: Boolean,
+    canExport: Boolean,
     management: Boolean,
   }),
   emit = defineEmits(['changed', 'person']);
@@ -486,6 +488,7 @@ onBeforeUnmount(() => {
           ><button v-if="canEdit" @click="editor = m">{{ t('Edit media') }}</button
           ><button v-if="management" @click="reviewRemoval(m)">{{ t('Move medium to trash') }}</button>
         </div>
+        <ResearchTaskPanel :tree-id="treeId" :source="m" source-type="medium" :can-export="canExport" />
       </article>
     </div>
     <button v-if="page !== null" :disabled="loading" @click="load(page)">{{ t('Load more') }}</button

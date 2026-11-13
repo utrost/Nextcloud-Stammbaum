@@ -16,7 +16,7 @@ Use **Exports** to review the included research, privacy options and format limi
 
 The app currently targets **Nextcloud 34**, PHP **8.3+**, with MariaDB verified. It uses Nextcloud accounts and private app storage; Library and Relate are development references, not dependencies.
 
-From a person, authorized researchers can create reviewed Nextcloud Tasks or Calendar entries and privately link a Nextcloud Contacts card. **Connections** shows that account's private links, supports read-only refresh and local unlink, and offers separately reviewed conditional removal for newly created unchanged Tasks/Calendar items. These optional journeys keep each app's permissions and ownership separate. Their current limits are recorded in the iteration notes below.
+Authorized researchers can create a reviewed Nextcloud Task from a person, source, shared event or image/PDF medium, and a reviewed Calendar entry from a person or shared event. Task priority and completion remain in Tasks; exact person dates can supply an anniversary. People can also privately link a Nextcloud Contacts card. **Connections** shows that account's private links, supports read-only refresh and local unlink, and offers separately reviewed conditional removal for newly created unchanged Tasks/Calendar items. These optional journeys keep each app's permissions and ownership separate. Their current limits are recorded in the iteration notes below.
 
 - [GEDCOM iteration and verification](docs/iteration-02.md)
 - [Import profile, limits and preserved-original contract](docs/gedcom-import-profile.md)
@@ -26,6 +26,8 @@ From a person, authorized researchers can create reviewed Nextcloud Tasks or Cal
 - [Development environment and lessons from Library/Relate](docs/development.md)
 - [Implementation roadmap](docs/implementation-roadmap.md)
 - [Nextcloud Tasks, Calendar and Contacts integration concept](docs/nextcloud-integration-concept.md)
+- [Same-instance integration API and permission contract](docs/integration-api-contract.md)
+- [Alpha.27 optional-integration test and Alice deployment evidence](docs/integration-acceptance-alpha27.md)
 - [First Tasks integration journey and verified limits](docs/tasks-iteration.md)
 - [Nextcloud Contacts linking and confidential-copy contract](docs/contacts-iteration.md)
 - [Reviewed Nextcloud Calendar events and limits](docs/calendar-iteration.md)
