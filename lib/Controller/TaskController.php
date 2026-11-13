@@ -48,9 +48,9 @@ final class TaskController extends Controller
     }
     #[NoAdminRequired]
     #[NoCSRFRequired]
-    public function collections(): Response
+    public function collections(int $page = 0): Response
     {
-        return $this->respond(fn($a) => $this->tasks->collections($a));
+        return $this->respond(fn($a) => $this->tasks->collections($a, $page));
     }
     #[NoAdminRequired]
     public function review(string $tree): Response

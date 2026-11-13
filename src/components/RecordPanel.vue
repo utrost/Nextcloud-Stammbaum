@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { api } from '../api.js';
 import { t, title } from '../i18n.js';
 import { dateText, personName } from '../domain.js';
@@ -15,6 +15,7 @@ const props = defineProps({
   canExport: Boolean,
   management: Boolean,
   section: String,
+  targetEventId: String,
 });
 const emit = defineEmits(['evidence', 'person']);
 const records = ref([]),
@@ -87,7 +88,27 @@ watch(
     load();
   },
 );
-onMounted(() => load());
+onMounted(async () => {
+  await load();
+  const seq = sequence;
+  if (props.section === 'timeline' && props.targetEventId) {
+    try {
+      const event = await api(`/trees/${props.treeId}/records/${props.targetEventId}`);
+      if (seq !== sequence) return;
+      if (
+        event.category !== 'event' ||
+        !event.participants.some((participant) => participant.person.id === props.person.id)
+      ) {
+        throw new Error('This information is not available.');
+      }
+      if (!records.value.some((item) => item.id === event.id)) records.value = [event, ...records.value];
+      await nextTick();
+      document.querySelector(`[data-record-id="${event.id}"]`)?.focus({ preventScroll: false });
+    } catch (e) {
+      if (seq === sequence) error.value = t(e.message);
+    }
+  }
+});
 onBeforeUnmount(() => sequence++);
 </script>
 <template>
@@ -126,7 +147,7 @@ onBeforeUnmount(() => sequence++);
       </p></template
     >
     <p v-if="!loading && !error && !items.length" class="muted">{{ t('No records yet') }}</p>
-    <article v-for="r in items" :key="r.id" class="record-card">
+    <article v-for="r in items" :key="r.id" :data-record-id="r.id" tabindex="-1" class="record-card">
       <div class="eyebrow">
         {{ label(r.type) }} <span v-if="r.preferred" class="badge">{{ t('Preferred biography') }}</span>
       </div>

@@ -43,19 +43,27 @@ final class ResearchTasks
         throw Problem::missing();
     }
 
-    public function collections(string $actor): array
+    public function collections(string $actor, int $page = 0): array
     {
+        if ($page < 0 || $page > 10000) {
+            throw new Problem('validation', 'Choose an available task-list page.');
+        }
         $this->trees->active($actor);
         $user = $this->users->get($actor);
         if (!$user || !$this->apps->isEnabledForUser('tasks', $user)) {
-            return ['available' => false, 'items' => [], 'readOnlyItems' => []];
+            return ['available' => false, 'items' => [], 'readOnlyItems' => [], 'nextPage' => null];
         }
         $items = [];
         $readOnly = [];
+        $choices = [];
         foreach ($this->calendars->getCalendarsForPrincipal('principals/users/' . $actor) as $c) {
             if ($c->isDeleted() || !preg_match('/\A[a-zA-Z0-9_.-]{1,160}\z/D', $c->getUri())) {
                 continue;
             }
+            $choices[] = $c;
+        }
+        usort($choices, fn($a, $b) => strcmp($a->getUri(), $b->getUri()));
+        foreach (array_slice($choices, $page * 50, 50) as $c) {
             $entry = [
                 'uri' => $c->getUri(),
                 'name' => $c->getDisplayName() ?: $c->getUri(),
@@ -68,11 +76,13 @@ final class ResearchTasks
             } else {
                 $readOnly[] = $entry + ['state' => 'read-only'];
             }
-            if (count($items) + count($readOnly) >= 50) {
-                break;
-            }
         }
-        return ['available' => true, 'items' => $items, 'readOnlyItems' => $readOnly];
+        return [
+            'available' => true,
+            'items' => $items,
+            'readOnlyItems' => $readOnly,
+            'nextPage' => count($choices) > ($page + 1) * 50 ? $page + 1 : null,
+        ];
     }
 
     private static function escape(string $value): string
@@ -322,17 +332,20 @@ final class ResearchTasks
         ) {
             throw new Problem('conflict', 'The research or your access changed. Review the task again.', 412);
         }
+        $target = match ($source['type']) {
+            'person' => '&view=people&person=' . rawurlencode($source['id']),
+            'source' => '&view=sources&source=' . rawurlencode($source['id']),
+            'medium' => '&view=media&medium=' . rawurlencode($source['id']),
+            'event' => '&view=people&person=' .
+                rawurlencode($source['anchorPersonId']) .
+                '&event=' .
+                rawurlencode($source['id']),
+        };
         $link =
             $this->urls->linkToRouteAbsolute('stammbaum.page.index') .
             '#tree=' .
             rawurlencode($row['tree_id']) .
-            ($source['type'] === 'person'
-                ? '&view=people&person=' . rawurlencode($source['id'])
-                : ($source['type'] === 'source'
-                    ? '&view=sources'
-                    : ($source['type'] === 'medium'
-                        ? '&view=media'
-                        : '&view=people')));
+            $target;
         $description = ($review['note'] === '' ? '' : $review['note'] . "\n\n") . $link;
         return [
             'id' => $row['id'],

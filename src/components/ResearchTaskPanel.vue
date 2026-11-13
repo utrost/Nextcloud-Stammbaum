@@ -45,6 +45,7 @@ const open = ref(false),
   error = ref(''),
   collections = ref([]),
   readOnlyCount = ref(0),
+  nextCollectionPage = ref(null),
   collection = ref(''),
   title = ref(''),
   note = ref(''),
@@ -99,21 +100,53 @@ async function loadLinks() {
 
 async function toggle() {
   open.value = !open.value;
-  if (!open.value) return;
+  if (!open.value) {
+    sequence++;
+    reviewSequence++;
+    busy.value = false;
+    return;
+  }
   const seq = ++sequence;
   busy.value = true;
   error.value = '';
   title.value ||= `${t('Research')} ${originLabel.value}`;
   try {
-    const result = await api('/integrations/tasks/collections');
+    const result = await api('/integrations/tasks/collections?page=0');
     if (!result.available) throw new Error('Nextcloud Tasks is not available for this account.');
     const detected = await discoverTaskCalendars([...result.items, ...(result.readOnlyItems || [])]);
     if (seq !== sequence) return;
     collections.value = detected.filter((item) => item.state !== 'read-only');
     readOnlyCount.value = detected.length - collections.value.length;
+    nextCollectionPage.value = result.nextPage;
     if (!collections.value.some((c) => c.uri === collection.value))
       collection.value = collections.value[0]?.uri || '';
     await loadLinks();
+  } catch (e) {
+    if (seq === sequence) error.value = t(e.message);
+  } finally {
+    if (seq === sequence) busy.value = false;
+  }
+}
+
+async function loadMoreCollections() {
+  const next = nextCollectionPage.value;
+  if (next === null || busy.value) return;
+  const seq = sequence;
+  busy.value = true;
+  error.value = '';
+  try {
+    const result = await api(`/integrations/tasks/collections?page=${next}`);
+    if (!result.available) throw new Error('Nextcloud Tasks is not available for this account.');
+    const detected = await discoverTaskCalendars([...result.items, ...(result.readOnlyItems || [])]);
+    if (seq !== sequence) return;
+    const seen = new Set(collections.value.map((item) => item.uri));
+    collections.value = [
+      ...collections.value,
+      ...detected.filter((item) => item.state !== 'read-only' && !seen.has(item.uri)),
+    ];
+    readOnlyCount.value += detected.filter((item) => item.state === 'read-only').length;
+    nextCollectionPage.value = result.nextPage;
+    if (!collection.value) collection.value = collections.value[0]?.uri || '';
   } catch (e) {
     if (seq === sequence) error.value = t(e.message);
   } finally {
@@ -130,7 +163,9 @@ watch(
     busy.value = false;
     review.value = null;
     links.value = [];
+    collections.value = [];
     readOnlyCount.value = 0;
+    nextCollectionPage.value = null;
     title.value = '';
     note.value = '';
     due.value = '';
@@ -320,6 +355,9 @@ async function refresh() {
           <button type="submit">{{ t('Review task') }}</button>
         </fieldset>
       </form>
+      <button v-if="nextCollectionPage !== null" :disabled="busy" @click="loadMoreCollections">
+        {{ t('Load more task lists') }}
+      </button>
       <div v-if="review" class="task-preview">
         <h3>{{ t('Review copied details') }}</h3>
         <p>
