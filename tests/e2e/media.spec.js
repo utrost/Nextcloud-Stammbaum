@@ -163,6 +163,10 @@ test('uploads reject disguised active content, over-limit images and files; malf
   const oversized = await png(page);
   oversized.writeUInt32BE(16001, 16);
   expect((await upload(page, tr.id, oversized)).status).toBe(422);
+  const tooManyPixels = await png(page);
+  tooManyPixels.writeUInt32BE(4001, 16);
+  tooManyPixels.writeUInt32BE(4000, 20);
+  expect((await upload(page, tr.id, tooManyPixels)).status).toBe(422);
   expect((await upload(page, tr.id, Buffer.alloc(10485761, 65))).status).toBe(413);
   const bytes = Buffer.from(
       '%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n',
@@ -171,6 +175,11 @@ test('uploads reject disguised active content, over-limit images and files; malf
       file: { name: 'fictional.pdf', mimeType: 'application/pdf', buffer: bytes },
     });
   expect(pdf.status, JSON.stringify(pdf.body)).toBe(201);
+  const disguised = await upload(page, tr.id, bytes, {
+    file: { name: 'disguised.png', mimeType: 'image/png', buffer: bytes },
+  });
+  expect(disguised.status, JSON.stringify(disguised.body)).toBe(201);
+  expect(disguised.body.mime).toBe('application/pdf');
   const r = await page.request.get(`${endpoint}/trees/${tr.id}/media/${pdf.body.id}/original`);
   expect(r.headers()['content-disposition']).toContain('attachment');
   expect(r.headers()['x-content-type-options']).toBe('nosniff');

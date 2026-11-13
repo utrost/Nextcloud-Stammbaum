@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { login, tree, person, grant, good, request, key, endpoint } from './helpers.js';
 import { editable } from '../../src/domain.js';
 const pdf = readFileSync('tests/fixtures/media-two-pages.pdf');
-async function upload(page, tid, title = 'Fictional document', image = false) {
+async function upload(page, tid, title = 'Fictional document', image = false, visibility) {
   const bytes = image
     ? Buffer.from(
         await page.evaluate(() => {
@@ -25,6 +25,7 @@ async function upload(page, tid, title = 'Fictional document', image = false) {
     multipart: {
       title,
       requestId: key(),
+      ...(visibility ? { visibility } : {}),
       file: {
         name: image ? 'fictional.png' : 'fictional.pdf',
         mimeType: image ? 'image/png' : 'application/pdf',
@@ -188,8 +189,8 @@ test('hidden people and event participants protect metadata, suggestions, filter
     p = await person(page, tr.id, 'Secret', { visibility: 'management' });
   await grant(page, tr.id, 'stb_editor', 'editor');
   const e = await event(page, tr.id, p),
-    a = await upload(page, tr.id),
-    b = await upload(page, tr.id);
+    a = await upload(page, tr.id, 'Fictional document A', false, 'members'),
+    b = await upload(page, tr.id, 'Fictional document B', false, 'members');
   await save(page, tr.id, a, {
     ...a.metadata,
     people: [{ name: 'Secret caption', personId: p.id, association: 'mentioned' }],
