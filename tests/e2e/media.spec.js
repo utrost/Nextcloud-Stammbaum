@@ -92,7 +92,7 @@ test('shared private media never leaks metadata, originals or previews to ordina
     p = await person(page, tr.id, 'Public'),
     q = await person(page, tr.id, 'Secret', { visibility: 'management' });
   await grant(page, tr.id, 'stb_editor', 'editor');
-  const up = await upload(page, tr.id, await png(page), { personId: p.id });
+  const up = await upload(page, tr.id, await png(page), { personId: p.id, visibility: 'members' });
   expect(up.status, JSON.stringify(up.body)).toBe(201);
   const m = up.body;
   await good(page, `/trees/${tr.id}/media/${m.id}`, 'PUT', {
@@ -108,6 +108,41 @@ test('shared private media never leaks metadata, originals or previews to ordina
       404,
     );
   expect((await request(editor, `/trees/${tr.id}/media/${m.id}`, 'PUT', edit(m))).status).toBe(404);
+  await ctx.close();
+});
+
+test('upload visibility defaults follow the uploader role and remain enforced on direct URLs', async ({
+  page,
+  browser,
+}) => {
+  await login(page);
+  const tr = await tree(page),
+    bytes = await png(page);
+  await grant(page, tr.id, 'stb_editor', 'editor');
+  const ownerUpload = await upload(page, tr.id, bytes);
+  expect(ownerUpload.status, JSON.stringify(ownerUpload.body)).toBe(201);
+  expect(ownerUpload.body.visibility).toBe('management');
+  const ctx = await browser.newContext(),
+    editor = await ctx.newPage();
+  await login(editor, 'stb_editor');
+  expect((await good(editor, `/trees/${tr.id}/media`)).items).toEqual([]);
+  for (const suffix of ['', '/original', '/preview'])
+    expect(
+      (await editor.request.get(`${endpoint}/trees/${tr.id}/media/${ownerUpload.body.id}${suffix}`)).status(),
+    ).toBe(404);
+  const editorUpload = await upload(editor, tr.id, bytes);
+  expect(editorUpload.status, JSON.stringify(editorUpload.body)).toBe(201);
+  expect(editorUpload.body.visibility).toBe('members');
+  expect((await good(editor, `/trees/${tr.id}/media`)).items.map((m) => m.id)).toEqual([
+    editorUpload.body.id,
+  ]);
+  await page.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&view=media`);
+  await page.getByLabel('Choose original', { exact: true }).setInputFiles({
+    name: 'fictional-visibility.png',
+    mimeType: 'image/png',
+    buffer: bytes,
+  });
+  await expect(page.getByRole('combobox', { name: 'Visibility' })).toHaveValue('management');
   await ctx.close();
 });
 
