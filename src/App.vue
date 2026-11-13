@@ -711,7 +711,11 @@ async function removePerson() {
             'Delete this person from active use? Their connections will be deactivated. History is retained; this is not permanent erasure.',
           ) +
           '\n' +
-          t('Shared records linked to this person become unavailable until the person is restored.'),
+          t('Shared records linked to this person become unavailable until the person is restored.') +
+          '\n' +
+          t(
+            'Original media and existing backups may retain data. This action does not physically erase them.',
+          ),
       )
     )
       return;

@@ -72,7 +72,7 @@ const items = ref([]),
   fileInput = ref(null),
   uploading = ref(false),
   title = ref(''),
-  visibility = ref('members');
+  visibility = ref(props.management ? 'management' : 'members');
 useDraftGuard(
   computed(() => file.value !== null || cloudFile.value !== null),
   uploading,
@@ -119,6 +119,7 @@ async function load(next = 0) {
 function choose(e) {
   cloudFile.value = null;
   file.value = e.target.files[0] || null;
+  visibility.value = props.management ? 'management' : 'members';
   title.value = file.value?.name || '';
   request = requestId();
   error.value = '';
@@ -142,6 +143,7 @@ function chooseCloud() {
         cloudFile.value = selected;
         file.value = null;
         fileInput.value.value = '';
+        visibility.value = props.management ? 'management' : 'members';
         title.value = selected.name;
         request = requestId();
       } catch (e) {

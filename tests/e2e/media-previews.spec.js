@@ -55,7 +55,10 @@ test('image derivatives are bounded, cached, regenerated and permission checked 
   const tr = await tree(page),
     p = await person(page, tr.id, 'Media cache'),
     bytes = await png(page),
-    m = await upload(page, tr.id, bytes, 'fictional-cache.png', { personId: p.id });
+    m = await upload(page, tr.id, bytes, 'fictional-cache.png', {
+      personId: p.id,
+      visibility: 'members',
+    });
   const rev = (await good(page, `/trees/${tr.id}`)).revision;
   const previewUrl = (size) => `${endpoint}/trees/${tr.id}/media/${m.id}/preview?size=${size}`;
   const url = previewUrl(320);
@@ -208,7 +211,7 @@ test('image viewer and warm gallery clear displayed pixels when access is revoke
 }) => {
   await login(page);
   const tr = await tree(page),
-    m = await upload(page, tr.id, await png(page), 'Fictional image.png');
+    m = await upload(page, tr.id, await png(page), 'Fictional image.png', { visibility: 'members' });
   await grant(page, tr.id, 'stb_viewer', 'viewer');
   const ctx = await browser.newContext(),
     viewer = await ctx.newPage();

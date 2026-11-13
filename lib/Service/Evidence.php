@@ -41,6 +41,7 @@ final class Evidence
     public function sources(string $tree, string $actor, string $query = '', int $page = 0): array
     {
         $m = $this->trees->access($tree, $actor);
+        $page = max(0, min(10000, $page));
         $where = 'tree_id = ?';
         $params = [$tree];
         if (!Trees::management($m)) {
@@ -62,12 +63,12 @@ final class Evidence
             'SELECT * FROM *PREFIX*stb_sources WHERE ' .
                 $where .
                 ' ORDER BY title, id LIMIT 51 OFFSET ' .
-                max(0, min(10000, $page)) * 50,
+                $page * 50,
             $params,
         );
         return [
             'items' => array_map(fn($r) => $this->sourceDto($r), array_slice($rows, 0, 50)),
-            'nextPage' => count($rows) > 50 ? $page + 1 : null,
+            'nextPage' => count($rows) > 50 && $page < 10000 ? $page + 1 : null,
         ];
     }
     private function url(mixed $input): string

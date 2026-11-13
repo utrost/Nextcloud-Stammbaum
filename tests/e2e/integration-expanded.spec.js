@@ -131,6 +131,7 @@ test('source and media research tasks require a fresh review and expose only the
     multipart: {
       requestId: key(),
       title: 'Fictional photograph',
+      visibility: 'members',
       file: {
         name: 'fictional.pdf',
         mimeType: 'application/pdf',

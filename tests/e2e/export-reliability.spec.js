@@ -88,6 +88,7 @@ test('cancellation at the final publication checkpoint leaves no downloadable ar
   const upload = await page.request.post(`${endpoint}/trees/${tr.id}/media`, {
     headers: { requesttoken: await page.evaluate(() => window.OC.requestToken) },
     multipart: {
+      visibility: 'members',
       requestId: key(),
       file: { name: 'fictional.pdf', mimeType: 'application/pdf', buffer: pdf },
     },
@@ -239,6 +240,7 @@ test('packaged media cannot exceed 64 MiB and twenty queued jobs block admission
     headers: { requesttoken: await page.evaluate(() => window.OC.requestToken) },
     multipart: {
       title: 'Fictional capacity document',
+      visibility: 'members',
       requestId: key(),
       file: { name: 'capacity.pdf', mimeType: 'application/pdf', buffer: pdf },
     },
