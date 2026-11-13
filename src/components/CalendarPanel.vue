@@ -1,15 +1,31 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { api, userId } from '../api.js';
 import { requestId, personName } from '../domain.js';
 import { t } from '../i18n.js';
 import { captureCreatedEtag } from '../integrations.js';
 
-const props = defineProps({ treeId: String, person: Object, canExport: Boolean });
+const props = defineProps({ treeId: String, person: Object, event: Object, canExport: Boolean });
+const origin = computed(() => props.event || props.person);
+const originType = computed(() => (props.event ? 'event' : 'person'));
+const originLabel = computed(() => props.event?.title || personName(props.person, t('Unnamed person')));
+const originPeople = computed(() =>
+  props.event ? props.event.participants.map((p) => p.person) : [props.person],
+);
+const livingWarning = computed(() => originPeople.value.some((p) => p?.livingStatus !== 'deceased'));
+const managementWarning = computed(
+  () =>
+    origin.value?.visibility === 'management' ||
+    originPeople.value.some((p) => p?.visibility === 'management'),
+);
+const selectedAudience = computed(
+  () => collections.value.find((item) => item.uri === collection.value)?.audience || 'unknown',
+);
 const open = ref(false),
   busy = ref(false),
   error = ref(''),
   collections = ref([]),
+  readOnlyCount = ref(0),
   collection = ref(''),
   mode = ref('appointment'),
   anniversaryKind = ref('birth'),
@@ -58,9 +74,11 @@ async function discoverEventCalendars(items) {
 
 async function loadLinks() {
   const treeId = props.treeId,
-    personId = props.person.id;
-  const result = await api(`/trees/${treeId}/calendar?person=${encodeURIComponent(personId)}`);
-  if (treeId === props.treeId && personId === props.person.id) links.value = result.items;
+    sourceId = origin.value.id;
+  const result = await api(
+    `/trees/${treeId}/calendar?sourceType=${originType.value}&sourceId=${encodeURIComponent(sourceId)}`,
+  );
+  if (treeId === props.treeId && sourceId === origin.value?.id) links.value = result.items;
 }
 
 async function toggle() {
@@ -74,15 +92,17 @@ async function toggle() {
   const seq = ++sequence;
   busy.value = true;
   error.value = '';
-  title.value ||= `${t('Family appointment')}: ${personName(props.person, t('Unnamed person'))}`;
+  title.value ||= `${t('Family appointment')}: ${originLabel.value}`;
   try {
     const result = await api('/integrations/calendar/collections');
     if (!result.available) throw new Error('Nextcloud Calendar is not available for this account.');
     if (seq !== sequence) return;
-    const allowed = await discoverEventCalendars(result.items);
+    const detected = await discoverEventCalendars([...result.items, ...(result.readOnlyItems || [])]);
     if (seq !== sequence) return;
-    collections.value = allowed;
-    if (!allowed.some((c) => c.uri === collection.value)) collection.value = allowed[0]?.uri || '';
+    collections.value = detected.filter((item) => item.state !== 'read-only');
+    readOnlyCount.value = detected.length - collections.value.length;
+    if (!collections.value.some((c) => c.uri === collection.value))
+      collection.value = collections.value[0]?.uri || '';
     await loadLinks();
   } catch (e) {
     if (seq === sequence) error.value = t(e.message);
@@ -92,13 +112,14 @@ async function toggle() {
 }
 
 watch(
-  () => [props.treeId, props.person?.id],
+  () => [props.treeId, origin.value?.id, originType.value],
   () => {
     sequence++;
     reviewSequence++;
     open.value = false;
     busy.value = false;
     collections.value = [];
+    readOnlyCount.value = 0;
     review.value = null;
     links.value = [];
     mode.value = 'appointment';
@@ -116,7 +137,7 @@ watch(
 );
 
 watch([mode, anniversaryKind], () => {
-  if (mode.value === 'anniversary') {
+  if (mode.value === 'anniversary' && !props.event) {
     title.value = `${t(anniversaryKind.value === 'birth' ? 'Birthday of' : 'Remembrance of')} ${personName(props.person, t('Unnamed person'))}`;
   }
 });
@@ -145,7 +166,7 @@ watch(
 async function preview() {
   const seq = ++reviewSequence,
     treeId = props.treeId,
-    personId = props.person.id;
+    sourceId = origin.value.id;
   busy.value = true;
   error.value = '';
   review.value = null;
@@ -153,7 +174,8 @@ async function preview() {
     const result = await api(`/trees/${treeId}/calendar/review`, {
       method: 'POST',
       body: {
-        personId,
+        sourceType: originType.value,
+        sourceId,
         collection: collection.value,
         mode: mode.value,
         anniversaryKind: anniversaryKind.value,
@@ -166,7 +188,7 @@ async function preview() {
         includeManagement: includeManagement.value,
       },
     });
-    if (seq === reviewSequence && treeId === props.treeId && personId === props.person.id)
+    if (seq === reviewSequence && treeId === props.treeId && sourceId === origin.value?.id)
       review.value = result;
   } catch (e) {
     if (seq === reviewSequence) error.value = t(e.message);
@@ -179,7 +201,7 @@ async function create() {
   if (!review.value) return;
   const seq = sequence,
     treeId = props.treeId,
-    personId = props.person.id;
+    sourceId = origin.value.id;
   busy.value = true;
   error.value = '';
   try {
@@ -194,19 +216,19 @@ async function create() {
     });
     if (created.status === 'linked')
       await captureCreatedEtag(treeId, 'calendar', created.id, review.value.collection);
-    if (seq !== sequence || treeId !== props.treeId || personId !== props.person.id) return;
+    if (seq !== sequence || treeId !== props.treeId || sourceId !== origin.value?.id) return;
     review.value = null;
     acknowledged.value = false;
     acknowledgedDuplicate.value = false;
     key = requestId();
     await loadLinks();
   } catch (e) {
-    if (seq === sequence && treeId === props.treeId && personId === props.person.id) {
+    if (seq === sequence && treeId === props.treeId && sourceId === origin.value?.id) {
       error.value = t(e.message);
       if (e.status === 412) review.value = null;
     }
   } finally {
-    if (seq === sequence && treeId === props.treeId && personId === props.person.id) busy.value = false;
+    if (seq === sequence && treeId === props.treeId && sourceId === origin.value?.id) busy.value = false;
   }
 }
 
@@ -251,6 +273,7 @@ async function unlink(id) {
       <p v-if="busy" role="status">{{ t('Working…') }}</p>
       <p v-if="error" role="alert" class="feedback error">{{ error }}</p>
       <p v-if="!busy && !collections.length">{{ t('No writable calendar is available.') }}</p>
+      <p v-if="readOnlyCount" class="muted">{{ t('Read-only calendars are unavailable for creation.') }}</p>
       <form v-if="collections.length && !review" @submit.prevent="preview">
         <fieldset :disabled="busy">
           <label
@@ -259,11 +282,20 @@ async function unlink(id) {
               <option v-for="item in collections" :key="item.uri" :value="item.uri">{{ item.name }}</option>
             </select></label
           >
+          <p class="muted">
+            {{
+              t(
+                selectedAudience === 'shared-with-me'
+                  ? 'This calendar is shared with your account. Other readers may see copied details.'
+                  : 'This calendar’s outward sharing could not be verified. Review its audience before continuing.',
+              )
+            }}
+          </p>
           <label
             >{{ t('Event type')
             }}<select v-model="mode">
               <option value="appointment">{{ t('One-time appointment') }}</option>
-              <option value="anniversary">{{ t('Yearly anniversary') }}</option>
+              <option v-if="!event" value="anniversary">{{ t('Yearly anniversary') }}</option>
             </select></label
           >
           <label v-if="mode === 'anniversary'"
@@ -282,14 +314,22 @@ async function unlink(id) {
           </template>
           <label>{{ t('Event title') }}<input v-model="title" required maxlength="200" /></label>
           <label>{{ t('Location (optional)') }}<input v-model="location" maxlength="300" /></label>
-          <label v-if="person.livingStatus !== 'deceased'" class="check"
+          <label v-if="livingWarning" class="check"
             ><input v-model="includeLiving" type="checkbox" />{{
-              t('Include this living or unknown-status person in the event')
+              t(
+                event
+                  ? 'Include living or unknown-status people in the event'
+                  : 'Include this living or unknown-status person in the event',
+              )
             }}</label
           >
-          <label v-if="person.visibility === 'management'" class="check"
+          <label v-if="managementWarning" class="check"
             ><input v-model="includeManagement" type="checkbox" />{{
-              t('Include this management-only person in the event')
+              t(
+                event
+                  ? 'Include management-only research in the event'
+                  : 'Include this management-only person in the event',
+              )
             }}</label
           >
           <button type="submit">{{ t('Review event') }}</button>
@@ -312,7 +352,15 @@ async function unlink(id) {
           >
         </p>
         <p v-if="review.location">{{ t('Location') }}: {{ review.location }}</p>
-        <p>{{ t('A private link back to this person will be included.') }}</p>
+        <p>
+          {{
+            t(
+              event
+                ? 'A link back to this research will be included. Opening it still requires tree access.'
+                : 'A private link back to this person will be included.',
+            )
+          }}
+        </p>
         <p>{{ t(review.audienceWarning) }}</p>
         <p v-if="review.mode === 'anniversary' && review.anniversaryKind === 'birth'" class="muted">
           {{ t('Nextcloud may already show a birthday from Contacts. Duplicate detection is incomplete.') }}

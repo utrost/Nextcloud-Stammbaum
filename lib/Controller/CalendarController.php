@@ -70,8 +70,15 @@ final class CalendarController extends Controller
     public function index(string $tree): Response
     {
         $person = $this->request->getParam('person', '');
+        $type = $this->request->getParam('sourceType', 'person');
+        $id = $this->request->getParam('sourceId', $person);
         return $this->respond(
-            fn($a) => $this->appointments->list($tree, $a, is_string($person) ? $person : ''),
+            fn($a) => $this->appointments->list(
+                $tree,
+                $a,
+                is_string($id) ? $id : '',
+                is_string($type) ? $type : '',
+            ),
         );
     }
     #[NoAdminRequired]

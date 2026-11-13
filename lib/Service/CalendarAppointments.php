@@ -6,7 +6,7 @@ use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCP\App\IAppManager;
-use OCP\Calendar\{ICalendar, ICreateFromString, IManager};
+use OCP\Calendar\{ICalendar, ICalendarIsShared, ICreateFromString, IManager};
 use OCP\Constants;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
@@ -17,39 +17,14 @@ final class CalendarAppointments
     public function __construct(
         private Store $store,
         private Trees $trees,
-        private People $people,
         private IManager $calendars,
         private IAppManager $apps,
         private IUserManager $users,
         private IURLGenerator $urls,
         private ContactLinks $contacts,
         private ConnectionIdentity $identity,
+        private IntegrationSources $sources,
     ) {}
-
-    private function source(
-        string $tree,
-        string $actor,
-        string $person,
-        bool $includeLiving,
-        bool $includeManagement,
-    ): array {
-        $m = $this->trees->access($tree, $actor);
-        if (!Trees::management($m) && !(bool) $m['export_allowed']) {
-            throw new Problem('forbidden', 'Export permission is required to copy genealogy details.', 403);
-        }
-        $row = $this->people->row($tree, $person, $m);
-        $p = $this->people->dto($row);
-        if ($p['livingStatus'] !== 'deceased' && !$includeLiving) {
-            throw new Problem(
-                'review_required',
-                'Review inclusion of a living person or unknown living status.',
-            );
-        }
-        if ($p['visibility'] === 'management' && !$includeManagement) {
-            throw new Problem('review_required', 'Review inclusion of a management-only person.');
-        }
-        return [$m, $row, $p];
-    }
 
     private function calendar(string $actor, string $uri): ICalendar
     {
@@ -78,24 +53,36 @@ final class CalendarAppointments
         $this->trees->active($actor);
         $user = $this->users->get($actor);
         if (!$user || !$this->apps->isEnabledForUser('calendar', $user)) {
-            return ['available' => false, 'items' => []];
+            return ['available' => false, 'items' => [], 'readOnlyItems' => []];
         }
         $items = [];
+        $readOnly = [];
         foreach ($this->calendars->getCalendarsForPrincipal('principals/users/' . $actor) as $c) {
             if (
-                !$c->isDeleted() &&
-                $c instanceof ICreateFromString &&
-                $c->getPermissions() & Constants::PERMISSION_CREATE &&
-                preg_match('/\A[a-zA-Z0-9_.-]{1,160}\z/D', $c->getUri()) &&
-                !str_starts_with($c->getUri(), 'contact_birthdays')
+                $c->isDeleted() ||
+                !($c instanceof ICreateFromString) ||
+                !preg_match('/\A[a-zA-Z0-9_.-]{1,160}\z/D', $c->getUri()) ||
+                str_starts_with($c->getUri(), 'contact_birthdays')
             ) {
-                $items[] = ['uri' => $c->getUri(), 'name' => $c->getDisplayName() ?: $c->getUri()];
+                continue;
             }
-            if (count($items) >= 50) {
+            $entry = [
+                'uri' => $c->getUri(),
+                'name' => $c->getDisplayName() ?: $c->getUri(),
+                'audience' =>
+                    $c instanceof ICalendarIsShared && $c->isShared() ? 'shared-with-me' : 'unknown',
+                'componentCheck' => 'authenticated-dav',
+            ];
+            if ($c->getPermissions() & Constants::PERMISSION_CREATE) {
+                $items[] = $entry;
+            } else {
+                $readOnly[] = $entry + ['state' => 'read-only'];
+            }
+            if (count($items) + count($readOnly) >= 50) {
                 break;
             }
         }
-        return ['available' => true, 'items' => $items];
+        return ['available' => true, 'items' => $items, 'readOnlyItems' => $readOnly];
     }
 
     private static function date(string $value): DateTimeImmutable
@@ -155,16 +142,29 @@ final class CalendarAppointments
 
     public function review(string $tree, string $actor, array $b): array
     {
-        $person = $b['personId'] ?? null;
+        $type = $b['sourceType'] ?? 'person';
+        $sourceId = $b['sourceId'] ?? ($b['personId'] ?? null);
         $uri = $b['collection'] ?? null;
-        if (!is_string($person) || !is_string($uri)) {
+        if (
+            !is_string($type) ||
+            !in_array($type, ['person', 'event'], true) ||
+            !is_string($sourceId) ||
+            !is_string($uri)
+        ) {
             throw Problem::missing();
         }
         $this->calendar($actor, $uri);
         $includeLiving = ($b['includeLiving'] ?? false) === true;
         $includeManagement = ($b['includeManagement'] ?? false) === true;
-        [$m, $row, $p] = $this->source($tree, $actor, $person, $includeLiving, $includeManagement);
+        $source = $this->sources->get($tree, $actor, $type, $sourceId, $includeLiving, $includeManagement);
+        $p = $source['person'];
         $mode = Values::choice($b['mode'] ?? 'appointment', ['appointment', 'anniversary'], 'mode');
+        if ($type !== 'person' && $mode === 'anniversary') {
+            throw new Problem(
+                'validation',
+                'Anniversaries require a person with an exact birth or death date.',
+            );
+        }
         $anniversaryKind = '';
         $sourceDate = '';
         $time = '';
@@ -209,17 +209,19 @@ final class CalendarAppointments
                 self::timedStart($date, $time, $timezone);
             }
         }
-        $name = trim($p['givenName'] . ' ' . $p['familyName']) ?: 'Unnamed person';
+        $name = $source['label'];
         $title = Values::text($b['title'] ?? '', 'title', 200, true);
         $location = Values::text($b['location'] ?? '', 'location', 300);
         $birthdaySignal = false;
         if ($mode === 'anniversary' && $anniversaryKind === 'birth') {
-            $birthdaySignal = $this->contacts->birthdaySignal($tree, $actor, $person)[
+            $birthdaySignal = $this->contacts->birthdaySignal($tree, $actor, $sourceId)[
                 'linkedContactBirthday'
             ];
         }
         return [
-            'personId' => $person,
+            'personId' => $type === 'person' ? $sourceId : '',
+            'sourceType' => $type,
+            'sourceId' => $sourceId,
             'personName' => $name,
             'collection' => $uri,
             'mode' => $mode,
@@ -232,9 +234,12 @@ final class CalendarAppointments
             'location' => $location,
             'includeLiving' => $includeLiving,
             'includeManagement' => $includeManagement,
-            'sourceRevision' => (int) $row['revision'],
-            'memberRevision' => (int) $m['revision'],
-            'treeRevision' => $this->trees->get($tree, $actor)['revision'],
+            'sourceRevision' => $source['revision'],
+            'memberRevision' => $source['memberRevision'],
+            'treeRevision' => $source['treeRevision'],
+            'dependencyDigest' => $source['dependencyDigest'],
+            'livingWarning' => $source['livingWarning'],
+            'managementWarning' => $source['managementWarning'],
             'linkedContactBirthday' => $birthdaySignal,
             'expiresAt' => time() + 300,
             'audienceWarning' =>
@@ -340,6 +345,8 @@ final class CalendarAppointments
         foreach (
             [
                 'personId',
+                'sourceType',
+                'sourceId',
                 'collection',
                 'mode',
                 'anniversaryKind',
@@ -354,6 +361,7 @@ final class CalendarAppointments
                 'sourceRevision',
                 'memberRevision',
                 'treeRevision',
+                'dependencyDigest',
                 'linkedContactBirthday',
             ]
             as $key
@@ -386,6 +394,8 @@ final class CalendarAppointments
                     $current,
                     array_flip([
                         'personId',
+                        'sourceType',
+                        'sourceId',
                         'collection',
                         'mode',
                         'anniversaryKind',
@@ -399,6 +409,7 @@ final class CalendarAppointments
                         'includeManagement',
                         'sourceRevision',
                         'memberRevision',
+                        'dependencyDigest',
                     ]),
                 ),
             ),
@@ -432,6 +443,8 @@ final class CalendarAppointments
                 'tree_id' => $tree,
                 'actor_id' => $actor,
                 'person_id' => $current['personId'],
+                'source_type' => $current['sourceType'],
+                'source_id' => $current['sourceId'],
                 'collection_uri' => $current['collection'],
                 'object_name' => $id . '.ics',
                 'request_id' => $requestId,
@@ -439,10 +452,7 @@ final class CalendarAppointments
                 'source_revision' => $current['sourceRevision'],
                 'member_revision' => $current['memberRevision'],
                 'account_incarnation' => $this->identity->current($actor),
-                'dependency_digest' => hash(
-                    'sha256',
-                    $current['personId'] . ':' . $current['sourceRevision'],
-                ),
+                'dependency_digest' => $current['dependencyDigest'],
                 'status' => 'pending',
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -460,10 +470,18 @@ final class CalendarAppointments
             throw new Problem('review_expired', 'Review this calendar event again.', 412);
         }
         // A fresh authority check immediately precedes the external write.
-        [$member, $source] = $this->source($tree, $actor, $row['person_id'], true, true);
+        $source = $this->sources->get(
+            $tree,
+            $actor,
+            $row['source_type'] ?: 'person',
+            $row['source_id'] ?: $row['person_id'],
+            true,
+            true,
+        );
         if (
-            (int) $member['revision'] !== (int) $row['member_revision'] ||
-            (int) $source['revision'] !== (int) $row['source_revision']
+            $source['memberRevision'] !== (int) $row['member_revision'] ||
+            $source['revision'] !== (int) $row['source_revision'] ||
+            ($row['source_id'] !== null && $source['dependencyDigest'] !== $row['dependency_digest'])
         ) {
             throw new Problem(
                 'conflict',
@@ -477,8 +495,9 @@ final class CalendarAppointments
                 $this->urls->linkToRouteAbsolute('stammbaum.page.index') .
                 '#tree=' .
                 rawurlencode($tree) .
-                '&view=people&person=' .
-                rawurlencode($row['person_id']);
+                ($source['type'] === 'person'
+                    ? '&view=people&person=' . rawurlencode($source['id'])
+                    : '&view=people');
             try {
                 $calendar->createFromStringMinimal(
                     $row['object_name'],
@@ -495,7 +514,14 @@ final class CalendarAppointments
             }
         }
         try {
-            [$member, $source] = $this->source($tree, $actor, $row['person_id'], true, true);
+            $source = $this->sources->get(
+                $tree,
+                $actor,
+                $row['source_type'] ?: 'person',
+                $row['source_id'] ?: $row['person_id'],
+                true,
+                true,
+            );
         } catch (Problem $e) {
             $this->store->execute(
                 "UPDATE *PREFIX*stb_calendar_links SET status = 'authority-invalidated', updated_at = ? WHERE id = ?",
@@ -508,8 +534,9 @@ final class CalendarAppointments
             );
         }
         if (
-            (int) $member['revision'] !== (int) $row['member_revision'] ||
-            (int) $source['revision'] !== (int) $row['source_revision']
+            $source['memberRevision'] !== (int) $row['member_revision'] ||
+            $source['revision'] !== (int) $row['source_revision'] ||
+            ($row['source_id'] !== null && $source['dependencyDigest'] !== $row['dependency_digest'])
         ) {
             $this->store->execute(
                 "UPDATE *PREFIX*stb_calendar_links SET status = 'authority-invalidated', updated_at = ? WHERE id = ?",
@@ -521,7 +548,22 @@ final class CalendarAppointments
                 409,
             );
         }
-        if (!$this->found($calendar, $row['id'])) {
+        try {
+            // The pre-write calendar object may retain an ACL snapshot. Resolve
+            // the account's current destination permission after publication.
+            $currentCalendar = $this->calendar($actor, $row['collection_uri']);
+        } catch (Problem $e) {
+            $this->store->execute(
+                "UPDATE *PREFIX*stb_calendar_links SET status = 'authority-invalidated', updated_at = ? WHERE id = ?",
+                [time(), $row['id']],
+            );
+            throw new Problem(
+                'outcome_unknown',
+                'The event may have been created, but calendar access changed. Check Calendar.',
+                409,
+            );
+        }
+        if (!$this->found($currentCalendar, $row['id'])) {
             throw new Problem(
                 'outcome_unknown',
                 'Calendar creation could not be verified. Check Calendar before retrying.',
@@ -555,25 +597,31 @@ final class CalendarAppointments
         });
     }
 
-    public function list(string $tree, string $actor, string $person): array
+    public function list(string $tree, string $actor, string $sourceId, string $sourceType = 'person'): array
     {
-        $m = $this->trees->access($tree, $actor);
-        if (!Trees::management($m) && !(bool) $m['export_allowed']) {
-            return ['items' => []];
+        try {
+            $source = $this->sources->get($tree, $actor, $sourceType, $sourceId, true, true);
+        } catch (Problem $e) {
+            if ($e->errorCode === 'forbidden') {
+                return ['items' => []];
+            }
+            throw $e;
         }
-        $source = $this->people->row($tree, $person, $m);
         $this->store->execute(
             "UPDATE *PREFIX*stb_calendar_links SET status = 'outcome-unknown' WHERE actor_id = ? AND status = 'pending' AND created_at < ?",
             [$actor, time() - 300],
         );
         $rows = $this->store->rows(
-            "SELECT id, collection_uri, status, source_revision, created_at FROM *PREFIX*stb_calendar_links WHERE tree_id = ? AND actor_id = ? AND person_id = ? AND member_revision = ? AND status IN ('pending','linked','outcome-unknown') ORDER BY created_at DESC, id DESC LIMIT 25",
-            [$tree, $actor, $person, (int) $m['revision']],
+            "SELECT id, collection_uri, status, source_revision, source_id, dependency_digest, created_at FROM *PREFIX*stb_calendar_links WHERE tree_id = ? AND actor_id = ? AND source_type = ? AND (source_id = ? OR (source_id IS NULL AND person_id = ? AND source_type = 'person')) AND member_revision = ? AND status IN ('pending','linked','outcome-unknown') ORDER BY created_at DESC, id DESC LIMIT 25",
+            [$tree, $actor, $sourceType, $sourceId, $sourceId, $source['memberRevision']],
         );
         $items = [];
         foreach ($rows as $r) {
             $status =
-                (int) $r['source_revision'] !== (int) $source['revision'] ? 'source-changed' : $r['status'];
+                (int) $r['source_revision'] !== $source['revision'] ||
+                ($r['source_id'] !== null && $r['dependency_digest'] !== $source['dependencyDigest'])
+                    ? 'source-changed'
+                    : $r['status'];
             if ($status === 'linked') {
                 try {
                     $calendar = $this->calendar($actor, $r['collection_uri']);

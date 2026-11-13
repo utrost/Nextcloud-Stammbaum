@@ -1195,6 +1195,7 @@ onBeforeUnmount(() => {
             :tree-id="tree.id"
             :management="management"
             :can-edit="canEdit"
+            :can-export="tree.canExport"
           />
           <MediaPanel
             v-else-if="tab === 'media'"
@@ -1203,6 +1204,7 @@ onBeforeUnmount(() => {
             :tree-id="tree.id"
             :management="management"
             :can-edit="canEdit"
+            :can-export="tree.canExport"
           />
           <IntegrationConnections
             v-else-if="tab === 'connections'"
@@ -1567,6 +1569,7 @@ onBeforeUnmount(() => {
                       :tree-id="tree.id"
                       :person="selected"
                       :can-edit="canEdit"
+                      :can-export="tree.canExport"
                       :management="management"
                       @changed="mediaChanged"
                       @person="selectPerson"
@@ -1577,6 +1580,7 @@ onBeforeUnmount(() => {
                       :tree-id="tree.id"
                       :person="selected"
                       :can-edit="canEdit"
+                      :can-export="tree.canExport"
                       :management="management"
                       :section="detailTab"
                       @evidence="changeDetailTab('evidence')"
@@ -1587,6 +1591,7 @@ onBeforeUnmount(() => {
                       :tree-id="tree.id"
                       :management="management"
                       :can-edit="canEdit"
+                      :can-export="tree.canExport"
                       :person="selected"
                       :claims="claims"
                       :relations="relations"

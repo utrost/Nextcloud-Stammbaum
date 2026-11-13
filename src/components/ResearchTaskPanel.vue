@@ -1,19 +1,55 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { api, userId } from '../api.js';
 import { requestId, personName } from '../domain.js';
 import { t } from '../i18n.js';
 import { captureCreatedEtag } from '../integrations.js';
 
-const props = defineProps({ treeId: String, person: Object, canExport: Boolean });
+const props = defineProps({
+  treeId: String,
+  person: Object,
+  source: Object,
+  sourceType: String,
+  canExport: Boolean,
+});
+const origin = computed(() => props.source || props.person);
+const originType = computed(() => props.sourceType || 'person');
+const originLabel = computed(() =>
+  originType.value === 'person'
+    ? personName(origin.value, t('Unnamed person'))
+    : origin.value?.title || t('Untitled'),
+);
+const originPeople = computed(() =>
+  originType.value === 'person'
+    ? [origin.value]
+    : originType.value === 'event'
+      ? origin.value?.participants?.map((p) => p.person) || []
+      : originType.value === 'medium'
+        ? [
+            ...(origin.value?.assignments?.map((a) => a.person) || []),
+            ...(origin.value?.metadata?.people?.map((p) => p.person || { livingStatus: 'unknown' }) || []),
+          ]
+        : [],
+);
+const livingWarning = computed(() => originPeople.value.some((p) => p?.livingStatus !== 'deceased'));
+const managementWarning = computed(
+  () =>
+    origin.value?.visibility === 'management' ||
+    originPeople.value.some((p) => p?.visibility === 'management'),
+);
+const selectedAudience = computed(
+  () => collections.value.find((item) => item.uri === collection.value)?.audience || 'unknown',
+);
 const open = ref(false),
   busy = ref(false),
   error = ref(''),
   collections = ref([]),
+  readOnlyCount = ref(0),
   collection = ref(''),
   title = ref(''),
   note = ref(''),
   due = ref(''),
+  priority = ref('0'),
   includeLiving = ref(false),
   includeManagement = ref(false),
   review = ref(null),
@@ -54,9 +90,11 @@ async function discoverTaskCalendars(items) {
 
 async function loadLinks() {
   const treeId = props.treeId,
-    personId = props.person.id;
-  const result = await api(`/trees/${treeId}/tasks?person=${encodeURIComponent(personId)}`);
-  if (treeId === props.treeId && personId === props.person.id) links.value = result.items;
+    sourceId = origin.value.id;
+  const result = await api(
+    `/trees/${treeId}/tasks?sourceType=${encodeURIComponent(originType.value)}&sourceId=${encodeURIComponent(sourceId)}`,
+  );
+  if (treeId === props.treeId && sourceId === origin.value?.id) links.value = result.items;
 }
 
 async function toggle() {
@@ -65,14 +103,16 @@ async function toggle() {
   const seq = ++sequence;
   busy.value = true;
   error.value = '';
-  title.value ||= `${t('Research')} ${personName(props.person, t('Unnamed person'))}`;
+  title.value ||= `${t('Research')} ${originLabel.value}`;
   try {
     const result = await api('/integrations/tasks/collections');
     if (!result.available) throw new Error('Nextcloud Tasks is not available for this account.');
-    const allowed = await discoverTaskCalendars(result.items);
+    const detected = await discoverTaskCalendars([...result.items, ...(result.readOnlyItems || [])]);
     if (seq !== sequence) return;
-    collections.value = allowed;
-    if (!allowed.some((c) => c.uri === collection.value)) collection.value = allowed[0]?.uri || '';
+    collections.value = detected.filter((item) => item.state !== 'read-only');
+    readOnlyCount.value = detected.length - collections.value.length;
+    if (!collections.value.some((c) => c.uri === collection.value))
+      collection.value = collections.value[0]?.uri || '';
     await loadLinks();
   } catch (e) {
     if (seq === sequence) error.value = t(e.message);
@@ -82,7 +122,7 @@ async function toggle() {
 }
 
 watch(
-  () => [props.person?.id, props.treeId],
+  () => [origin.value?.id, originType.value, props.treeId],
   () => {
     sequence++;
     reviewSequence++;
@@ -90,9 +130,11 @@ watch(
     busy.value = false;
     review.value = null;
     links.value = [];
+    readOnlyCount.value = 0;
     title.value = '';
     note.value = '';
     due.value = '';
+    priority.value = '0';
     includeLiving.value = false;
     includeManagement.value = false;
     acknowledged.value = false;
@@ -100,7 +142,7 @@ watch(
   },
 );
 
-watch([title, note, due, collection, includeLiving, includeManagement], () => {
+watch([title, note, due, priority, collection, includeLiving, includeManagement], () => {
   reviewSequence++;
   review.value = null;
   acknowledged.value = false;
@@ -110,7 +152,7 @@ watch([title, note, due, collection, includeLiving, includeManagement], () => {
 async function preview() {
   const seq = ++reviewSequence,
     treeId = props.treeId,
-    personId = props.person.id;
+    sourceId = origin.value.id;
   busy.value = true;
   error.value = '';
   review.value = null;
@@ -118,16 +160,18 @@ async function preview() {
     const result = await api(`/trees/${treeId}/tasks/review`, {
       method: 'POST',
       body: {
-        personId,
+        sourceType: originType.value,
+        sourceId,
         collection: collection.value,
         title: title.value,
         note: note.value,
         due: due.value,
+        priority: priority.value,
         includeLiving: includeLiving.value,
         includeManagement: includeManagement.value,
       },
     });
-    if (seq === reviewSequence && treeId === props.treeId && personId === props.person.id)
+    if (seq === reviewSequence && treeId === props.treeId && sourceId === origin.value?.id)
       review.value = result;
   } catch (e) {
     if (seq === reviewSequence) error.value = t(e.message);
@@ -139,7 +183,7 @@ async function preview() {
 async function create() {
   if (!review.value) return;
   const treeId = props.treeId,
-    personId = props.person.id,
+    sourceId = origin.value.id,
     seq = sequence;
   busy.value = true;
   error.value = '';
@@ -172,7 +216,7 @@ async function create() {
       await api(`/trees/${treeId}/tasks/${reservation.id}/complete`, { method: 'POST' });
     }
     await captureCreatedEtag(treeId, 'task', reservation.id, reservation.collection || collection.value);
-    if (seq !== sequence || treeId !== props.treeId || personId !== props.person.id) return;
+    if (seq !== sequence || treeId !== props.treeId || sourceId !== origin.value?.id) return;
     review.value = null;
     acknowledged.value = false;
     key = requestId();
@@ -181,7 +225,7 @@ async function create() {
     if (reservation) {
       try {
         await api(`/trees/${treeId}/tasks/${reservation.id}/complete`, { method: 'POST' });
-        if (seq !== sequence || treeId !== props.treeId || personId !== props.person.id) return;
+        if (seq !== sequence || treeId !== props.treeId || sourceId !== origin.value?.id) return;
         await loadLinks();
         review.value = null;
         return;
@@ -189,12 +233,12 @@ async function create() {
         /* Keep the same request ID for a safe retry. */
       }
     }
-    if (seq === sequence && treeId === props.treeId && personId === props.person.id) {
+    if (seq === sequence && treeId === props.treeId && sourceId === origin.value?.id) {
       error.value = t(e.message);
       if (e.status === 412) review.value = null;
     }
   } finally {
-    if (seq === sequence && treeId === props.treeId && personId === props.person.id) busy.value = false;
+    if (seq === sequence && treeId === props.treeId && sourceId === origin.value?.id) busy.value = false;
   }
 }
 
@@ -225,6 +269,7 @@ async function refresh() {
       <p v-if="busy" role="status">{{ t('Working…') }}</p>
       <p v-if="error" role="alert" class="feedback error">{{ error }}</p>
       <p v-if="!busy && !collections.length">{{ t('No writable task list is available.') }}</p>
+      <p v-if="readOnlyCount" class="muted">{{ t('Read-only task lists are unavailable for creation.') }}</p>
       <form v-if="collections.length" @submit.prevent="preview">
         <fieldset :disabled="busy">
           <label
@@ -233,17 +278,43 @@ async function refresh() {
               <option v-for="item in collections" :key="item.uri" :value="item.uri">{{ item.name }}</option>
             </select>
           </label>
+          <p class="muted">
+            {{
+              t(
+                selectedAudience === 'shared-with-me'
+                  ? 'This task list is shared with your account. Other readers may see copied details.'
+                  : 'This task list’s outward sharing could not be verified. Review its audience before continuing.',
+              )
+            }}
+          </p>
           <label>{{ t('Task title') }}<input v-model="title" maxlength="200" required /></label>
           <label>{{ t('Research instruction') }}<textarea v-model="note" maxlength="1000" /></label>
           <label>{{ t('Due date (optional)') }}<input v-model="due" type="date" /></label>
-          <label v-if="person.livingStatus !== 'deceased'" class="check"
+          <label
+            >{{ t('Priority')
+            }}<select v-model="priority">
+              <option value="0">{{ t('Unspecified') }}</option>
+              <option value="1">{{ t('High') }}</option>
+              <option value="5">{{ t('Normal') }}</option>
+              <option value="9">{{ t('Low') }}</option>
+            </select></label
+          >
+          <label v-if="livingWarning" class="check"
             ><input v-model="includeLiving" type="checkbox" />{{
-              t('Include this living or unknown-status person in the task')
+              t(
+                originType === 'person'
+                  ? 'Include this living or unknown-status person in the task'
+                  : 'Include living or unknown-status people in the task',
+              )
             }}</label
           >
-          <label v-if="person.visibility === 'management'" class="check"
+          <label v-if="managementWarning" class="check"
             ><input v-model="includeManagement" type="checkbox" />{{
-              t('Include this management-only person in the task')
+              t(
+                originType === 'person'
+                  ? 'Include this management-only person in the task'
+                  : 'Include management-only research in the task',
+              )
             }}</label
           >
           <button type="submit">{{ t('Review task') }}</button>
@@ -255,7 +326,9 @@ async function refresh() {
           <strong>{{ review.title }}</strong> · {{ review.personName }}
         </p>
         <p v-if="review.note" class="preserve-text">{{ review.note }}</p>
-        <p>{{ t('A private link back to this person will be included.') }}</p>
+        <p>
+          {{ t('A link back to this research will be included. Opening it still requires tree access.') }}
+        </p>
         <p>{{ t(review.audienceWarning) }}</p>
         <label class="check"
           ><input v-model="acknowledged" type="checkbox" />{{
@@ -269,7 +342,7 @@ async function refresh() {
       </div>
       <div v-if="links.length" class="task-links">
         <h3>{{ t('My linked tasks') }}</h3>
-        <p class="muted">{{ t('Open Tasks to see current completion and edit the task.') }}</p>
+        <p class="muted">{{ t('Task completion is read from Tasks; edit the task there.') }}</p>
         <ul>
           <li v-for="link in links" :key="link.id">
             {{
@@ -280,11 +353,17 @@ async function refresh() {
                     ? 'Source changed; review before updating'
                     : link.status === 'outcome-unknown'
                       ? 'Task result uncertain; check Tasks'
-                      : 'Task creation pending',
+                      : link.status === 'destination-changed'
+                        ? 'Task was removed or moved in Tasks'
+                        : link.status === 'unavailable'
+                          ? 'Task list is unavailable'
+                          : 'Task creation pending',
               )
             }}
             ·
             {{ link.collection }}
+            <span v-if="link.completion === 'complete'"> · {{ t('Completed') }}</span>
+            <span v-else-if="link.completion === 'open'"> · {{ t('Open') }}</span>
           </li>
         </ul>
         <div class="button-row">

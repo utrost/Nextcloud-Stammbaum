@@ -71,8 +71,13 @@ final class TaskController extends Controller
     }
     #[NoAdminRequired]
     #[NoCSRFRequired]
-    public function index(string $tree, string $person): Response
+    public function index(string $tree): Response
     {
-        return $this->respond(fn($a) => $this->tasks->list($tree, $a, $person));
+        $type = $this->request->getParam('sourceType', 'person');
+        $person = $this->request->getParam('person', '');
+        $id = $this->request->getParam('sourceId', $person);
+        return $this->respond(
+            fn($a) => $this->tasks->list($tree, $a, is_string($id) ? $id : '', is_string($type) ? $type : ''),
+        );
     }
 }
