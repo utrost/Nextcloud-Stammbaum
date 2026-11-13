@@ -176,3 +176,50 @@ test('source and citation UI creates, reuses and detaches evidence without losin
   await expect(page.locator('.citation-card')).toContainText('Alma Example');
   await page.screenshot({ path: 'test-results/evidence-desktop.png', fullPage: true });
 });
+
+test('source search pages stay authorized and a failed later page retries without changing the applied search', async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(120000);
+  await login(page);
+  const tr = await tree(page);
+  for (let i = 1; i <= 51; i++)
+    await source(page, tr.id, { title: `Fictional index ${String(i).padStart(3, '0')}` });
+  const hidden = await source(page, tr.id, { title: 'Fictional index 052', visibility: 'management' });
+  await grant(page, tr.id, 'stb_editor', 'editor');
+  const ctx = await browser.newContext(),
+    editor = await ctx.newPage();
+  await login(editor, 'stb_editor');
+  const first = await good(editor, `/trees/${tr.id}/sources?query=Fictional%20index&page=0`);
+  const second = await good(editor, `/trees/${tr.id}/sources?query=Fictional%20index&page=1`);
+  expect(first.items).toHaveLength(50);
+  expect(first.nextPage).toBe(1);
+  expect(second.items).toHaveLength(1);
+  expect(second.nextPage).toBeNull();
+  expect([...first.items, ...second.items].map((s) => s.id)).not.toContain(hidden.id);
+  await editor.goto(`/index.php/apps/stammbaum/#tree=${tr.id}&view=sources`);
+  const panel = editor.locator('.evidence-panel');
+  await expect(panel.locator('.source-card')).toHaveCount(50);
+  await editor.getByRole('searchbox', { name: 'Search sources' }).fill('No matching source');
+  let failed = false;
+  await editor.route(`**/api/v1/trees/${tr.id}/sources?*page=1`, async (route) => {
+    if (!failed) {
+      failed = true;
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Temporary failure' }),
+      });
+    } else await route.continue();
+  });
+  await panel.getByRole('button', { name: 'Load more' }).click();
+  await expect(panel.getByRole('alert')).toContainText('Temporary failure');
+  await expect(panel.locator('.source-card')).toHaveCount(50);
+  await panel.getByRole('alert').getByRole('button', { name: 'Retry' }).click();
+  await expect(panel.locator('.source-card')).toHaveCount(51);
+  await expect(panel.getByRole('alert')).toHaveCount(0);
+  await editor.getByRole('button', { name: 'Search', exact: true }).click();
+  await expect(panel.locator('.source-card')).toHaveCount(0);
+  await ctx.close();
+});

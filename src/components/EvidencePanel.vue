@@ -18,6 +18,7 @@ const props = defineProps({
 const sources = ref([]),
   citations = ref([]),
   query = ref(''),
+  appliedQuery = ref(''),
   source = ref(null),
   sourcePage = ref(null),
   citationPage = ref(null),
@@ -27,14 +28,16 @@ const sources = ref([]),
   reuse = ref(false),
   busy = ref(false);
 let sequence = 0;
+let lastRequest = { page: 0, more: '' };
 async function load(page = 0, more = '') {
+  lastRequest = { page, more };
   const seq = ++sequence;
   loading.value = true;
   error.value = '';
   try {
     if (!props.person && !source.value) {
       const r = await api(
-        `/trees/${props.treeId}/sources?query=${encodeURIComponent(query.value)}&page=${page}`,
+        `/trees/${props.treeId}/sources?query=${encodeURIComponent(appliedQuery.value)}&page=${page}`,
       );
       if (seq !== sequence) return;
       sources.value = more ? [...sources.value, ...r.items] : r.items;
@@ -53,6 +56,13 @@ async function load(page = 0, more = '') {
   } finally {
     if (seq === sequence) loading.value = false;
   }
+}
+function searchSources() {
+  appliedQuery.value = query.value;
+  load();
+}
+function retry() {
+  load(lastRequest.page, lastRequest.more);
 }
 function openSource(s) {
   source.value = s;
@@ -137,14 +147,14 @@ onBeforeUnmount(() => sequence++);
         {{ t(reuse ? 'Show this person’s evidence' : 'Reuse existing citation') }}
       </button>
     </div>
-    <form v-if="!person && !source" class="people-toolbar" @submit.prevent="load()">
+    <form v-if="!person && !source" class="people-toolbar" @submit.prevent="searchSources">
       <label class="search-label"
         ><span class="sr-only">{{ t('Search sources') }}</span
         ><input v-model="query" type="search" :placeholder="t('Search sources')" /></label
       ><button>{{ t('Search') }}</button>
     </form>
     <div v-if="error" class="feedback error" role="alert">
-      {{ error }} <button @click="load()">{{ t('Retry') }}</button>
+      {{ error }} <button @click="retry">{{ t('Retry') }}</button>
     </div>
     <p v-if="loading" role="status">{{ t('Loading…') }}</p>
     <template v-if="!person && !source"

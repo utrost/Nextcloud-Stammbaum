@@ -163,15 +163,30 @@ test('delete and restore preserve person without reconnecting old relationships'
     a = await person(page, t.id, 'Parent'),
     b = await person(page, t.id, 'Child');
   expect((await relative(page, t.id, a, b)).status).toBe(201);
+  const currentTree = await good(page, `/trees/${t.id}`);
+  await good(page, `/trees/${t.id}`, 'PUT', {
+    name: currentTree.name,
+    description: currentTree.description,
+    revision: currentTree.revision,
+    homeId: b.id,
+  });
   let p = await good(page, `/trees/${t.id}/people/${b.id}`);
   await good(page, `/trees/${t.id}/people/${b.id}/delete`, 'POST', { revision: p.revision, confirmed: true });
   expect((await request(page, `/trees/${t.id}/people/${b.id}`)).status).toBe(404);
+  expect((await good(page, `/trees/${t.id}`)).homeId).toBeNull();
+  const changed = await good(page, `/trees/${t.id}/people/${a.id}`, 'PUT', {
+    givenName: 'Updated Parent',
+    familyName: 'Example',
+    revision: (await good(page, `/trees/${t.id}/people/${a.id}`)).revision,
+  });
   p = (await good(page, `/trees/${t.id}/people?deleted=true`)).items.find((x) => x.id === b.id);
   await good(page, `/trees/${t.id}/people/${b.id}/restore`, 'POST', {
     revision: p.revision,
     confirmed: true,
   });
   expect((await good(page, `/trees/${t.id}/people/${b.id}/relations`)).items).toHaveLength(0);
+  expect((await good(page, `/trees/${t.id}/people/${a.id}`)).givenName).toBe(changed.givenName);
+  expect((await relative(page, t.id, a, b)).status).toBe(201);
 });
 test('last owner and manager privilege boundaries survive stale membership updates', async ({
   page,

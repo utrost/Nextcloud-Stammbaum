@@ -237,6 +237,59 @@ test('person deletion retains captions privately and restoration does not resurr
   expect((await good(page, `/trees/${tr.id}/media?person=${p.id}`)).items).toEqual([]);
 });
 
+test('deletion review counts shared-event media and restore does not revive its link or expose the original', async ({
+  page,
+  browser,
+}) => {
+  await login(page);
+  const tr = await tree(page),
+    p = await person(page, tr.id, 'Alma'),
+    q = await person(page, tr.id, 'Bruno'),
+    e = await event(page, tr.id, p, {
+      participants: [
+        { personId: p.id, role: 'subject' },
+        { personId: q.id, role: 'subject' },
+      ],
+      confirmedParticipants: [p.id, q.id],
+    }),
+    m = await upload(page, tr.id);
+  await save(
+    page,
+    tr.id,
+    m,
+    { ...m.metadata, eventId: e.id },
+    { visibility: 'members', confirmRelease: true },
+  );
+  await grant(page, tr.id, 'stb_editor', 'editor');
+  const ctx = await browser.newContext(),
+    editor = await ctx.newPage();
+  await login(editor, 'stb_editor');
+  expect((await request(editor, `/trees/${tr.id}/people/${p.id}/deletion-impact`)).status).toBe(403);
+  const review = await good(page, `/trees/${tr.id}/people/${p.id}/deletion-impact`);
+  expect(review.records).toBe(1);
+  expect(review.media).toBe(1);
+  await good(page, `/trees/${tr.id}/people/${p.id}/delete`, 'POST', {
+    revision: review.revision,
+    treeRevision: review.treeRevision,
+    confirmed: true,
+  });
+  const after = await good(page, `/trees/${tr.id}/media/${m.id}`);
+  expect(after.metadata.eventId).toBe('');
+  expect(after.visibility).toBe('management');
+  expect(await (await page.request.get(`${endpoint}/trees/${tr.id}/media/${m.id}/original`)).body()).toEqual(
+    pdf,
+  );
+  expect((await good(editor, `/trees/${tr.id}/media`)).items).toEqual([]);
+  expect((await editor.request.get(`${endpoint}/trees/${tr.id}/media/${m.id}/original`)).status()).toBe(404);
+  await good(page, `/trees/${tr.id}/people/${p.id}/restore`, 'POST', {
+    revision: review.revision + 1,
+    confirmed: true,
+  });
+  expect((await good(page, `/trees/${tr.id}/media?event=${e.id}`)).items).toEqual([]);
+  expect((await good(page, `/trees/${tr.id}/media/${m.id}`)).metadata.eventId).toBe('');
+  await ctx.close();
+});
+
 test('metadata editor and responsive viewer support names, dates, event/person links, filters and discard', async ({
   page,
 }) => {

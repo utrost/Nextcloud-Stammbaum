@@ -1043,6 +1043,8 @@ export default {
   Restore: 'Wiederherstellen',
   'Delete this person from active use? Their connections will be deactivated. History is retained; this is not permanent erasure.':
     'Diese Person aus dem aktiven Bestand löschen? Ihre Verbindungen werden deaktiviert. Der Verlauf bleibt erhalten; dies ist keine endgültige Löschung.',
+  'Original media and existing backups may retain data. This action does not physically erase them.':
+    'Originalmedien und vorhandene Sicherungen können Daten enthalten. Dieser Vorgang löscht sie nicht physisch.',
   'Restore this person? Former connections will not return automatically.':
     'Diese Person wiederherstellen? Frühere Verbindungen werden nicht automatisch wiederhergestellt.',
   'Person restored': 'Person wiederhergestellt',

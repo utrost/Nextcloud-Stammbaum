@@ -83,7 +83,7 @@ final class MediaController extends Controller
         string $tree,
         string $requestId,
         string $personId = '',
-        string $visibility = 'members',
+        string $visibility = '',
         string $title = '',
     ): Response {
         return $this->respond(
@@ -115,7 +115,7 @@ final class MediaController extends Controller
         string $requestId,
         string $title = '',
         string $personId = '',
-        string $visibility = 'members',
+        string $visibility = '',
         string $referenceRecordId = '',
         int $referenceField = -1,
         int $referenceRevision = 0,
