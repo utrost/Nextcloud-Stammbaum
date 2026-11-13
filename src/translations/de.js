@@ -1,4 +1,30 @@
 export default {
+  'Referenced media': 'Referenzierte Medien',
+  'Loading media references…': 'Medienreferenzen werden geladen …',
+  'Original FILE reference': 'Ursprüngliche FILE-Referenz',
+  'Matched private copy': 'Zugeordnete private Kopie',
+  Availability: 'Verfügbarkeit',
+  'Missing: referenced file has not been supplied':
+    'Fehlt: Die referenzierte Datei wurde noch nicht bereitgestellt',
+  'Partly matched private copies': 'Private Kopien teilweise zugeordnet',
+  'Match a Nextcloud Files copy': 'Datei aus Nextcloud Files zuordnen',
+  'No private copy has been matched yet.': 'Es wurde noch keine private Kopie zugeordnet.',
+  'The matched copy is unavailable. A manager can review media trash and permissions.':
+    'Die zugeordnete Kopie ist nicht verfügbar. Die Verwaltung kann Medien-Papierkorb und Berechtigungen prüfen.',
+  'Review private copy': 'Private Kopie prüfen',
+  'Nextcloud file': 'Nextcloud-Datei',
+  bytes: 'Bytes',
+  Target: 'Ziel',
+  'this family tree': 'dieser Stammbaum',
+  'Media title': 'Medientitel',
+  'An unchanged private copy will consume Stammbaum quota. Later source edits, deletion or sharing changes will not alter this copy. The original GEDCOM reference remains unchanged.':
+    'Eine unveränderte private Kopie belegt Stammbaum-Speicher. Spätere Änderungen, Löschungen oder Freigaben der Quelldatei ändern diese Kopie nicht. Die ursprüngliche GEDCOM-Referenz bleibt erhalten.',
+  'Import and match private copy': 'Private Kopie importieren und zuordnen',
+  'This reference requires management-only media.': 'Diese Referenz erfordert Medien nur für die Verwaltung.',
+  'This file reference already has a private copy.':
+    'Dieser Dateireferenz ist bereits eine private Kopie zugeordnet.',
+  'The export ZIP can exceed the 32 MiB or 100-entry media-import limits; transferring its media may require splitting it into smaller packages.':
+    'Die Export-ZIP kann die Grenzen für den Medienimport von 32 MiB oder 100 Einträgen überschreiten. Für die Übertragung müssen die Medien gegebenenfalls auf kleinere Pakete aufgeteilt werden.',
   Connections: 'Verknüpfungen',
   'My app connections': 'Meine App-Verknüpfungen',
   'Only you can see these links. Tasks, Calendar and Contacts keep their own copies and sharing permissions.':

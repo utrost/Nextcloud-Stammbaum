@@ -102,6 +102,12 @@ final class MediaController extends Controller
         return $this->respond(fn($a) => $this->media->selectFile($tree, $a, $path));
     }
     #[NoAdminRequired]
+    #[NoCSRFRequired]
+    public function referenceReview(string $tree, string $record): Response
+    {
+        return $this->respond(fn($a) => $this->media->referenceReview($tree, $a, $record));
+    }
+    #[NoAdminRequired]
     public function importFile(
         string $tree,
         int $fileId,
@@ -110,12 +116,22 @@ final class MediaController extends Controller
         string $title = '',
         string $personId = '',
         string $visibility = 'members',
+        string $referenceRecordId = '',
+        int $referenceField = -1,
+        int $referenceRevision = 0,
     ): Response {
         return $this->respond(
             fn($a) => $this->media->importFile($tree, $a, $fileId, $etag, [
                 'requestId' => $requestId,
                 'personId' => $personId,
                 'visibility' => $visibility,
+                ...$referenceRecordId !== ''
+                    ? [
+                        'referenceRecordId' => $referenceRecordId,
+                        'referenceField' => $referenceField,
+                        'referenceRevision' => $referenceRevision,
+                    ]
+                    : [],
                 ...$title !== '' ? ['title' => $title] : [],
             ]),
             201,

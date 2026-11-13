@@ -30,10 +30,89 @@ const processExports = () =>
 test.afterEach(() => {
   for (const id of cleanup.splice(0)) {
     fixtureDatabase('DELETE FROM *PREFIX*stb_exports WHERE tree_id = ?', [id]);
+    fixtureDatabase(
+      "DELETE FROM *PREFIX*stb_claims WHERE tree_id = ? AND actor_id = 'stb_capacity_fixture'",
+      [id],
+    );
     fixtureDatabase("DELETE FROM *PREFIX*stb_people WHERE tree_id = ? AND given_name LIKE 'Capacity %'", [
       id,
     ]);
   }
+});
+
+test('the actual 50,000-object projection admits the boundary and rejects one more object', async ({
+  page,
+}) => {
+  test.setTimeout(240000);
+  await login(page);
+  const tr = await tree(page);
+  cleanup.push(tr.id);
+  const p = await person(page, tr.id, 'Fictional object limit', { livingStatus: 'deceased' });
+  const existing = Number(
+    fixtureDatabase('SELECT COUNT(*) AS n FROM *PREFIX*stb_claims WHERE tree_id = ?', [tr.id], true)[0].n,
+  );
+  const payload = Buffer.from(
+    JSON.stringify({ tree: tr.id, person: p.id, count: 49999 - existing }),
+  ).toString('base64');
+  const code = `define('OC_CONSOLE',true);require '/var/www/html/lib/base.php';$v=json_decode(base64_decode('${payload}'),true);$db=\\OCP\\Server::get(\\OCP\\IDBConnection::class);$db->beginTransaction();try{for($i=0;$i<$v['count'];$i++){$db->executeStatement('INSERT INTO *PREFIX*stb_claims (id,tree_id,person_id,kind,value_json,assessment,visibility,preferred,created_at,actor_id) VALUES (?,?,?,?,?,?,?,?,?,?)',[substr($v['tree'],0,8).'-'.str_pad((string)$i,27,'0',STR_PAD_LEFT),$v['tree'],$v['person'],'name','{"givenName":"Alternative","familyName":"Example"}','supported','members',1,time(),'stb_capacity_fixture']);}$db->commit();echo $v['count'];}catch(\\Throwable $e){$db->rollBack();throw $e;}`;
+  execFileSync('docker', ['exec', '-u', 'www-data', 'stammbaum-iteration-nc', 'php', '-r', code], {
+    timeout: 180000,
+  });
+  const atLimit = await good(page, `/trees/${tr.id}/exports/preview`, 'POST', { options: {} });
+  expect(Object.values(atLimit.counts).reduce((sum, n) => sum + n, 0)).toBe(50000);
+  fixtureDatabase(
+    'INSERT INTO *PREFIX*stb_claims (id,tree_id,person_id,kind,value_json,assessment,visibility,preferred,created_at,actor_id) VALUES (?,?,?,?,?,?,?,?,?,?)',
+    [
+      key(),
+      tr.id,
+      p.id,
+      'name',
+      '{"givenName":"Extra","familyName":"Example"}',
+      'supported',
+      'members',
+      1,
+      Math.floor(Date.now() / 1000),
+      'stb_capacity_fixture',
+    ],
+  );
+  expect((await request(page, `/trees/${tr.id}/exports/preview`, 'POST', { options: {} })).status).toBe(413);
+  expect((await good(page, `/trees/${tr.id}/exports`)).items).toEqual([]);
+});
+
+test('cancellation at the final publication checkpoint leaves no downloadable artifact', async ({ page }) => {
+  await login(page);
+  const tr = await tree(page);
+  cleanup.push(tr.id);
+  await person(page, tr.id, 'Fictional cancelled export', { livingStatus: 'deceased' });
+  const pdf = readFileSync('tests/fixtures/media-two-pages.pdf');
+  const upload = await page.request.post(`${endpoint}/trees/${tr.id}/media`, {
+    headers: { requesttoken: await page.evaluate(() => window.OC.requestToken) },
+    multipart: {
+      requestId: key(),
+      file: { name: 'fictional.pdf', mimeType: 'application/pdf', buffer: pdf },
+    },
+  });
+  expect(upload.status()).toBe(201);
+  const review = await good(page, `/trees/${tr.id}/exports/preview`, 'POST', { options: { media: true } });
+  const job = await good(
+    page,
+    `/trees/${tr.id}/exports`,
+    'POST',
+    { ...review, acknowledged: true, requestId: key() },
+    201,
+  );
+  const payload = Buffer.from(JSON.stringify({ tree: tr.id, id: job.id, actor: fixture.user })).toString(
+    'base64',
+  );
+  const code = `define('OC_CONSOLE',true);require '/var/www/html/lib/base.php';$v=json_decode(base64_decode('${payload}'),true);$app=new \\OCA\\Stammbaum\\AppInfo\\Application();$s=$app->getContainer()->get(\\OCA\\Stammbaum\\Service\\Exports::class);$s->work(function()use($s,$v){$s->cancel($v['tree'],$v['id'],$v['actor']);});$f=\\OCP\\Server::get(\\OCP\\Files\\AppData\\IAppDataFactory::class)->get('stammbaum')->getFolder('exports-v1');echo json_encode(['ged'=>$f->fileExists($v['id'].'.ged'),'json'=>$f->fileExists($v['id'].'.json'),'zip'=>$f->fileExists($v['id'].'.zip')]);`;
+  const result = JSON.parse(
+    execFileSync('docker', ['exec', '-u', 'www-data', 'stammbaum-iteration-nc', 'php', '-r', code], {
+      encoding: 'utf8',
+    }),
+  );
+  expect(result).toEqual({ ged: false, json: false, zip: false });
+  expect((await good(page, `/trees/${tr.id}/exports/${job.id}`)).state).toBe('cancelled');
+  expect((await page.request.get(`${endpoint}/trees/${tr.id}/exports/${job.id}/gedcom`)).status()).toBe(409);
 });
 
 async function uploadImport(page, treeId, bytes) {

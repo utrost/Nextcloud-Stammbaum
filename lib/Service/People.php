@@ -432,6 +432,12 @@ final class People
             );
             if (!$restore) {
                 $this->invalidatePrivateConnections($tree, $id);
+                // A deleted participant severs reviewed missing-media matches. Restoring the
+                // person must never recreate a former media link automatically.
+                $this->store->execute(
+                    'DELETE FROM *PREFIX*stb_media_matches WHERE record_id IN (SELECT record_id FROM *PREFIX*stb_participants WHERE person_id = ?)',
+                    [$id],
+                );
                 foreach (
                     $this->store->rows('SELECT media_id FROM *PREFIX*stb_media_people WHERE person_id = ?', [
                         $id,
@@ -474,6 +480,34 @@ final class People
                         'media_person_unlinked',
                         null,
                         ['mediaId' => $media['id'], 'personId' => $id],
+                        'management',
+                    );
+                }
+                // Shared-event media has a dependency on every participant. Sever the
+                // event link now; otherwise restoring this person would revive it.
+                foreach (
+                    $this->store->rows(
+                        "SELECT v.*, x.target_id AS event_id FROM *PREFIX*stb_media v JOIN *PREFIX*stb_media_refs x ON x.media_id = v.id JOIN *PREFIX*stb_participants a ON a.record_id = x.target_id WHERE v.tree_id = ? AND x.kind = 'event' AND a.person_id = ?",
+                        [$tree, $id],
+                    )
+                    as $media
+                ) {
+                    $data = json_decode($media['metadata_json'], true);
+                    $data['eventId'] = '';
+                    $this->store->execute(
+                        "DELETE FROM *PREFIX*stb_media_refs WHERE media_id = ? AND kind = 'event' AND target_id = ?",
+                        [$media['id'], $media['event_id']],
+                    );
+                    $this->store->execute(
+                        "UPDATE *PREFIX*stb_media SET metadata_json = ?, visibility = 'management', revision = revision + 1, updated_at = ? WHERE id = ?",
+                        [Store::json($data), time(), $media['id']],
+                    );
+                    $this->store->audit(
+                        $tree,
+                        $actor,
+                        'media_event_unlinked',
+                        null,
+                        ['mediaId' => $media['id'], 'eventId' => $media['event_id']],
                         'management',
                     );
                 }

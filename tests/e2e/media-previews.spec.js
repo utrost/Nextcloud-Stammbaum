@@ -44,7 +44,7 @@ function cache(action, id) {
 }
 const cacheKey = (m, size = 320, crop = null, page = 1) =>
   createHash('sha256')
-    .update(JSON.stringify(['raster-v1', m.sha256, m.mime, crop, size, page]))
+    .update(JSON.stringify(['raster-v2', m.sha256, m.mime, crop, size, page]))
     .digest('hex');
 
 test('image derivatives are bounded, cached, regenerated and permission checked on warm hits', async ({

@@ -256,7 +256,7 @@ Original uploads, shared assignments/crops and reviewed GEDCOM media matching re
 
 [E08 · #77](https://github.com/utrost/Nextcloud-Stammbaum/issues/77) covers metadata gallery filters, responsive detail presentation and person/event contexts, alongside the metadata model/editor in #76.
 
-Office documents and conversion are out of scope by user decision; #73 (E05) is closed as not planned and retained in the backlog only for history. Media entry points are device upload and explicit selection from Nextcloud Files. Existing files are copied into private Stammbaum storage with source-read authorization, original-byte validation and quota checks; subsequent source edits/deletion do not change an imported copy. Explain the independent copy and tree visibility before confirmation. PDF preview failure must leave original download available. EXIF orientation remains separately tracked in #69.
+Office documents and conversion are out of scope by user decision; #73 (E05) is closed as not planned and retained in the backlog only for history. Media entry points are device upload and explicit selection from Nextcloud Files. Existing files are copied into private Stammbaum storage with source-read authorization, original-byte validation and quota checks; subsequent source edits/deletion do not change an imported copy. Explain the independent copy and tree visibility before confirmation. PDF preview failure must leave original download available. Alpha.30 adds reviewed matching of a Files copy to an exact imported GEDCOM FILE entry (#74) and EXIF-oriented derived previews with compatible legacy crops (#69). ZIP package matching remains #34.
 
 ### Alpha.20 export and recoverable media
 

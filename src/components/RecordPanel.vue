@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { t, title } from '../i18n.js';
 import { dateText, personName } from '../domain.js';
 import MediaPanel from './MediaPanel.vue';
+import MissingMediaMatch from './MissingMediaMatch.vue';
 import ResearchTaskPanel from './ResearchTaskPanel.vue';
 import CalendarPanel from './CalendarPanel.vue';
 import RecordEditor from './RecordEditor.vue';
@@ -64,6 +65,14 @@ async function load(next = 0) {
 async function saved() {
   editor.value = null;
   await load();
+}
+async function refreshRecord(id) {
+  try {
+    const current = await api(`/trees/${props.treeId}/records/${id}`);
+    records.value = records.value.map((r) => (r.id === id ? current : r));
+  } catch (e) {
+    error.value = t(e.message);
+  }
 }
 async function prefer(r) {
   busy.value = true;
@@ -160,8 +169,21 @@ onBeforeUnmount(() => sequence++);
       <p v-else class="preserve-text">{{ r.text }}</p>
       <dl v-if="r.fields.length" class="record-fields">
         <div v-for="(f, i) in r.fields" :key="i">
-          <dt>{{ f.label }}</dt>
-          <dd>{{ f.value }} {{ f.unit }}</dd>
+          <dt>
+            {{
+              r.original?.title === 'Missing media reference' && f.label === 'Availability'
+                ? t(f.label)
+                : f.label
+            }}
+          </dt>
+          <dd>
+            {{
+              r.original?.title === 'Missing media reference' && f.label === 'Availability'
+                ? t(f.value)
+                : f.value
+            }}
+            {{ f.unit }}
+          </dd>
         </div>
       </dl>
       <ul v-if="r.category === 'event'" class="citation-targets">
@@ -181,6 +203,13 @@ onBeforeUnmount(() => sequence++);
           </div>
         </dl>
       </details>
+      <MissingMediaMatch
+        v-if="r.original?.title === 'Missing media reference'"
+        :tree-id="treeId"
+        :record="r"
+        :can-edit="canEdit"
+        @matched="refreshRecord(r.id)"
+      />
       <div class="button-row">
         <button v-if="r.category === 'event'" @click="mediaEvent = mediaEvent === r.id ? null : r.id">
           {{ t('Event media') }}

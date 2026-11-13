@@ -7,6 +7,7 @@ final class Media
 {
     public const MAX_BYTES = 10485760,
         QUOTA = 1073741824;
+    private array $orientationCache = [];
     public function __construct(
         private Store $store,
         private Trees $trees,
@@ -16,6 +17,7 @@ final class Media
         private PreviewCache $previews,
         private PdfPreview $pdf,
         private MediaMetadata $metadata,
+        private Records $records,
     ) {}
     private function folder(): ISimpleFolder
     {
@@ -35,13 +37,18 @@ final class Media
         ) {
             throw Problem::missing();
         }
-        $r['assignments'] = array_map(function ($a) use ($tree, $m) {
+        $r['assignments'] = array_map(function ($a) use ($tree, $m, $r) {
             $p = $this->people->dto($this->people->row($tree, $a['person_id'], $m));
+            $crop = json_decode($a['crop_json'], true);
+            if (!isset($crop['space']) && $r['mime'] === 'image/jpeg' && $r['status'] === 'ready') {
+                $crop = ImageOrientation::crop($crop, $this->orientation($r));
+            }
+            unset($crop['space']);
             return [
                 'personId' => $a['person_id'],
                 'person' => $p,
                 'purpose' => $a['purpose'],
-                'crop' => json_decode($a['crop_json'], true),
+                'crop' => $crop,
                 'preferred' => (bool) $a['preferred'],
             ];
         }, $this->store->rows(
@@ -304,16 +311,45 @@ final class Media
     ): array {
         $id = $this->store->write(function () use ($tree, $actor, $f, $b) {
             $m = $this->trees->access($tree, $actor, 'editor');
+            $referenceId = Values::text($b['referenceRecordId'] ?? '', 'referenceRecordId', 36);
+            $referenceField = (int) ($b['referenceField'] ?? -1);
+            $referenceRevision = $b['referenceRevision'] ?? null;
+            if ($referenceId !== '' && $referenceField < 0) {
+                throw Problem::missing();
+            }
+            $reference =
+                $referenceId !== ''
+                    ? $this->referenceEntry($tree, $actor, $referenceId, $referenceField, $referenceRevision)
+                    : null;
             $visibility = Values::choice(
                 $b['visibility'] ?? 'members',
                 ['members', 'management'],
                 'visibility',
             );
+            if (
+                $reference &&
+                $reference['record']['visibility'] === 'management' &&
+                $visibility !== 'management'
+            ) {
+                throw new Problem(
+                    'reference_visibility',
+                    'This reference requires management-only media.',
+                    422,
+                );
+            }
             if ($visibility !== 'members' && !Trees::management($m)) {
                 throw new Problem('forbidden', 'Only management can change visibility.', 403);
             }
             $title = Values::text($b['title'] ?? $f['name'], 'title', 250, true);
             $person = Values::text($b['personId'] ?? '', 'personId', 36);
+            if ($reference) {
+                $expected =
+                    $reference['record']['category'] === 'event' ? '' : $reference['record']['origin_id'];
+                if ($person !== '' && $person !== $expected) {
+                    throw Problem::missing();
+                }
+                $person = $expected;
+            }
             if ($person !== '') {
                 $this->people->row($tree, $person, $m);
             }
@@ -321,8 +357,31 @@ final class Media
                 $actor,
                 'media:' . $tree,
                 (string) ($b['requestId'] ?? ''),
-                [$f['sha256'], $f['size'], $f['name'], $title, $visibility, $person],
-                function () use ($tree, $actor, $f, $title, $visibility, $person, $m) {
+                [
+                    $f['sha256'],
+                    $f['size'],
+                    $f['name'],
+                    $title,
+                    $visibility,
+                    $person,
+                    $referenceId,
+                    $referenceField,
+                    $referenceRevision,
+                ],
+                function () use (
+                    $tree,
+                    $actor,
+                    $f,
+                    $title,
+                    $visibility,
+                    $person,
+                    $m,
+                    $referenceId,
+                    $referenceField,
+                ) {
+                    if ($referenceId !== '') {
+                        $this->assertReferenceUnmatched($tree, $actor, $referenceId, $referenceField);
+                    }
                     $used =
                         (int) ($this->store->one(
                             'SELECT COALESCE(SUM(size),0) AS total FROM *PREFIX*stb_media',
@@ -360,7 +419,13 @@ final class Media
                             'media_id' => $id,
                             'person_id' => $person,
                             'purpose' => 'attachment',
-                            'crop_json' => Store::json(['x' => 0, 'y' => 0, 'width' => 1, 'height' => 1]),
+                            'crop_json' => Store::json([
+                                'x' => 0,
+                                'y' => 0,
+                                'width' => 1,
+                                'height' => 1,
+                                'space' => 'oriented',
+                            ]),
                             'preferred' => 0,
                         ]);
                     }
@@ -396,7 +461,7 @@ final class Media
                 500,
             );
         }
-        return $this->store->write(function () use ($tree, $id, $actor, $sourceCheck) {
+        return $this->store->write(function () use ($tree, $id, $actor, $sourceCheck, $b) {
             if ($sourceCheck) {
                 $sourceCheck();
             }
@@ -413,6 +478,29 @@ final class Media
                 );
             }
             if ($r['status'] !== 'ready') {
+                $referenceId = (string) ($b['referenceRecordId'] ?? '');
+                if ($referenceId !== '') {
+                    $field = (int) ($b['referenceField'] ?? -1);
+                    $reference = $this->referenceEntry(
+                        $tree,
+                        $actor,
+                        $referenceId,
+                        $field,
+                        $b['referenceRevision'] ?? null,
+                    );
+                    $this->assertReferenceUnmatched($tree, $actor, $referenceId, $field);
+                    $this->store->insert('stb_media_matches', [
+                        'record_id' => $referenceId,
+                        'field_index' => $field,
+                        'media_id' => $id,
+                        'actor_id' => $actor,
+                        'created_at' => time(),
+                    ]);
+                    if ($reference['record']['category'] === 'event') {
+                        $metadata = $this->metadata->clean($tree, ['eventId' => $referenceId], $m);
+                        $this->metadata->write($id, $metadata);
+                    }
+                }
                 $this->store->execute("UPDATE *PREFIX*stb_media SET status = 'ready' WHERE id = ?", [$id]);
                 $this->store->bump($tree);
                 $this->store->audit($tree, $actor, 'media_uploaded', null, ['mediaId' => $id], 'management');
@@ -459,6 +547,98 @@ final class Media
             'name' => $node->getName(),
             'size' => $node->getSize(),
             'mime' => $node->getMimeType(),
+        ];
+    }
+    /** The immutable import entry supplies the exact FILE wording, even after record edits. */
+    private function referenceEntry(
+        string $tree,
+        string $actor,
+        string $recordId,
+        int $fieldIndex,
+        ?int $revision = null,
+    ): array {
+        $membership = $this->trees->access($tree, $actor);
+        $record = $this->records->row($tree, $recordId, $membership);
+        if ($revision !== null) {
+            $this->store->version($record, $revision);
+        }
+        $original = json_decode($record['original_json'], true);
+        if (
+            ($original['title'] ?? '') !== 'Missing media reference' ||
+            (($original['visibility'] ?? 'members') !== 'members' && !Trees::management($membership)) ||
+            !$this->store->one(
+                'SELECT m.object_id FROM *PREFIX*stb_import_maps m JOIN *PREFIX*stb_imports i ON i.id = m.run_id WHERE i.tree_id = ? AND m.kind = ? AND m.object_id = ?',
+                [$tree, 'record', $recordId],
+            )
+        ) {
+            throw Problem::missing();
+        }
+        foreach ($original['participants'] ?? [] as $participant) {
+            $this->people->row($tree, $participant['personId'], $membership);
+        }
+        $field = $original['fields'][$fieldIndex] ?? null;
+        if ($fieldIndex >= 0 && (($field['label'] ?? '') !== 'FILE' || ($field['value'] ?? '') === '')) {
+            throw Problem::missing();
+        }
+        return ['record' => $record, 'path' => $field['value'] ?? ''];
+    }
+    private function assertReferenceUnmatched(string $tree, string $actor, string $recordId, int $field): void
+    {
+        $match = $this->store->one(
+            'SELECT media_id FROM *PREFIX*stb_media_matches WHERE record_id = ? AND field_index = ?',
+            [$recordId, $field],
+        );
+        if (!$match) {
+            return;
+        }
+        try {
+            $this->get($tree, $match['media_id'], $actor);
+        } catch (Problem $e) {
+            if ($e->status !== 404 || !Trees::management($this->trees->access($tree, $actor))) {
+                throw Problem::missing();
+            }
+        }
+        throw new Problem('reference_matched', 'This file reference already has a private copy.', 409);
+    }
+    public function referenceReview(string $tree, string $actor, string $recordId): array
+    {
+        $first = $this->referenceEntry($tree, $actor, $recordId, -1);
+        $record = $first['record'];
+        $original = json_decode($record['original_json'], true);
+        $references = [];
+        foreach ($original['fields'] as $index => $field) {
+            if ($field['label'] !== 'FILE' || $field['value'] === '') {
+                continue;
+            }
+            $match = $this->store->one(
+                'SELECT media_id FROM *PREFIX*stb_media_matches WHERE record_id = ? AND field_index = ?',
+                [$recordId, $index],
+            );
+            $medium = null;
+            if ($match) {
+                try {
+                    $medium = $this->get($tree, $match['media_id'], $actor);
+                } catch (Problem $e) {
+                    if ($e->status !== 404) {
+                        throw $e;
+                    }
+                    if (!Trees::management($this->trees->access($tree, $actor))) {
+                        throw Problem::missing();
+                    }
+                }
+            }
+            $references[] = [
+                'fieldIndex' => $index,
+                'path' => $field['value'],
+                'state' => !$match ? 'missing' : ($medium ? 'matched' : 'unavailable'),
+                'medium' => $medium,
+            ];
+        }
+        return [
+            'recordId' => $recordId,
+            'revision' => (int) $record['revision'],
+            'visibility' => $record['visibility'],
+            'references' => $references,
         ];
     }
     public function importFile(string $tree, string $actor, int $fileId, string $etag, array $b): array
@@ -609,7 +789,7 @@ final class Media
                     'media_id' => $id,
                     'person_id' => $a['personId'],
                     'purpose' => $a['purpose'],
-                    'crop_json' => Store::json($a['crop']),
+                    'crop_json' => Store::json([...$a['crop'], 'space' => 'oriented']),
                     'preferred' => $a['preferred'] ? 1 : 0,
                 ]);
             }
@@ -657,6 +837,16 @@ final class Media
             throw new Problem('original_mismatch', 'The stored original failed its integrity check.', 500);
         }
         return $bytes;
+    }
+    private function orientation(array $row, ?string $bytes = null): int
+    {
+        if ($row['mime'] !== 'image/jpeg') {
+            return 1;
+        }
+        $hash = $row['sha256'];
+        return $this->orientationCache[$hash] ??= ImageOrientation::fromJpeg(
+            $bytes ?? $this->originalBytes($row),
+        );
     }
     private function pdfPages(array $r, string $bytes, callable $authorize): int
     {
@@ -710,14 +900,15 @@ final class Media
         if ($page > $pages) {
             throw new Problem('preview_page', 'This page is not available.', 404);
         }
-        // v1 intentionally retains raw-image crop coordinates; EXIF normalization remains #69.
-        $identity = Store::json(['raster-v1', $r['sha256'], $r['mime'], $crop, $size, $page]);
+        $orientation = $this->orientation($r, $bytes);
+        $identity = Store::json(['raster-v2', $r['sha256'], $r['mime'], $crop, $size, $page]);
         $result = $this->previews->remember($identity, $check, function () use (
             $bytes,
             $r,
             $crop,
             $size,
             $page,
+            $orientation,
         ) {
             if ($r['mime'] === 'application/pdf') {
                 return $this->pdf->render($bytes, $page, $size);
@@ -730,6 +921,7 @@ final class Media
                     422,
                 );
             }
+            $im = ImageOrientation::orient($im, $orientation);
             if ($crop !== null) {
                 $cropped = imagecrop($im, [
                     'x' => (int) floor($crop['x'] * imagesx($im)),

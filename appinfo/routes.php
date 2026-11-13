@@ -104,6 +104,11 @@ return [
         ['name' => 'media#index', 'url' => '/api/v1/trees/{tree}/media', 'verb' => 'GET'],
         ['name' => 'media#selectFile', 'url' => '/api/v1/trees/{tree}/media/select-file', 'verb' => 'POST'],
         ['name' => 'media#importFile', 'url' => '/api/v1/trees/{tree}/media/import-file', 'verb' => 'POST'],
+        [
+            'name' => 'media#referenceReview',
+            'url' => '/api/v1/trees/{tree}/media/reference/{record}',
+            'verb' => 'GET',
+        ],
         ['name' => 'media#trash', 'url' => '/api/v1/trees/{tree}/media-trash', 'verb' => 'GET'],
         ['name' => 'media#impact', 'url' => '/api/v1/trees/{tree}/media/{id}/impact', 'verb' => 'GET'],
         ['name' => 'media#delete', 'url' => '/api/v1/trees/{tree}/media/{id}/delete', 'verb' => 'POST'],
