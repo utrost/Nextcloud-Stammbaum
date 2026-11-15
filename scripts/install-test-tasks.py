@@ -8,7 +8,7 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 fixture = json.loads((root / 'build/test-instance.json').read_text())
-assert fixture['container'] == 'stammbaum-iteration-nc', 'Never install this fixture app on local development installation.'
+assert fixture['container'] == 'stammbaum-iteration-nc', 'Install fixture Tasks only in the disposable container.'
 version = '0.18.1'
 expected = '0c988d50531c9bfa246e6c31f3f95369adde1629ba70d15194915ab56e24687b'
 url = f'https://github.com/nextcloud/tasks/releases/download/v{version}/tasks.tar.gz'

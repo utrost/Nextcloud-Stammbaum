@@ -92,7 +92,7 @@ Initial scope is linking and optional one-way, field-reviewed copy of current em
 
 ## Verification and release gate
 
-Use fictional accounts, trees, calendars, tasks and contacts in a disposable installation with the exact declared app versions. Do not install or mutate sibling apps on shared local development installation merely to satisfy these tests. Preserve Library and Relate; any eventual local development installation smoke uses scoped fixtures and needs no pre-deployment backup.
+Use fictional accounts, trees, calendars, tasks and contacts in a disposable installation with the exact declared app versions. Do not mutate unrelated apps on a shared installation to satisfy these tests. Use scoped fictional fixtures for any additional smoke test.
 
 Required evidence: all four roles with/without export grants; admin without membership; living/unknown/management filters; hidden dependencies; foreign-account collection/object IDs; shared/read-only collections; app absent/disabled; source and destination permission changes; stale revisions and ETags; duplicate clicks and lost responses; partial success; account disable/delete/recreation; revoke/regrant; restoration and cleanup. Test that genealogy revisions remain unchanged for external operations, while explicit contact-record copies produce normal revision-checked history.
 

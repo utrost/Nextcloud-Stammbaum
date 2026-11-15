@@ -35,6 +35,8 @@ test('compact import review retains diagnostics, deliberate activation and uncha
   await expect(page.locator('.import-diagnostic-groups')).toHaveCount(0);
   await page.locator('.import-review').scrollIntoViewIfNeeded();
   await page.screenshot({ path: 'test-results/import-ready-desktop.png' });
+  if (process.env.STAMMBAUM_PUBLIC_SCREENSHOTS === '1')
+    await page.locator('.import-review').screenshot({ path: 'test-results/public-import.png' });
   await page.setViewportSize({ width: 1440, height: 1800 });
   await expect(page.locator('.import-review')).toHaveScreenshot('import-ready.png', {
     animations: 'disabled',
