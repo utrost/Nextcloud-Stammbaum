@@ -10,7 +10,7 @@ Seventeen distinct targeted Playwright tests passed on the isolated Nextcloud/Ma
 
 Coverage includes native picker confirmation and keyboard submission; desktop/390px/320px layouts with inspected screenshots; owned PDFs and read-only shared PNGs; denied source access; viewer denial; revoked shares; changed/deleted sources; unchanged downloaded originals; idempotent retries; path traversal rejection; disguised-content rejection; existing portrait crops/privacy; upload limits; draft preservation; and German feedback. Four JavaScript unit/catalog checks, build/route checks, PHP media syntax, formatting and archive/documentation validation passed.
 
-The exact alpha.17 runtime package SHA-256 is `4af75d1dbb9e707d844c227c2d68521dba591d2cbe012e23afbc854f4fc1fb18`. It was deployed to both the isolated instance and Alice. An Alice Playwright smoke with a temporary fictional ordinary account verified the native picker, private PDF copy, unchanged download, source deletion independence and zero browser errors. The temporary account, source file, genealogy rows and private copied original were cleaned up. Alice stayed healthy; Library and Relate versions and enablement were unchanged.
+The exact alpha.17 runtime package SHA-256 is `4af75d1dbb9e707d844c227c2d68521dba591d2cbe012e23afbc854f4fc1fb18`. It was deployed to both the isolated instance and the test installation. A Playwright smoke with a temporary fictional ordinary account verified the native picker, private PDF copy, unchanged download, source deletion independence and zero browser errors. The temporary account, source file, genealogy rows and private copied original were cleaned up. The test installation stayed healthy; Library and Relate versions and enablement were unchanged.
 
 ## Remaining work
 

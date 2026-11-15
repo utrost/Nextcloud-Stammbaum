@@ -15,15 +15,15 @@ npm run package
 
 ## Supported scaffold and licenses
 
-The current supported development target is Nextcloud 34 with PHP 8.3+ and MariaDB. CI creates Nextcloud 34.0.4/MariaDB 11 from scratch, checks PHP 8.3 syntax, installs the exact package and executes the native browser suite. Alice also exercises an existing Nextcloud 34 installation with PHP 8.5. PostgreSQL, SQLite and other Nextcloud majors are not certified by this scaffold evidence; see the [platform adaptation decision](platform-adaptation.md) for the exact verified matrix and boundaries.
+The current supported development target is Nextcloud 34 with PHP 8.3+ and MariaDB. CI creates Nextcloud 34.0.4/MariaDB 11 from scratch, checks PHP 8.3 syntax, installs the exact package and executes the native browser suite. PostgreSQL, SQLite and other Nextcloud majors are not certified by this evidence; see the [platform adaptation decision](platform-adaptation.md) for the verified matrix and boundaries.
 
 Stammbaum is AGPL-3.0-or-later. The bundled Vue runtime is MIT licensed; [THIRD-PARTY-NOTICES](../THIRD-PARTY-NOTICES) contains its notice and license text, and both that file and [LICENSE](../LICENSE) ship in every runtime archive. Exact build-tool dependencies and their declared licenses are recorded in `package-lock.json`; build tools are not distributed as app runtime dependencies. Runtime scripts, styles and icons are packaged locally; the UI inherits the host Nextcloud theme/fonts without loading an app-owned external font service.
 
 There are no app-specific database credentials, standalone login service or initial administrator settings to enter. Nextcloud owns authentication and host configuration; unauthenticated app entry redirects to its login. An unavailable startup API displays an error and explicit Retry. Missing host/database installation prerequisites are operator setup failures, not an empty genealogy dataset. The app-specific installer refuses an unhealthy or unsupported host before deployment. The upgrade and recovery boundaries below remain applicable.
 
-## Alice deployment
+## Deploy to a development container
 
-Alice is this workstation. Use the default local Docker context. The shared development container is `nextcloud`; Library and Relate must remain intact. The user explicitly waived backups for Alice development deployment. No SSH or new deployment approval is needed for this authorized scope.
+Use the local Docker context and set `--container` to a Nextcloud 34 container you control. The installer changes only the Stammbaum app; check the host's normal backup and change procedures before using it with real data. Use the disposable fixture below for destructive tests.
 
 ```sh
 npm run package
@@ -53,7 +53,7 @@ Playwright currently uses `/usr/bin/google-chrome`. Unit tests use Node; PHP syn
 
 ### Optional same-instance apps
 
-CI pins Nextcloud 34.0.4, Calendar 6.6.5, Tasks 0.18.1, Contacts 8.9.3 and the built-in DAV backend 1.40.0. The reused local isolated fixture currently has Contacts 8.10.0; Alice has 8.9.3. Record which matrix ran with each result rather than treating one fixture as the other. The app remains usable without any of those optional clients. Calendar/Tasks choices are discovered per signed-in account; a writable collection must also support VEVENT/VTODO respectively. An absent or read-only destination is unavailable for publication. Collection sharing may be marked `shared-with-me` or `unknown`; the public API cannot prove that a calendar owned by the acting account has not later been shared outward. Verify its audience in Nextcloud before copying sensitive details. No server credential, remote URL or host-wide app configuration is needed.
+CI pins Nextcloud 34.0.4, Calendar 6.6.5, Tasks 0.18.1, Contacts 8.9.3 and the built-in DAV backend 1.40.0. Record the exact version matrix with each result. The app remains usable without any of those optional clients. Calendar/Tasks choices are discovered per signed-in account; a writable collection must also support VEVENT/VTODO respectively. An absent or read-only destination is unavailable for publication. Collection sharing may be marked `shared-with-me` or `unknown`; the public API cannot prove that a calendar owned by the acting account has not later been shared outward. Verify its audience in Nextcloud before copying sensitive details. No server credential, remote URL or host-wide app configuration is needed.
 
 Task creation uses the acting browser's authenticated same-origin CalDAV session. A tree permission revocation after the server returns a reviewed VTODO but before the browser writes it can leave a copy in Tasks. Stammbaum refuses to confirm the link after revocation and never reactivates it on regrant; the account holder should inspect or remove the copy in Tasks. Calendar creation runs in the foreground through Nextcloud's public calendar interface and also cannot roll back a remote success after a cross-app authority change. The [integration API contract](integration-api-contract.md) and [private connection lifecycle](connections-iteration.md) describe status and cleanup. Restored app data requires the authority-invalidation command below before reopening genealogy access.
 
@@ -73,7 +73,7 @@ The download endpoint verifies the original's SHA-256 every time. A mismatch fai
 
 ## Consistent recovery boundary
 
-The production requirement remains a consistent recovery of Nextcloud identity/configuration, all `stb_` tables and private app data. Backing up only a GEDCOM file or only the app directory cannot restore this system. Automated consistent backup/restore tooling and a full disaster-recovery exercise remain I06 work; Alice's development exception does not waive that product requirement.
+The production requirement remains a consistent recovery of Nextcloud identity/configuration, all `stb_` tables and private app data. Backing up only a GEDCOM file or only the app directory cannot restore this system. Automated consistent backup/restore tooling and a full disaster-recovery exercise remain I06 work.
 
 After restoring a consistent host/app snapshot, before reopening genealogy access, run:
 
@@ -101,9 +101,9 @@ The import integration suite uses fictional data and temporary database triggers
 
 ### Long-lived host workers during an app upgrade
 
-Alice had a pre-existing `background-job:worker --stop_after=5m` process that had remained alive for several days. It could not resolve the newly added Stammbaum job and Nextcloud removed that job registration; fresh PHP processes resolved it correctly. Reloading Apache alone does not reload such a CLI worker.
+An already-running `background-job:worker` process can retain old app code across an upgrade and fail to resolve a newly added job. Reloading Apache alone does not reload such a CLI worker.
 
-Before relying on new app jobs, gracefully recycle an identified long-lived host worker through its normal process manager, preserving its arguments and scheduling. In the inspected Nextcloud 34 code, SIGTERM/SIGINT are cooperative: the worker checks the interrupted flag between jobs. Check currently running work first; do not force-kill an active job. Then run the app deployment verification again to reconcile its declared jobs. Alice’s identified idle worker was reloaded this way, with no cron schedule or sibling app configuration changes.
+Before relying on new app jobs, gracefully recycle an identified long-lived host worker through its normal process manager, preserving its arguments and scheduling. In the inspected Nextcloud 34 code, SIGTERM/SIGINT are cooperative: the worker checks the interrupted flag between jobs. Check currently running work first; do not force-kill an active job. Then run the app deployment verification again to reconcile its declared jobs.
 
 The app installer does not automatically signal arbitrary host processes. `occ background-job:list --class='OCA\Stammbaum\BackgroundJob\ProcessImports'` checks the exact class name; this option is not a substring search.
 

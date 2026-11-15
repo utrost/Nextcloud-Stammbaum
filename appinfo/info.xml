@@ -6,7 +6,7 @@
   <description>Create private family trees, maintain people and explicit relationships, and retain the history behind your research.</description>
     <version>0.1.0-alpha.33</version>
   <licence>AGPL-3.0-or-later</licence>
-  <author>Uwe Trostheide</author>
+  <author>utrost</author>
   <namespace>Stammbaum</namespace>
   <category>organization</category>
   <website>https://github.com/utrost/Nextcloud-Stammbaum</website>

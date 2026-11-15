@@ -1,64 +1,48 @@
 # Nextcloud Stammbaum
 
-A native Nextcloud app for private, collaborative family-history research. The development alpha implements trees, people, relationships, evidence, shared events, notes, private media, reviewed GEDCOM import and current-state export. It is an early alpha, not yet release-0.15 parity.
+Stammbaum is a native Nextcloud app for private, collaborative family-history research. The current **0.1.0-alpha.33** release is for testing and feedback; [release 0.15 parity](docs/implementation-roadmap.md) and production recovery are still in progress.
 
-## Try the development alpha
+![Family diagram with fictional people](docs/screenshots/family-diagram-alpha33.png)
 
-Open **Stammbaum** in Nextcloud, create a tree, and add a person. Use the person workspace to add relatives, group siblings, record evidence and events, or upload an original photograph. Tree owners manage membership and invitations under **Manage**. Nextcloud administrators receive no automatic genealogy access.
+*An interactive family branch. The diagram also has a text alternative and keyboard controls.*
 
-Use **Expand person research** to read evidence alongside retained assertions and relatives. Each member can set a personal home without changing the shared home. Saved views retain their focus, selection and camera; the most recently saved view is used when reopening the tree. The diagram supports mouse, keyboard and two-finger navigation, with a text alternative. Select a boundary person and use **Expand relatives** to reveal one more local neighborhood without changing focus or camera. **Previous branch** restores local expansions; **Reset local expansions** returns to the chosen generation depths. Expansions stay in the current session’s branch history and are not included in named saved views or copied links.
+## What works today
 
-For existing research, create an empty tree and open **Imports**. Upload a supported GEDCOM file, review its diagnostics and preview, then explicitly confirm activation. Nextcloud processes it in the background. The current profile includes additional events, occupations, name components and confidential contact details. Missing media references appear in person Details; the referenced files are not automatically downloaded. The [named import profile](docs/gedcom-import-profile.md) is deliberately bounded; unsupported standard fields block activation.
+- Create private trees and invite members. Tree roles, export grants and record visibility are independent of Nextcloud administrator status.
+- Record people, relationships, family contexts, historical dates, sources, citations, shared events, notes and competing assertions.
+- Explore a bounded family diagram, expand local relatives, search and review evidence, and keep personal saved views.
+- Upload JPEG, PNG and PDF originals, or review a private copy from Nextcloud Files. Add descriptive dates, places, events and people shown or mentioned; create portraits and attachments separately. Previews and thumbnails stay private. PDF previews need optional Poppler utilities.
+- Review and activate supported GEDCOM imports into an empty tree. Generate privacy-filtered current-state GEDCOM exports, with optional unchanged originals in a ZIP package.
+- Review media deletion and restore retained originals from media trash.
+- Optionally create reviewed Tasks and Calendar entries, and privately link Contacts cards. These apps are not required for genealogy.
 
-In **Media**, upload a JPEG, PNG or PDF from your device or use **Choose from Nextcloud Files**. Confirm **Import private copy** to store unchanged bytes under the tree's permissions. The copy counts against Stammbaum's storage quota and remains available if the source later changes or is deleted. The gallery has private cached thumbnails and **Open preview** for larger images and PDF pages, with zoom and page controls. PDF previews require the optional Poppler runtime; unsupported documents keep their original download. Individual imported GEDCOM file references can be matched with reviewed private copies; ZIP package matching remains separate work.
+![Fictional source citation in the research workspace](docs/screenshots/research-evidence-alpha33.png)
 
-Use **Exports** to review the included research, privacy options and format limitations before generating GEDCOM or an optional package of original media. Results are private to the requester, expire after 24 hours and become invalid after tree/access changes. Managers can review **Move medium to trash** and restore retained media through **Media trash**; originals continue to occupy storage. See the [export and media lifecycle contract](docs/export-media-lifecycle-iteration.md) and [alpha.21 export reliability changes](docs/export-reliability-iteration.md).
+*Evidence remains alongside the person's assertions and family context.*
 
-The app currently targets **Nextcloud 34**, PHP **8.3+**, with MariaDB verified. It uses Nextcloud accounts and private app storage; Library and Relate are development references, not dependencies.
+![Reviewed fictional GEDCOM import](docs/screenshots/import-review-alpha33.png)
 
-Authorized researchers can create a reviewed Nextcloud Task from a person, source, shared event or image/PDF medium, and a reviewed Calendar entry from a person or shared event. Task priority and completion remain in Tasks; exact person dates can supply an anniversary. People can also privately link a Nextcloud Contacts card. **Connections** shows that account's private links, supports read-only refresh and local unlink, and offers separately reviewed conditional removal for newly created unchanged Tasks/Calendar items. These optional journeys keep each app's permissions and ownership separate. Their current limits are recorded in the iteration notes below.
+*The import preview appears before activation.*
 
-- [GEDCOM iteration and verification](docs/iteration-02.md)
-- [Import profile, limits and preserved-original contract](docs/gedcom-import-profile.md)
-- [First-iteration scope, evidence and remaining work](docs/iteration-01.md)
-- [Architecture and data contracts](docs/architecture.md)
-- [Native Nextcloud platform adaptation and verified compatibility](docs/platform-adaptation.md)
-- [Alpha.33 core issue closeout and acceptance evidence](docs/core-closeout-alpha33.md)
-- [Build, install, test and recovery instructions](docs/operations.md)
-- [Development environment and lessons from Library/Relate](docs/development.md)
-- [Implementation roadmap](docs/implementation-roadmap.md)
-- [Nextcloud Tasks, Calendar and Contacts integration concept](docs/nextcloud-integration-concept.md)
-- [Same-instance integration API and permission contract](docs/integration-api-contract.md)
-- [Alpha.27 optional-integration test and Alice deployment evidence](docs/integration-acceptance-alpha27.md)
-- [Alpha.28 collection pagination and precise backlink evidence](docs/integration-discovery-links-alpha28.md)
-- [First Tasks integration journey and verified limits](docs/tasks-iteration.md)
-- [Nextcloud Contacts linking and confidential-copy contract](docs/contacts-iteration.md)
-- [Reviewed Nextcloud Calendar events and limits](docs/calendar-iteration.md)
-- [Private connection lifecycle and reviewed external removal](docs/connections-iteration.md)
-- [GitHub roadmap and implementation backlog](https://github.com/utrost/Nextcloud-Stammbaum/issues/1)
+## Build and test
 
-## Build
-
-Node 24 and npm 11 are used for development. Runtime installation needs no Node process.
+The current development target is **Nextcloud 34**, **PHP 8.3+** and **MariaDB**. Node 24 and npm 11 are used to build the app; Nextcloud needs no Node process at runtime.
 
 ```sh
 npm ci
 npm run check
+npm run format:check
 npm run package
 ```
 
-The package and SHA-256 file appear in `build/`. The archive contains one `stammbaum/` runtime directory. See the operator instructions for Alice deployment and the isolated test fixture.
+The package and SHA-256 sidecar are written to `build/`. The archive contains one `stammbaum/` runtime directory. See [build, test and installation instructions](docs/operations.md) for the disposable fixture, exact-package checks and recovery boundary. The [platform adaptation](docs/platform-adaptation.md) records the verified compatibility matrix.
 
-## Specification
+## Scope and limitations
 
-The parity baseline is documented release 0.15, adapted to Nextcloud identity and platform services. The 47 foundation/parity issues and 12 deferred issues retain their original priorities; this first iteration does not close them wholesale.
+GEDCOM import and export use [documented bounded profiles](docs/gedcom-import-profile.md); unsupported input may block activation and export reports omissions. The app does not claim unrestricted round trips, populated-tree merge, a portable lossless archive or complete release-0.15 parity. Generated exports expire after 24 hours and become invalid after relevant tree or access changes. Media originals remain private app data and continue to count toward quota while in trash.
 
-- [Initial specification — PDF](docs/intial-spec/current-product-specification.pdf)
-- [Initial specification — HTML](docs/intial-spec/current-product-specification.html), with local illustrations
-- [Initial specification — text](docs/intial-spec/current-product-specification.txt)
-- [Reviewable issue specifications and published URLs](docs/backlog.json)
-- [Archive and backlog verification](docs/backlog-verification.md)
+Nextcloud accounts provide sign-in and account administration. Optional Tasks, Calendar and Contacts actions require their own review and retain each destination app's permissions. See the [integration concept](docs/nextcloud-integration-concept.md) and [current API contract](docs/integration-api-contract.md).
 
-`intial-spec` intentionally preserves the requested spelling. All original documents and render artifacts are retained. Development fixtures are fictional; private family information does not belong in this repository.
+The [implementation roadmap](docs/implementation-roadmap.md), [open issues](https://github.com/utrost/Nextcloud-Stammbaum/issues) and [alpha.33 acceptance evidence](docs/core-closeout-alpha33.md) describe remaining work and executed checks. The [archived initial specification](docs/intial-spec/current-product-specification.pdf) is the source handoff; its `intial-spec` spelling is intentional.
 
-Photos and PDFs support descriptive dates, named people shown or mentioned (including people outside the tree), events, places and source/credit. Read the [metadata and gallery contract](docs/media-metadata-iteration.md).
+All screenshots above come from automated fictional fixtures. Do not commit real family records, credentials or local deployment configuration. Stammbaum is licensed under [AGPL-3.0-or-later](LICENSE); runtime dependency notices are in [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES).

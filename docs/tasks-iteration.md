@@ -1,6 +1,6 @@
 # Alpha.23: first Nextcloud Tasks journey
 
-This iteration implements a small part of [the optional Nextcloud integration concept](nextcloud-integration-concept.md) and issues #81–#83. It does not close those issues or change the release-0.15 parity baseline. The exact verified development target is Nextcloud 34.0.4, Tasks 0.18.1 and the built-in DAV backend 1.40.0. CI installs the official Tasks 0.18.1 release only into its disposable fictional fixture and checks the pinned SHA-256; Alice already has Tasks 0.18.1.
+This iteration implements a small part of [the optional Nextcloud integration concept](nextcloud-integration-concept.md) and issues #81–#83. It does not close those issues or change the release-0.15 parity baseline. The exact verified development target is Nextcloud 34.0.4, Tasks 0.18.1 and the built-in DAV backend 1.40.0. CI installs the official Tasks 0.18.1 release only into its disposable fictional fixture and checks the pinned SHA-256; Other installations must verify their installed Tasks version.
 
 ## Delivered journey
 
@@ -30,4 +30,4 @@ The cross-app revocation window remains. An isolated browser test deliberately r
 
 ## Verification
 
-The focused Playwright test uses a fictional person and real VTODO collection. It checks the review at 1440, 390 and 320 px, keyboard confirmation, the persisted task UID/backlink, conditional duplicate rejection, no tree revision change, denied viewer export, living/unknown default, idempotent reservation and stale person edits. The entire browser suite, CI and Alice smoke results will be recorded after execution; documentation checks alone do not certify this journey.
+The focused Playwright test uses a fictional person and real VTODO collection. It checks the review at 1440, 390 and 320 px, keyboard confirmation, the persisted task UID/backlink, conditional duplicate rejection, no tree revision change, denied viewer export, living/unknown default, idempotent reservation and stale person edits. The entire browser suite, CI and local smoke results will be recorded after execution; documentation checks alone do not certify this journey.

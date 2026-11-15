@@ -16,7 +16,7 @@ The release snapshot defines parity, not full original-product completion. Origi
 
 ## Native Nextcloud adaptations
 
-Use the existing development environment and [Library/Relate reference practices](development.md). The user authorizes the Alice development system without a pre-deployment backup requirement. Product backup/recovery remains a separate feature; it does not gate ordinary development deployment. The initial development target is Nextcloud 34, with broader compatibility determined and tested in F01.
+Use the existing development environment and [Library/Relate reference practices](development.md). Use disposable fictional fixtures for fault injection. Product backup and recovery remain a separate delivery requirement. The initial development target is Nextcloud 34, with broader compatibility determined and tested in F01.
 
 [F01 · #2](https://github.com/utrost/Nextcloud-Stammbaum/issues/2) records the compatibility matrix and exact adaptation contracts before implementation. The source Java stack, standalone account system and deployment choices are not requirements for this app.
 
