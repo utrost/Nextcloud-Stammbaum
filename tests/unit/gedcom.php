@@ -49,7 +49,7 @@ foreach (
         str_replace('2 VERS 5.5.1', '2 VERS 7.0', $bytes),
         str_replace('2 DATE ABT 1840', '4 DATE ABT 1840', $bytes),
         str_replace('1 CHAR UTF-8', '1 CHAR UTF-8' . "\xff", $bytes),
-        str_replace('1 NAME Ada /Linden/', '1 NAME Ada /Linden/' . "\n" . '1 NAME local development installation /Linden/', $bytes),
+        str_replace('1 NAME Ada /Linden/', '1 NAME Ada /Linden/' . "\n" . '1 NAME Marta /Linden/', $bytes),
         str_replace('1 CHIL @I3@', '1 CHIL @I1@', $bytes),
     ]
     as $i => $invalid

@@ -6,7 +6,7 @@ Decision recorded 13 November 2026. This app implements the archived release 0.1
 
 | Component | Declared or intended boundary | Executed evidence |
 | --- | --- | --- |
-| Nextcloud | Only major 34 in `appinfo/info.xml`; other majors require an independent compatibility run | Isolated 34.0.4.1 fixture and local development installation 34.x |
+| Nextcloud | Only major 34 in `appinfo/info.xml`; other majors require an independent compatibility run | Disposable Nextcloud 34.0.4.1 fixture and a separate Nextcloud 34 smoke test |
 | PHP | Minimum 8.3 syntax; host must also meet its Nextcloud release requirements | 8.5.10 runtime and 8.3 syntax check |
 | Database | Nextcloud's `IDBConnection` and additive schema migrations; MariaDB/InnoDB is the app's verified database | Isolated MariaDB 11.8.9, including concurrent writes and upgrades. PostgreSQL and SQLite are not certified for this app. |
 | Browser | Native Nextcloud UI with keyboard and responsive layouts; no browser-specific APIs required for core genealogy | Google Chrome 148 Playwright on desktop and narrow viewports. Firefox, Safari and Edge remain unverified. |
@@ -26,7 +26,7 @@ The app's versioned `en`/`de` preference overrides the host language for Stammba
 
 Original GEDCOM, image and PDF bytes use private Nextcloud `IAppData`, addressed by opaque IDs and authorized downloads. The app enforces 512 MiB retained GEDCOM originals and 1 GiB logical media accounting. Pending and trashed originals remain counted; derived previews and disposable export artifacts are separate. This is not ordinary user Files storage or a public share. Host cron runs app-registered import/export jobs; each job rechecks initiating authority, revision and membership generation before publication. The host owns the cron schedule, but the app owns its job records and limits.
 
-A recoverable installation must consistently restore Nextcloud identity/configuration, all `stb_` tables and private AppData originals, then invalidate restored authority. local development installation is an authorized development instance where the user waived a pre-deployment backup; that does not waive the product's recovery obligation [I06](https://github.com/utrost/Nextcloud-Stammbaum/issues/45). See [operations](operations.md) for the exact command and package process.
+A recoverable installation must consistently restore Nextcloud identity/configuration, all `stb_` tables and private AppData originals, then invalidate restored authority. That recovery scope is tracked in [I06](https://github.com/utrost/Nextcloud-Stammbaum/issues/45). See [operations](operations.md) for the exact command and package process.
 
 ## Verification and remaining limits
 

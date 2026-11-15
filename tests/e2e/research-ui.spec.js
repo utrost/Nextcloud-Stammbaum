@@ -201,6 +201,8 @@ test('family and research layouts remain readable in English and German across d
       await expect(page.locator('.citation-card')).toContainText('Volume II');
       expect(await page.locator('.details').evaluate((e) => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
       await page.screenshot({ path: `test-results/research-${locale}-${width}.png` });
+      if (process.env.STAMMBAUM_PUBLIC_SCREENSHOTS === '1' && locale === 'en' && width === 1440)
+        await page.locator('#person-panel').screenshot({ path: 'test-results/public-research.png' });
       await page.locator('.research-toggle').click();
       await expect
         .poll(async () => {
@@ -217,6 +219,8 @@ test('family and research layouts remain readable in English and German across d
       ).not.toBe('none');
       await page.locator('.graph-shell').scrollIntoViewIfNeeded();
       await page.screenshot({ path: `test-results/family-${locale}-${width}.png` });
+      if (process.env.STAMMBAUM_PUBLIC_SCREENSHOTS === '1' && locale === 'en' && width === 1440)
+        await page.locator('.graph-shell').screenshot({ path: 'test-results/public-family.png' });
     }
   }
   await page.setViewportSize({ width: 1440, height: 1000 });

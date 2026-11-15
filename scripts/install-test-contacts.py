@@ -8,7 +8,7 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 fixture = json.loads((root / 'build/test-instance.json').read_text())
-assert fixture['container'] == 'stammbaum-iteration-nc', 'Never install fixture Contacts on local development installation.'
+assert fixture['container'] == 'stammbaum-iteration-nc', 'Install fixture Contacts only in the disposable container.'
 version = '8.9.3'
 expected = '2844792ca52f25057ea0ee30b326cc3a63771ab7d82b1e52c39b2e344906ac8c'
 url = f'https://github.com/nextcloud-releases/contacts/releases/download/v{version}/contacts-v{version}.tar.gz'

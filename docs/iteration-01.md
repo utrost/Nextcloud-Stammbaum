@@ -37,9 +37,9 @@ The regression suite covers:
 
 Final local result: **39 integration/browser tests passed**, with zero failures, skips or retries, in 5.1 minutes. Three JavaScript unit tests and the PHP historical-date/person checks passed. PHP 8.3 syntax, metadata/routes, formatting, runtime dependency audit and archive/backlog checks passed. The 451-person bounded graph plus first people page completed in 156 ms in this fixture; that single measurement is not a production performance certification.
 
-The exact runtime package SHA-256 is `03a775765e2dd36e6a63efe3fa0f341c3ab9a371d740c734e3041ade586f80d6`. It upgraded the isolated fixture and installed freshly on local development installation's Nextcloud **34.x / PHP 8.5.10**. The shared-instance browser smoke verified native login, an empty account, tree/person creation, authorized reads and no browser errors. Its temporary account and fictional genealogy rows were removed afterward.
+The exact runtime package SHA-256 is `03a775765e2dd36e6a63efe3fa0f341c3ab9a371d740c734e3041ade586f80d6`. It upgraded the isolated fixture and installed on a separate Nextcloud 34 test installation. The shared-instance browser smoke verified native login, an empty account, tree/person creation, authorized reads and no browser errors. Its temporary account and fictional genealogy rows were removed afterward.
 
-local development installation remained healthy with maintenance off. Library **0.4.0-alpha.2** and Relate (`utrost_inventory`) **0.28.1-alpha.1** retained their versions and enablement. No local development installation pre-deployment backup was created, following the user's development-system instruction. No broader tests or recovery invalidation command were run on the shared installation.
+The test installation remained healthy with maintenance off, and other apps retained their versions and enablement. Broader fault and recovery tests ran only in the disposable fixture.
 
 The CI workflow is configured; remote results are reported separately after it runs.
 

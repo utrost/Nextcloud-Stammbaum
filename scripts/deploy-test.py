@@ -1,4 +1,4 @@
-"""Install a verified runtime archive into an explicitly supported local development installation container."""
+"""Install a verified runtime archive into a supported Nextcloud test container."""
 import argparse
 import base64
 import hashlib

@@ -8,7 +8,7 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 fixture = json.loads((root / 'build/test-instance.json').read_text())
-assert fixture['container'] == 'stammbaum-iteration-nc', 'Never install fixture Calendar on local development installation.'
+assert fixture['container'] == 'stammbaum-iteration-nc', 'Install fixture Calendar only in the disposable container.'
 version = '6.6.5'
 expected = 'e3afbc2a10db87920f5347279423422411010550a809b2902c0e8cf2f2492107'
 url = f'https://github.com/nextcloud-releases/calendar/releases/download/v{version}/calendar-v{version}.tar.gz'
