@@ -22,4 +22,4 @@ Use [operations](operations.md) for the exact build, disposable fixture, migrati
 | Request failures | Ignore obsolete responses, retain failed cursors and user input, and offer Retry. | W01, W05, I05 |
 | Verification | Service, package, migration, HTTP and Playwright tests using disposable fictional fixtures. | I07–I09 |
 
-Do not copy another app's ownership gate, file-deletion behavior or browser fixtures wholesale. Test the privacy and lifecycle rules that are specific to genealogy. Product backup and recovery remain [open work](https://github.com/utrost/Nextcloud-Stammbaum/issues/45); disposable test setup is not a recovery certification.
+Do not copy another app's ownership gate, file-deletion behavior or browser fixtures wholesale. Test the privacy and lifecycle rules that are specific to genealogy. Run the [backup and restore exercise](operations.md#consistent-recovery-boundary) separately from the main browser suite. It verifies the current recovery behavior on fictional data. Webhook signing-key recovery and full recovery acceptance remain [open](https://github.com/utrost/Nextcloud-Stammbaum/issues/45).

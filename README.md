@@ -1,6 +1,6 @@
 # Nextcloud Stammbaum
 
-Stammbaum is a native Nextcloud app for private, collaborative family-history research. The current **0.1.0-alpha.33** release is for testing and feedback; [release 0.15 parity](docs/implementation-roadmap.md) and production recovery are still in progress.
+Stammbaum is a native Nextcloud app for private, collaborative family-history research. The current **0.1.0-alpha.34** development version is for testing and feedback. [Release 0.15 parity](docs/implementation-roadmap.md) and production recovery are still in progress.
 
 ![Family diagram with fictional people](docs/screenshots/family-diagram-alpha33.png)
 
@@ -35,13 +35,15 @@ npm run format:check
 npm run package
 ```
 
-The package and SHA-256 sidecar are written to `build/`. The archive contains one `stammbaum/` runtime directory. See [build, test and installation instructions](docs/operations.md) for the disposable fixture, exact-package checks and recovery boundary. The [platform adaptation](docs/platform-adaptation.md) records the verified compatibility matrix.
+The package and SHA-256 sidecar are written to `build/`. The archive contains one `stammbaum/` runtime directory. The [operations guide](docs/operations.md) covers installation and the disposable test fixture. The [recovery exercise](docs/operations.md#consistent-recovery-boundary) verifies that a backup preserves fictional research and original files, and that restored credentials, invitations and exports lose their authority. The [platform adaptation](docs/platform-adaptation.md) records the verified compatibility matrix.
 
 ## Scope and limitations
 
 GEDCOM import and export use [documented bounded profiles](docs/gedcom-import-profile.md); unsupported input may block activation and export reports omissions. The app does not claim unrestricted round trips, populated-tree merge, a portable lossless archive or complete release-0.15 parity. Generated exports expire after 24 hours and become invalid after relevant tree or access changes. Media originals remain private app data and continue to count toward quota while in trash.
 
 Nextcloud accounts provide sign-in and account administration. Optional Tasks, Calendar and Contacts actions require their own review and retain each destination app's permissions. See the [integration concept](docs/nextcloud-integration-concept.md) and [current API contract](docs/integration-api-contract.md).
+
+The [scoped credential foundation](docs/operations.md#scoped-credential-foundation) provides issuance and revocation through authenticated browser routes. The account UI and external bearer API are still in progress.
 
 The [implementation roadmap](docs/implementation-roadmap.md), [open issues](https://github.com/utrost/Nextcloud-Stammbaum/issues) and [alpha.33 acceptance evidence](docs/core-closeout-alpha33.md) describe remaining work and executed checks. The [archived initial specification](docs/intial-spec/current-product-specification.pdf) is the source handoff; its `intial-spec` spelling is intentional.
 

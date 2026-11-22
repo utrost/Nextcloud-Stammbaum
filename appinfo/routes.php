@@ -1,6 +1,10 @@
 <?php
 return [
     'routes' => [
+        ['name' => 'credential#index', 'url' => '/api/v1/tool-credentials', 'verb' => 'GET'],
+        ['name' => 'credential#issue', 'url' => '/api/v1/tool-credentials', 'verb' => 'POST'],
+        ['name' => 'credential#revokeAll', 'url' => '/api/v1/tool-credentials', 'verb' => 'DELETE'],
+        ['name' => 'credential#revoke', 'url' => '/api/v1/tool-credentials/{id}', 'verb' => 'DELETE'],
         ['name' => 'connection#index', 'url' => '/api/v1/trees/{tree}/connections', 'verb' => 'GET'],
         [
             'name' => 'connection#refresh',

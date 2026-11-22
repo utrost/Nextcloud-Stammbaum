@@ -2,8 +2,15 @@ import { test, expect } from '@playwright/test';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { editable } from '../../src/domain.js';
+import { credentialAuthority } from './credential-fixture.js';
 import { endpoint, fixture, good, key, login, person, request, tree } from './helpers.js';
-import { captureRecoveryBackup, recoveryTarget, sourcePhp, verifyRecoverySource } from './restore-fixture.js';
+import {
+  captureRecoveryBackup,
+  recoveryTarget,
+  sourcePhp,
+  sourcePhpWithInput,
+  verifyRecoverySource,
+} from './restore-fixture.js';
 
 const pdf = readFileSync('tests/fixtures/media-two-pages.pdf');
 const gedcom = readFileSync('tests/fixtures/family.ged');
@@ -59,6 +66,7 @@ test('disposable installation restore preserves research and revokes snapshotted
   const sourceVisitor = await browser.newContext({ baseURL: fixture.baseURL });
   const restoredContexts = [];
   const sourceExports = [];
+  let sourceCredential;
   let sourceImport;
   let backup;
   try {
@@ -66,6 +74,16 @@ test('disposable installation restore preserves research and revokes snapshotted
     const familyTree = await tree(page);
     const family = `/trees/${familyTree.id}`;
     const importTree = `/trees/${(await tree(page)).id}`;
+    const tool = {
+      label: 'Fictional recovery tool',
+      scopes: ['tree.read'],
+      treeIds: [familyTree.id],
+      expiresInDays: 1,
+    };
+    sourceCredential = await good(page, '/tool-credentials', 'POST', { ...tool, requestId: key() }, 201);
+    expect(
+      credentialAuthority(sourcePhpWithInput, sourceCredential.secret, familyTree.id, 'tree.read').status,
+    ).toBe(200);
     await good(page, `${family}/members`, 'POST', {
       userId: 'stb_editor',
       role: 'editor',
@@ -193,6 +211,30 @@ test('disposable installation restore preserves research and revokes snapshotted
       expect((await outsider.request.get(`${endpoint}${mediaPath}/original`)).status()).toBe(404);
     });
     await test.step('Reject restored authority and allow fresh work', async () => {
+      expect(
+        credentialAuthority(restored.phpWithInput, sourceCredential.secret, familyTree.id, 'tree.read'),
+      ).toEqual({
+        status: 401,
+        error: 'credential_invalid',
+      });
+      const freshCredential = await good(
+        owner,
+        '/tool-credentials',
+        'POST',
+        { ...tool, requestId: key() },
+        201,
+      );
+      expect(
+        credentialAuthority(restored.phpWithInput, freshCredential.secret, familyTree.id, 'tree.read'),
+      ).toEqual({
+        status: 200,
+        credentialId: freshCredential.id,
+        actorId: fixture.user,
+      });
+      expect(
+        credentialAuthority(restored.phpWithInput, freshCredential.secret, familyTree.id, 'tree.write')
+          .status,
+      ).toBe(403);
       for (const action of ['review', 'accept']) {
         expect(
           (await request(outsider, `/invitations/${action}`, 'POST', { token: invite.token })).status,
@@ -231,6 +273,7 @@ test('disposable installation restore preserves research and revokes snapshotted
   } finally {
     try {
       // Do not leave the source's seeded jobs queued for subsequent fixture tests.
+      if (sourceCredential) await good(page, `/tool-credentials/${sourceCredential.id}`, 'DELETE');
       if (sourceImport) {
         const { revision } = await good(page, sourceImport);
         await good(page, `${sourceImport}/cancel`, 'POST', { revision });
