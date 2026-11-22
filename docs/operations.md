@@ -73,15 +73,29 @@ The download endpoint verifies the original's SHA-256 every time. A mismatch fai
 
 ## Consistent recovery boundary
 
-The production requirement remains a consistent recovery of Nextcloud identity/configuration, all `stb_` tables and private app data. Backing up only a GEDCOM file or only the app directory cannot restore this system. Automated consistent backup/restore tooling and a full disaster-recovery exercise remain I06 work.
+Use the host's backup and restore process to capture Nextcloud identity and configuration, the full database including all `stb_` tables, the custom app and theme files, and the data stores including Stammbaum AppData. Keep retained media and import originals with the records that describe them. A GEDCOM export cannot restore memberships, assignments, history or original files. [Nextcloud backup guide](https://docs.nextcloud.com/server/stable/admin_manual/maintenance/backup.html) · [Nextcloud restore guide](https://docs.nextcloud.com/server/stable/admin_manual/maintenance/restore.html)
 
-After restoring a consistent host/app snapshot, before reopening genealogy access, run:
+The operator owns backup scheduling, encryption, storage access, protected retention and periodic restore tests. Keep encryption keys recoverable separately from backup media, and protect database dumps, configuration and original files as private data. Installation does not schedule backups. Use the host's supported quiescing or consistent snapshot procedure so HTTP requests, cron and background workers cannot write to any component during capture.
+
+1. Restore the database and files to an isolated target using compatible Nextcloud, database and app versions. Verify the backup checksums and restore with HTTP and all workers stopped. If any step fails, keep the target offline and retry into fresh storage from the verified backup set.
+2. Check that `occ status --output=json` reports the expected version and no database upgrade needed. With HTTP and workers still stopped, turn maintenance mode off and run authority invalidation from a CLI process using the restored configuration. Nextcloud 34 does not load Stammbaum commands in maintenance mode. Run these commands from the Nextcloud directory as the HTTP service user.
+
+   ```sh
+   php occ maintenance:mode --off
+   php occ stammbaum:invalidate-authority
+   ```
+
+3. After invalidation succeeds, verify the restored installation in isolation before opening general access. Confirm tree memberships and history, check original bytes and assignment links, and verify that previously issued invitations and export downloads fail. The command also invalidates unfinished uploads, pending imports, and pending Tasks/Calendar/Contacts authority. Old app connections do not resume after recovery. Their owners can inspect and unlink their opaque receipts. Handle restored Nextcloud sessions and app passwords according to the host's own recovery policy before reopening access.
+
+Run the exercise separately from other tests on the disposable fictional fixture after installing the runtime package. It briefly stops that fixture, then restores to a separate database and volume before opening the clone on loopback. It also retries an interrupted restore. The exercise stores temporary, unencrypted test artifacts privately and removes them on exit. Production backups need the encryption and retention controls above.
 
 ```sh
-docker exec -u www-data nextcloud php occ stammbaum:invalidate-authority
+STAMMBAUM_RECOVERY_EXERCISE=1 npx playwright test tests/e2e/recovery-restore.spec.js --reporter=list
 ```
 
-This revokes restored invitation links and invalidates unfinished-upload, pending-import and pending Tasks/Calendar/Contacts connection authority while preserving current memberships and completed originals. Old app connections do not resume after recovery; owners can inspect and unlink their opaque receipts. Nextcloud session/app-password recovery remains a host responsibility. The isolated test verifies this command's effects, not an end-to-end backup restoration.
+Verified on Nextcloud 34.0.4 and MariaDB 11.8.9 with Stammbaum 0.1.0-alpha.33 (archive SHA-256 `a5710b05219de620515f33580adb33e651560fd3837716332c096731499fdfd8`). The restore test and both existing recovery tests passed locally. The restore preserved the edited person, attributed history, media assignment, memberships and PDF/GEDCOM original checksums. The interrupted target never started HTTP. After retry, the nonmember administrator still had no tree access, old invitations and export downloads were denied, and the workers rejected the restored import activation and queued export. A fresh invitation and export worked.
+
+[Issue #45](https://github.com/utrost/Nextcloud-Stammbaum/issues/45) remains open for recovery of scoped tool credentials and webhook signing keys. This exercise covers the existing authority model and does not certify the full A30 scenario.
 
 ## Import background processing
 
