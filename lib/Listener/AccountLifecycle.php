@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 namespace OCA\Stammbaum\Listener;
-use OCA\Stammbaum\Service\Store;
+use OCA\Stammbaum\Service\{Store, ToolCredentials};
 use OCP\EventDispatcher\{Event, IEventListener};
 use OCP\User\Events\{UserDeletedEvent, UserCreatedEvent, UserChangedEvent, PasswordUpdatedEvent};
 /** @implements IEventListener<Event> */
 final class AccountLifecycle implements IEventListener
 {
-    public function __construct(private Store $store) {}
+    public function __construct(private Store $store, private ToolCredentials $credentials) {}
     public function handle(Event $event): void
     {
         $remove = $event instanceof UserDeletedEvent || $event instanceof UserCreatedEvent;
@@ -22,6 +22,7 @@ final class AccountLifecycle implements IEventListener
         }
         $uid = $event->getUser()->getUID();
         $this->store->write(function () use ($uid, $remove) {
+            $this->credentials->invalidate($uid);
             if ($remove) {
                 $this->store->execute('DELETE FROM *PREFIX*stb_preferences WHERE user_id = ?', [$uid]);
                 $this->store->execute('DELETE FROM *PREFIX*stb_task_links WHERE actor_id = ?', [$uid]);

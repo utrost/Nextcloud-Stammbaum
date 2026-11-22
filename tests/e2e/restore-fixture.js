@@ -13,19 +13,25 @@ const webRoot = '/var/www/html';
 const dbClient = 'MYSQL_PWD="$MARIADB_PASSWORD" exec mariadb';
 const timeout = 120_000;
 
-function docker(args, { inputFile, outputFile, env } = {}) {
-  let input = 'ignore';
+function docker(args, { inputFile, outputFile, input, env } = {}) {
+  let stdin = input === undefined ? 'ignore' : 'pipe';
   let output = 'pipe';
   try {
-    if (inputFile) input = openSync(inputFile, 'r');
+    if (inputFile) stdin = openSync(inputFile, 'r');
     if (outputFile) output = openSync(outputFile, 'wx', 0o600);
-    return execFileSync('docker', args, { encoding: 'utf8', env, timeout, stdio: [input, output, 'pipe'] });
+    return execFileSync('docker', args, {
+      encoding: 'utf8',
+      env,
+      input,
+      timeout,
+      stdio: [stdin, output, 'pipe'],
+    });
   } catch (error) {
     // SQL and config output can contain credentials. Report the failed operation without dumping it.
     const detail = error.code || error.signal || `exit ${error.status}`;
     throw new Error(`Docker ${args[0]} failed (${detail})`);
   } finally {
-    if (typeof input === 'number') closeSync(input);
+    if (typeof stdin === 'number') closeSync(stdin);
     if (typeof output === 'number') closeSync(output);
   }
 }
@@ -43,10 +49,21 @@ function inspectContainer(name) {
 }
 
 export function sourcePhp(...args) {
-  return docker(['exec', '-u', 'www-data', source, 'php', ...args]);
+  return sourcePhpWithInput(args);
 }
 
 const sourceOcc = (...args) => sourcePhp('occ', ...args);
+
+export function sourcePhpWithInput(args, input) {
+  return runPhp(source, args, input);
+}
+
+function runPhp(container, args, input) {
+  return docker(
+    ['exec', ...(input === undefined ? [] : ['-i']), '-u', 'www-data', container, 'php', ...args],
+    { input },
+  );
+}
 
 export function verifyRecoverySource() {
   if (
@@ -153,7 +170,7 @@ export function recoveryTarget(images) {
   const web = `${name}-web`;
   const mount = `type=volume,source=${name},target=${webRoot},volume-nocopy`;
   const cleanups = [];
-  const php = (...args) => docker(['exec', '-u', 'www-data', web, 'php', ...args]);
+  const php = (...args) => runPhp(web, args);
   const offlineOcc = (...args) =>
     docker([
       'run',
@@ -175,6 +192,9 @@ export function recoveryTarget(images) {
 
   return {
     php,
+    phpWithInput(args, input) {
+      return runPhp(web, args, input);
+    },
     hasWebContainer() {
       return Boolean(docker(['ps', '-a', '--filter', `name=^/${web}$`, '--format', '{{.Names}}']).trim());
     },

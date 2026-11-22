@@ -1,4 +1,14 @@
 export default {
+  'Choose a credential expiry from 1 to 365 days.':
+    'Wähle für den Zugangsschlüssel eine Gültigkeit von 1 bis 365 Tagen.',
+  'Revoke an existing credential before creating another.':
+    'Widerrufe einen bestehenden Zugangsschlüssel, bevor du einen weiteren erstellst.',
+  'This credential is invalid or expired.': 'Dieser Zugangsschlüssel ist ungültig oder abgelaufen.',
+  'This credential does not allow this operation.': 'Dieser Zugangsschlüssel erlaubt diesen Vorgang nicht.',
+  'Too many credential requests. Try again later.':
+    'Zu viele Anfragen für Zugangsschlüssel. Versuche es später erneut.',
+  'Choose supported scopes and existing trees for this credential.':
+    'Wähle unterstützte Berechtigungen und bestehende Stammbäume für diesen Zugangsschlüssel.',
   'Sign in again': 'Erneut anmelden',
   'If the recipient has no Nextcloud account, ask a host administrator to create one. They can then open this invitation before it expires.':
     'Wenn die eingeladene Person noch kein Nextcloud-Konto hat, bitte die Host-Administration um eines. Danach kann sie diese Einladung vor Ablauf öffnen.',

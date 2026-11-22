@@ -85,7 +85,7 @@ The operator owns backup scheduling, encryption, storage access, protected reten
    php occ stammbaum:invalidate-authority
    ```
 
-3. After invalidation succeeds, verify the restored installation in isolation before opening general access. Confirm tree memberships and history, check original bytes and assignment links, and verify that previously issued invitations and export downloads fail. The command also invalidates unfinished uploads, pending imports, and pending Tasks/Calendar/Contacts authority. Old app connections do not resume after recovery. Their owners can inspect and unlink their opaque receipts. Handle restored Nextcloud sessions and app passwords according to the host's own recovery policy before reopening access.
+3. After invalidation succeeds, verify the restored installation in isolation before opening general access. Confirm tree memberships and history, check original bytes and assignment links, and verify that previously issued tool credentials, invitations and export downloads fail. The command also invalidates unfinished uploads, pending imports, and pending Tasks/Calendar/Contacts authority. Old app connections do not resume after recovery. Their owners can inspect and unlink their opaque receipts. Handle restored Nextcloud sessions and app passwords according to the host's own recovery policy before reopening access.
 
 Run the exercise separately from other tests on the disposable fictional fixture after installing the runtime package. It briefly stops that fixture, then restores to a separate database and volume before opening the clone on loopback. It also retries an interrupted restore. The exercise stores temporary, unencrypted test artifacts privately and removes them on exit. Production backups need the encryption and retention controls above.
 
@@ -95,7 +95,17 @@ STAMMBAUM_RECOVERY_EXERCISE=1 npx playwright test tests/e2e/recovery-restore.spe
 
 Verified on Nextcloud 34.0.4 and MariaDB 11.8.9 with Stammbaum 0.1.0-alpha.33 (archive SHA-256 `a5710b05219de620515f33580adb33e651560fd3837716332c096731499fdfd8`). The restore test and both existing recovery tests passed locally. The restore preserved the edited person, attributed history, media assignment, memberships and PDF/GEDCOM original checksums. The interrupted target never started HTTP. After retry, the nonmember administrator still had no tree access, old invitations and export downloads were denied, and the workers rejected the restored import activation and queued export. A fresh invitation and export worked.
 
-[Issue #45](https://github.com/utrost/Nextcloud-Stammbaum/issues/45) remains open for recovery of scoped tool credentials and webhook signing keys. This exercise covers the existing authority model and does not certify the full A30 scenario.
+[Issue #45](https://github.com/utrost/Nextcloud-Stammbaum/issues/45) remains open for webhook signing-key recovery and full A30 acceptance.
+
+## Scoped credential foundation
+
+The browser-session routes `/api/v1/tool-credentials` list active credentials with `GET`, issue with `POST`, and revoke all with `DELETE`. `DELETE /api/v1/tool-credentials/{id}` revokes one. Issuance uses Nextcloud password confirmation. All mutations use Nextcloud CSRF protection. The routes accept only the current account's browser session and return `Cache-Control: private, no-store`.
+
+Issuance accepts `label`, `scopes`, `treeIds`, `expiresInDays`, and an actor-bound `requestId`. This slice supports `tree.read` and `tree.write` as independent scopes. Only existing memberships can be selected. A changed selected membership invalidates its grant permanently, and unrelated grants still work. The application stores the hash of the random secret and returns the secret only in the first successful response. A matching retry returns metadata. If the issuance response is lost, revoke the listed credential and issue a replacement with a fresh request ID. The account can hold at most 20 active credentials and gets up to 20 issuance attempts per 15-minute window.
+
+Password changes, account disable/delete/recreation, and `stammbaum:invalidate-authority` revoke existing credentials. Each restore must run the command anew against the restored snapshot, even if it was already run against a later snapshot. The `stb_tool_credentials` and `stb_tool_issue_limits` tables stay within the full database backup set. The resolver checks credentials without giving them browser sessions or general genealogy access. Account UI, bearer route policy, and bearer request limits remain open under [#40](https://github.com/utrost/Nextcloud-Stammbaum/issues/40) and [#41](https://github.com/utrost/Nextcloud-Stammbaum/issues/41).
+
+The alpha.34 upgrade and Playwright checks passed locally on Nextcloud 34.0.4 and MariaDB 11.8.9. The backup exercise verified that a credential accepted before backup was rejected after recovery and that a new credential could read its selected tree but could not write. The verified package SHA-256 was `6b6c9aa0d148a5a2d73155b275b1dbb7536acf33f17bf5f9eeba341274d8cb48`.
 
 ## Import background processing
 
